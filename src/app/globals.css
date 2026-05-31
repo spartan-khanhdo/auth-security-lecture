@@ -270,6 +270,88 @@ body::before {
 }
 
 /* ─────────────────────────────────────────────────────────
+   COURSE HOME — syllabus, lecture cards, quiz row, footer
+   (ported from course.css design reference)
+───────────────────────────────────────────────────────── */
+
+/* Progress bar in hero CTA */
+.home-cta { display: flex; align-items: center; gap: 22px; margin-top: 30px; flex-wrap: wrap; }
+.home-prog { display: flex; align-items: center; gap: 11px; font-size: 13px; color: var(--text-dim); }
+.home-prog-bar { width: 130px; height: 8px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+.home-prog-bar span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--primary), var(--pink)); transition: width .6s var(--ease); }
+
+/* Syllabus section */
+.syllabus { padding: 36px 0 50px; }
+.syllabus-h { margin-bottom: 24px; }
+.syllabus-h h2 { font-size: clamp(26px, 3.4vw, 38px); }
+.syllabus-h .glue { margin-top: 8px; }
+
+/* Lecture card grid */
+.lec-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+@media (max-width: 900px) { .lec-cards { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 580px) { .lec-cards { grid-template-columns: 1fr; } }
+
+/* Lecture card */
+.lec-card {
+  position: relative; overflow: hidden; text-align: left;
+  background: var(--surface); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg); padding: 22px; cursor: pointer;
+  display: flex; flex-direction: column; gap: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: transform .3s var(--ease-back), box-shadow .3s var(--ease), border-color .3s;
+  font-family: var(--font-body);
+  text-decoration: none; color: inherit;
+}
+.lec-card:hover {
+  transform: translateY(-4px); box-shadow: var(--shadow-md);
+  border-color: color-mix(in srgb, var(--lc, var(--primary)) 55%, var(--border-subtle));
+}
+.lec-card--coming { opacity: .55; pointer-events: none; cursor: default; }
+.lc-top { display: flex; align-items: center; gap: 12px; }
+.lc-ico {
+  width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center;
+  color: #fff; background: var(--lc, var(--primary));
+  box-shadow: 0 8px 18px -6px color-mix(in srgb, var(--lc, var(--primary)) 70%, transparent);
+  flex-shrink: 0;
+}
+.lc-ico svg { width: 23px; height: 23px; }
+.lc-n { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--text-faint); }
+.lec-card h3 { font-size: 19px; }
+.lec-card > p { color: var(--text-dim); font-size: 14px; flex: 1; text-wrap: pretty; }
+.lc-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+.lc-dur { font-family: var(--font-mono); font-size: 12.5px; color: var(--text-faint); }
+.lc-go {
+  display: inline-flex; align-items: center; gap: 5px;
+  color: var(--primary-2); font-weight: 600; font-size: 13.5px;
+}
+.lc-go svg { width: 15px; height: 15px; transition: transform .25s var(--ease); }
+.lec-card:hover .lc-go svg { transform: translateX(3px); }
+
+/* Live Quiz CTA row */
+.home-quiz-row { margin-top: 24px; }
+.quiz-entry-btn {
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  padding: 18px 22px; background: var(--surface); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg); cursor: pointer; text-align: left;
+  box-shadow: var(--shadow-sm); text-decoration: none; color: inherit;
+  transition: transform .3s var(--ease-back), box-shadow .3s var(--ease), border-color .3s;
+  font-family: var(--font-body);
+}
+.quiz-entry-btn:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--border-strong); }
+.qeb-ico { font-size: 24px; flex-shrink: 0; }
+.qeb-text { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.qeb-text strong { font-size: 15px; font-weight: 600; color: var(--text); }
+.qeb-text span { font-size: 13.5px; color: var(--text-dim); }
+.qeb-arrow { color: var(--text-faint); flex-shrink: 0; }
+.qeb-arrow svg { width: 18px; height: 18px; }
+
+/* Course footer */
+.home-foot {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 24px 0 50px; border-top: 1px solid var(--border-subtle); font-size: 13.5px;
+}
+
+/* ─────────────────────────────────────────────────────────
    REDUCED MOTION
 ───────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
