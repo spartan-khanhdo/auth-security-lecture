@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, DM_Sans, JetBrains_Mono } from "next/font/google";
 import TopNavBar from "@/components/shell/TopNavBar";
+import CourseProgressProvider from "@/components/shell/CourseProgressProvider";
+import ThemeProvider from "@/components/shell/ThemeProvider";
+import SkipToContent from "@/components/shell/SkipToContent";
+import GlobalKeyboard from "@/components/shell/GlobalKeyboard";
 import "@/app/globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -39,8 +43,14 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="antialiased">
-        <TopNavBar />
-        <div>{children}</div>
+        <SkipToContent />
+        <ThemeProvider>
+          <CourseProgressProvider>
+            <TopNavBar />
+            <main id="main">{children}</main>
+            <GlobalKeyboard />
+          </CourseProgressProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
