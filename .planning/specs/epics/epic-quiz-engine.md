@@ -1,140 +1,241 @@
-# Epic: Quiz Engine & Score Card
+# Epic: Quiz Engine, Live Session & Leaderboard
 
 **Slug:** epic-quiz-engine
 **Status:** Ready for planning
 **Depends on:** epic-content-data, epic-content-units, epic-lecture-player, epic-navigation-shell
-**Estimated complexity:** M
+**Estimated complexity:** XL
 
 ---
 
 ## Problem
 
-The spec locked the checkpoint format as a **scored quiz**: per-question
-feedback, aggregated final score, retry. Without a dedicated engine, quiz
-state would leak into the player and the per-question logic would be
-duplicated across lectures. We need one quiz unit renderer, one shared
-answer store keyed by `unitId`, and one score card that surfaces when the
-trailing quiz run completes.
+The quiz needs to work in two modes:
+1. **Live session** — presenter runs a session on a big screen, teammates join from their phones with a name + avatar, scores update in real time as they answer. Think Kahoot but for a security lecture.
+2. **Self-paced** — learner opens `/quiz` solo, enters their name, takes the quiz, sees the leaderboard after.
+
+Without real-time session management, the leaderboard is just a static table of past scores. With it, the presenter can show a live view of who has joined, how everyone is scoring, and celebrate results in the room.
+
+---
 
 ## Scope
 
-- `src/components/quiz/QuizQuestion.tsx` — Renders one `QuizUnit`: question
-  text, difficulty badge, choice buttons, per-question feedback (correct/
-  incorrect + `explanation`) revealed after the user submits.
-- `src/components/quiz/DifficultyBadge.tsx` — `easy` | `medium` | `hard` chip.
-- `src/components/quiz/LectureScoreCard.tsx` — Aggregated score: `X / Y`,
-  per-question breakdown with badges and explanations, `<RetryQuizButton />`,
-  `<NextLectureCTA />`.
-- `src/components/quiz/RetryQuizButton.tsx` — Clears answers for this lecture
-  and sends the player back to the first quiz unit's `stepIndex`.
-- `src/components/quiz/NextLectureCTA.tsx` — Reads `getNextLectureSlug()` and
-  routes to `/lecture/<next>`; falls back to `/` after the last lecture.
-- `useQuizAnswers(lecture)` hook — Owns `Record<unitId, { choiceId, correct }>`
-  for the current lecture's quiz units; exposes `answer`, `reset`, `score`,
-  `isLectureQuizComplete`.
-- Integration with `epic-lecture-player`: when `stepIndex` lands on the *last*
-  unit and that unit (and the contiguous trailing run) is fully answered, the
-  player swaps `<UnitRenderer>` for `<LectureScoreCard>` inside `<UnitStage>`.
-- Integration with `epic-navigation-shell`: per-lecture quiz score is pushed to
-  `CourseProgressProvider` so the home card shows it (e.g., "Quiz: 4/5").
+### Roles
+
+| Role | Access | View |
+|---|---|---|
+| **Presenter / Admin** | PIN-protected (`/admin`) | Big-screen dashboard — session control, live scores, leaderboard |
+| **Participant** | Open, join via room code | Mobile-friendly — name + avatar picker, quiz flow, own score |
+
+Admin PIN is a single env var (`ADMIN_PIN`). No accounts, no Supabase auth.
+
+---
+
+### Participant Flow (`/join`)
+
+- Landing CTA "Join Session" → `/join?code=<room_code>`
+- **NameGate** — text input for name + random avatar picker (grid of 8 DiceBear avatars, re-roll button). Confirms with "Join" CTA.
+- **Lobby screen** — "Waiting for presenter to start…" + live list of who else has joined (Supabase Realtime).
+- **Quiz flow** — one question at a time, pushed by presenter. Participant sees question + choices, submits, gets per-question feedback, waits for next.
+- **Score screen** — final score `X/Y` + rank on leaderboard + "View Leaderboard" CTA.
+
+---
+
+### Presenter / Admin Flow (`/admin`)
+
+- PIN gate on load — env var `ADMIN_PIN`. Stored in `sessionStorage` for the tab lifetime.
+- **Session Dashboard** — the big-screen view:
+  - Room code (large, copyable) + QR code linking to `/join?code=<room_code>`
+  - Participant list with avatars — updates live as people join
+  - "Start Quiz" button (disabled until ≥1 participant)
+  - During quiz: current question number, % of participants who have answered
+  - Live leaderboard: rank / avatar / name / score — updates as answers come in
+  - "Next Question" / "End Session" controls
+- **Session lifecycle**: Create → Lobby → Active (question N of M) → Ended
+- After ending: leaderboard freezes, scores are persisted, "Start New Session" resets
+
+---
+
+### Self-Paced Flow (`/quiz`)
+
+- Same NameGate + avatar picker (no room code needed)
+- Runs all questions locally, no session needed
+- On complete: submits score to `quiz_scores` with `session_id = null`
+- Shows `LectureScoreCard` + "View Leaderboard" CTA → `/leaderboard`
+
+---
+
+### Leaderboard (`/leaderboard`)
+
+- Fetches from Supabase — all-time scores by default
+- Filter tabs: **All** | per lecture slug
+- Sorted by `pct` desc, tie-break `answered_at` asc
+- Shows: rank, avatar, name, score (`X/Y`), percentage, date
+- Auto-refreshes every 30s
+- Accessible from: `TopNavBar`, `LectureScoreCard`, `/admin` dashboard
+
+---
+
+### Supabase Schema
+
+```sql
+-- Active sessions created by the presenter
+create table quiz_sessions (
+  id           uuid primary key default gen_random_uuid(),
+  room_code    text not null unique,           -- 4-char uppercase e.g. "AX7K"
+  status       text not null default 'lobby',  -- lobby | active | ended
+  current_q    int not null default 0,         -- index of current question being shown
+  created_at   timestamptz not null default now()
+);
+
+-- Participants who joined a session
+create table quiz_participants (
+  id           uuid primary key default gen_random_uuid(),
+  session_id   uuid references quiz_sessions(id) on delete cascade,
+  name         text not null,
+  avatar_seed  text not null,   -- DiceBear seed string
+  joined_at    timestamptz not null default now()
+);
+
+-- One row per participant per question answered
+create table quiz_answers (
+  id             uuid primary key default gen_random_uuid(),
+  participant_id uuid references quiz_participants(id) on delete cascade,
+  session_id     uuid references quiz_sessions(id) on delete cascade,
+  question_idx   int not null,
+  choice_idx     int not null,
+  is_correct     boolean not null,
+  answered_at    timestamptz not null default now()
+);
+
+-- Final scores (written when session ends or self-paced quiz completes)
+create table quiz_scores (
+  id           uuid primary key default gen_random_uuid(),
+  session_id   uuid references quiz_sessions(id) on delete set null,
+  participant_id uuid references quiz_participants(id) on delete set null,
+  name         text not null,
+  avatar_seed  text,
+  lecture_slug text not null,   -- 'all' for full quiz
+  score        int not null,
+  total        int not null,
+  pct          int generated always as (round(score * 100.0 / total)) stored,
+  answered_at  timestamptz not null default now()
+);
+```
+
+**Supabase Realtime** channels:
+- `session:<room_code>` — presence (who joined), session status, current question index
+- `answers:<session_id>` — new answers as they arrive (admin dashboard listens)
+
+---
+
+### Avatars
+
+- Library: `@dicebear/core` + `@dicebear/collection` (style: `bottts` or `adventurer`)
+- `AvatarPicker.tsx` — generates 8 avatars from random seeds, shows grid, re-roll button
+- `Avatar.tsx` — renders a DiceBear SVG inline by seed + style
+
+---
 
 ## Out of Scope
 
-- Persistent quiz history (session only — cleared on full reload).
-- Adaptive difficulty / question shuffling.
-- Multi-select answers, free-text answers, code-completion questions — single
-  correct choice only.
-- Timed quizzes / timers.
-- A standalone "all quizzes in one place" page.
-- Quiz questions written here — content lives in lecture files
-  (`epic-content-data`) sourced from `.planning/contents/checkpoint-quiz.md`.
+- Multiple simultaneous active sessions
+- Admin kicking participants
+- Question timer / countdown
+- Question-by-question live reveal (presenter controls pace via "Next Question")
+- Score editing or deletion
+- Persistent sessions across server restarts (in-memory state is fine; Supabase is the truth)
+
+---
 
 ## User Stories
 
-- As a learner, I want immediate feedback after picking an answer so I know if
-  I was right before I move on.
-- As a learner, I want a final score card after the last question so I see how
-  I did overall, not just per question.
-- As a learner, I want to retry the quiz so I can fix mistakes without
-  reloading the whole lecture.
-- As a learner, I want a clear "Next lecture" button after my score so the
-  course feels continuous.
-- As a learner, I want each question marked Easy/Medium/Hard so I can calibrate
-  effort.
-- As a returning visitor (same session), I want my completed quiz score to
-  appear on the home card so the course feels stateful.
+- As a presenter, I want to display a room code + QR code on the big screen so teammates can join from their phones in seconds.
+- As a presenter, I want to see who has joined before I start so I know everyone is in.
+- As a presenter, I want a live leaderboard updating as answers come in so the room feels energised.
+- As a participant, I want to pick a fun avatar when I join so I'm recognisable on the leaderboard without sharing personal data.
+- As a participant, I want to answer on my phone and get instant feedback so I'm engaged even in a group session.
+- As a solo learner, I want to take the quiz without joining a session so I can study at my own pace.
+
+---
 
 ## Acceptance Criteria
 
-- [ ] `QuizQuestion` shows question, choices as buttons, and a difficulty
-      badge derived from `unit.difficulty`.
-- [ ] Clicking a choice locks the answer for that question, reveals
-      correctness + `explanation`, and disables further selection until reset.
-- [ ] Submitting the *last* quiz unit in a lecture surfaces
-      `<LectureScoreCard>` in `<UnitStage>`.
-- [ ] Score card displays `X / Y` and a per-question breakdown (correct ✓,
-      incorrect ✗) with each question's `explanation` visible.
-- [ ] Retry clears all answers for the current lecture's quiz units and
-      navigates the player back to the first quiz unit (`?step=N`).
-- [ ] "Next Lecture" CTA navigates to the next lecture's player at step 0; if
-      this is the last lecture, the CTA reads "Back to Course" and links to
-      `/`.
-- [ ] `useQuizAnswers` lives in `<LecturePlayer>` scope (lifted state) so all
-      quiz units in the lecture share it; `<LectureScoreCard>` reads from it.
-- [ ] Quiz state is session-only — full reload clears it.
-- [ ] Score card pushes the final score to `CourseProgressProvider` exactly
-      once per attempt.
-- [ ] Keyboard: answer choices are focusable; Enter activates the focused
-      choice; ← / → / Space (from `epic-lecture-player`) does NOT advance
-      while feedback is being read (it should still advance once feedback is
-      visible).
+- [ ] `/admin` shows a PIN gate; correct PIN grants access for the tab session.
+- [ ] Presenter can create a session and see the room code + QR code.
+- [ ] Participant opens `/join?code=XXX`, enters name, picks avatar, enters lobby.
+- [ ] Lobby shows live participant list (Realtime); presenter sees the same list.
+- [ ] Presenter clicks "Start Quiz" → all participant screens advance to Question 1.
+- [ ] Each question is pushed to participants via Realtime; they cannot advance themselves.
+- [ ] Participant submits answer → sees correctness + explanation; presenter sees `N / total answered`.
+- [ ] Presenter clicks "Next Question" → all screens advance.
+- [ ] On last question answered, presenter sees final leaderboard; participants see their score + rank.
+- [ ] Scores are written to `quiz_scores` when session ends.
+- [ ] `/quiz` self-paced flow works without a session (no room code, no Realtime).
+- [ ] `/leaderboard` shows all-time scores with lecture filter tabs.
+- [ ] Supabase unreachable → score card still renders; error shown as toast.
+- [ ] `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `ADMIN_PIN` are the only required env vars.
+
+---
 
 ## Key Design Decisions
 
-- Quiz answer state is **lecture-scoped**, lifted to `<LecturePlayer>`, not
-  global. Course-level summary (per-lecture scores) is the only thing that
-  goes into `CourseProgressProvider`.
-- The score card appears **inside** `<UnitStage>` (same `AnimatePresence`
-  surface) rather than overlaying the player — keeps the focused, single-
-  screen feel.
-- The "trailing run of quiz units" is computed via `getQuizUnits(lecture)`
-  from `epic-content-data` — quiz units must be contiguous at the end of the
-  lecture's `units` array.
-- One correct answer per question; correctness is determined by
-  `choiceId === unit.correctChoiceId`.
-- Points default to 1 when `unit.points` is undefined.
+- **Admin PIN in env var** — simple, zero-dependency, sufficient for a trusted internal audience.
+- **Presenter controls the pace** — participants can't advance questions themselves during a live session. This keeps the room in sync.
+- **DiceBear avatars** — fully client-side SVG generation, no external image requests, no storage needed.
+- **Supabase Realtime** for presence + answer streaming — fits the existing Supabase dependency, no extra infra.
+- **Room codes are 4 chars** — short enough to type on a phone from the big screen.
+- **Self-paced and live share components** — `QuizQuestion`, `DifficultyBadge`, `LectureScoreCard` are shared; only the orchestration layer differs.
+
+---
 
 ## Component Sketch
 
 ```
-src/components/quiz/
-├── QuizQuestion.tsx          # rendered by QuizRenderer for each QuizUnit
-├── DifficultyBadge.tsx
-├── LectureScoreCard.tsx      # surfaced when last quiz is answered
-├── RetryQuizButton.tsx
-├── NextLectureCTA.tsx
-└── useQuizAnswers.ts         # hook; owns answer map for the lecture
+src/
+  components/
+    quiz/
+    ├── NameGate.tsx             # name input + avatar picker
+    ├── AvatarPicker.tsx         # DiceBear grid + re-roll
+    ├── Avatar.tsx               # renders DiceBear SVG by seed
+    ├── QuizQuestion.tsx         # single question renderer
+    ├── DifficultyBadge.tsx
+    ├── LectureScoreCard.tsx     # final score + submit + leaderboard CTA
+    ├── RetryQuizButton.tsx
+    └── useQuizAnswers.ts
+    session/
+    ├── Lobby.tsx                # participant waiting screen
+    ├── LiveQuestion.tsx         # participant quiz screen (Realtime-driven)
+    └── useSession.ts            # Realtime subscription hook
+    admin/
+    ├── PinGate.tsx
+    ├── SessionDashboard.tsx     # big-screen presenter view
+    ├── ParticipantRoster.tsx    # live join list
+    ├── LiveLeaderboard.tsx      # real-time rank table
+    └── useAdminSession.ts
+    leaderboard/
+    ├── LeaderboardTable.tsx
+    └── LectureFilterTabs.tsx
+  lib/
+  ├── supabase.ts
+  ├── quiz-scores.ts
+  ├── sessions.ts                # createSession, startSession, nextQuestion, endSession
+  └── avatars.ts                 # generateAvatarSeeds, avatarUrl(seed)
+app/
+  admin/
+    page.tsx                     # presenter dashboard (PIN-protected)
+  join/
+    page.tsx                     # participant entry (name + avatar + lobby)
+  quiz/
+    page.tsx                     # self-paced standalone quiz
+  leaderboard/
+    page.tsx
 ```
 
-`UnitStage` (from epic-lecture-player) selects between:
-```
-<UnitRenderer unit={current} />            # normal flow
-              ↓ when last quiz answered
-<LectureScoreCard />                       # replaces the unit
-```
+---
 
 ## Open Questions
 
-- Should choice order be randomized per attempt, or always shown in the order
-  the content author specified? Lean: author order (predictable for review).
-- After submitting an answer, should the Next button advance automatically (no
-  click) or wait for the user? Lean: wait — let them read the explanation.
-- Should incorrect answers be retryable in place (clear and re-pick) without a
-  full quiz reset? Lean: no — one shot per question, then retry the whole
-  quiz.
-- Where does the score card live structurally — inside `UnitStage` or as a
-  sibling rendered when `isLectureQuizComplete` flips true? Lean: inside
-  `UnitStage` so transitions feel uniform.
-- Should the score card show only the trailing-quiz score, or also include
-  non-quiz "completion" (steps viewed)? Lean: trailing-quiz score only;
-  completion lives on the home card.
+- [ ] Leaderboard: all-time or today-only? Today-only makes more sense for a live session; all-time for async reference. Suggest: default to today, toggle to all-time.
+- [ ] Avatar style: `bottts` (robots) or `adventurer` (characters)? Lean: `bottts` — fits the security/tech theme.
+- [ ] Should `/leaderboard` be in `TopNavBar` always, or only after a score is submitted this session?
+- [ ] Room code expiry: auto-expire sessions older than 24h, or keep forever?

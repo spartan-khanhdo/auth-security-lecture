@@ -15,6 +15,7 @@ Source content: [Notion — Lecture 5: Authentication & Security](https://www.no
 - **Framer Motion** — unit transition animations (slide/fade between steps, NOT scroll triggers)
 - **Mermaid** — rendered client-side (lazy-loaded, `dynamic` import only, `ssr: false`)
 - **react-syntax-highlighter** — code blocks
+- **Supabase** — quiz score persistence + leaderboard (anon key, insert/select only)
 - **Vercel** — hosting
 
 ## Commands
@@ -31,8 +32,13 @@ No test suite planned (static content site).
 
 | Route | Description |
 |---|---|
-| `/` | Course index — lecture card grid |
+| `/` | Landing page — author intro, course pitch, CTAs |
+| `/course` | Course index — lecture card grid |
 | `/lecture/[slug]` | Step-through lecture player |
+| `/quiz` | Standalone self-paced quiz (name + avatar gate, no session) |
+| `/join` | Participant entry — name + avatar picker + lobby (Realtime) |
+| `/admin` | Presenter dashboard — PIN-gated, room code + QR, live scores |
+| `/leaderboard` | Global leaderboard — scores from Supabase, filterable by lecture |
 
 ### Lecture slugs
 
@@ -96,8 +102,9 @@ Demo keys: `OAuthFlowPlayer` | `PKCESimulator` | `JWTDecoder` | `JWTForger` | `D
   specs/
     auth-security-website.md        ← master product spec (locked decisions, architecture)
     epics/
+      epic-landing-page.md           ← landing page, author card, CTAs, /quiz route
       epic-content-data.md          ← typed content model + lecture registry
-      epic-course-home.md           ← course index page
+      epic-course-home.md           ← /course index page
       epic-lecture-player.md        ← step-through player core
       epic-content-units.md         ← unit renderers + demo registry
       epic-interactive-demos.md     ← all interactive demo components
