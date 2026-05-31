@@ -1,6 +1,7 @@
 "use client";
 
 import type { DemoUnit } from '@/content/types';
+import Callout from '@/components/ui/Callout';
 import { demoRegistry } from './demoRegistry';
 
 interface DemoRendererProps {
@@ -13,9 +14,7 @@ export default function DemoRenderer({ unit }: DemoRendererProps) {
   if (!Demo) {
     return (
       <div className="max-w-3xl mx-auto w-full">
-        <div className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100">
-          Demo unavailable: {unit.component}
-        </div>
+        <Callout tone="warn" text={`Demo unavailable: ${unit.component}`} />
       </div>
     );
   }
