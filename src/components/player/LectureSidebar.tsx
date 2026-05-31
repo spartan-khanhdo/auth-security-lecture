@@ -54,7 +54,7 @@ export default function LectureSidebar({
   onJump,
 }: ILectureSidebarProps) {
   const { getResumeStep, progress } = useCourseProgress();
-  const [courseOpen, setCourseOpen] = useState(true);
+  const [courseOpen, setCourseOpen] = useState(false);
 
   const currentLectureIndex = LECTURES.findIndex((l) => l.slug === lecture.slug);
 
@@ -106,8 +106,8 @@ export default function LectureSidebar({
                     <span className="si-txt">{sibling.title}</span>
                   </Link>
 
-                  {/* Progress % for this lecture */}
-                  {siblingProgress && siblingProgress.totalSteps > 0 && (
+                  {/* Progress % — only show once the learner has actually advanced */}
+                  {siblingProgress && siblingProgress.lastStep > 0 && siblingProgress.totalSteps > 1 && (
                     <div className="si-pct" aria-label={`${Math.round((siblingProgress.lastStep / (siblingProgress.totalSteps - 1)) * 100)}% complete`}>
                       {Math.round((siblingProgress.lastStep / (siblingProgress.totalSteps - 1)) * 100)}%
                     </div>
