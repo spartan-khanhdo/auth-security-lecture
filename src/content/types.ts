@@ -65,7 +65,15 @@ export interface Lecture {
     | 'gaps';
   title: string;
   subtitle: string;
+  /** Short marketing line shown on the syllabus card (distinct from subtitle) */
+  tagline: string;
   estMinutes: number;
   topics: string[];
   units: Unit[];
+  /** Accent color for the card icon badge */
+  color: 'teal' | 'indigo' | 'pink' | 'amber' | 'green';
+  /** SVG icon key for LectureCardIcon */
+  iconKey: 'swap' | 'key' | 'server' | 'shield' | 'puzzle';
+  /** When true the card renders as muted "Coming soon" (non-interactive) */
+  comingSoon: boolean;
 }
