@@ -15,7 +15,8 @@ Source content: [Notion — Lecture 5: Authentication & Security](https://www.no
 - **Framer Motion** — unit transition animations (slide/fade between steps, NOT scroll triggers)
 - **Mermaid** — rendered client-side (lazy-loaded, `dynamic` import only, `ssr: false`)
 - **react-syntax-highlighter** — code blocks
-- **Supabase** — quiz score persistence + leaderboard (anon key, insert/select only)
+- **Supabase** — database (questions, scores, sessions), Auth (admin email/password), Realtime (live quiz sessions)
+- **`@supabase/ssr`** — cookie-based session for Next.js App Router + `middleware.ts` auth guard
 - **Vercel** — hosting
 
 ## Commands
@@ -37,7 +38,10 @@ No test suite planned (static content site).
 | `/lecture/[slug]` | Step-through lecture player |
 | `/quiz` | Standalone self-paced quiz (name + avatar gate, no session) |
 | `/join` | Participant entry — name + avatar picker + lobby (Realtime) |
-| `/admin` | Presenter dashboard — PIN-gated, room code + QR, live scores |
+| `/admin/login` | Admin login — Supabase Auth email/password |
+| `/admin/questions` | Question CRUD — add, edit, delete, reorder |
+| `/admin/leaderboard` | Extended leaderboard with session + timestamp columns |
+| `/admin/sessions` | Session list + per-session participant detail |
 | `/leaderboard` | Global leaderboard — scores from Supabase, filterable by lecture |
 
 ### Lecture slugs

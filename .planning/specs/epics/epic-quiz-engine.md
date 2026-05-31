@@ -23,10 +23,10 @@ Without real-time session management, the leaderboard is just a static table of 
 
 | Role | Access | View |
 |---|---|---|
-| **Presenter / Admin** | PIN-protected (`/admin`) | Big-screen dashboard — session control, live scores, leaderboard |
+| **Presenter / Admin** | Supabase Auth (email/password) via `/admin/login` | Big-screen dashboard — session control, live scores, leaderboard |
 | **Participant** | Open, join via room code | Mobile-friendly — name + avatar picker, quiz flow, own score |
 
-Admin PIN is a single env var (`ADMIN_PIN`). No accounts, no Supabase auth.
+Admin auth is handled entirely by `epic-admin` (Supabase Auth + `@supabase/ssr` middleware). The quiz session dashboard at `/admin/sessions` is protected by the same session cookie — no separate PIN.
 
 ---
 
@@ -173,13 +173,13 @@ create table quiz_scores (
 - [ ] `/quiz` self-paced flow works without a session (no room code, no Realtime).
 - [ ] `/leaderboard` shows all-time scores with lecture filter tabs.
 - [ ] Supabase unreachable → score card still renders; error shown as toast.
-- [ ] `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `ADMIN_PIN` are the only required env vars.
+- [ ] `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are the only required env vars for participants.
 
 ---
 
 ## Key Design Decisions
 
-- **Admin PIN in env var** — simple, zero-dependency, sufficient for a trusted internal audience.
+- **Supabase Auth** — admin protected via email/password + cookie session (`@supabase/ssr`). See `epic-admin` for full auth implementation.
 - **Presenter controls the pace** — participants can't advance questions themselves during a live session. This keeps the room in sync.
 - **DiceBear avatars** — fully client-side SVG generation, no external image requests, no storage needed.
 - **Supabase Realtime** for presence + answer streaming — fits the existing Supabase dependency, no extra infra.
