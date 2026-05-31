@@ -43,6 +43,7 @@ const STORAGE_KEY = "theme";
 
 function applyTheme(theme: Theme) {
   document.documentElement.setAttribute("data-theme", theme);
+  document.documentElement.classList.toggle("dark", theme === "dark");
   try {
     localStorage.setItem(STORAGE_KEY, theme);
   } catch {
@@ -76,6 +77,7 @@ export default function ThemeProvider({
     if (stored && stored !== theme) {
       setThemeState(stored);
       document.documentElement.setAttribute("data-theme", stored);
+      document.documentElement.classList.toggle("dark", stored === "dark");
     }
     // Only run on mount — intentional empty-ish dep array via eslint disable.
     // eslint-disable-next-line react-hooks/exhaustive-deps

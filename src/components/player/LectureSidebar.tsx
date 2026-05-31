@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import type { Lecture } from "@/content/types";
 import { LECTURES } from "@/content/lectures";
@@ -53,6 +54,7 @@ export default function LectureSidebar({
   onJump,
 }: ILectureSidebarProps) {
   const { getResumeStep, progress } = useCourseProgress();
+  const [courseOpen, setCourseOpen] = useState(true);
 
   const currentLectureIndex = LECTURES.findIndex((l) => l.slug === lecture.slug);
 
@@ -63,8 +65,17 @@ export default function LectureSidebar({
 
       {/* Sidebar drawer */}
       <aside className="sidebar" aria-label="Course navigation">
-        {/* Section 1: Sibling lectures */}
-        <div className="side-title">COURSE CONTENTS</div>
+        {/* Section 1: Sibling lectures (collapsible) */}
+        <button
+          className="side-title side-title-btn"
+          onClick={() => setCourseOpen((v) => !v)}
+          aria-expanded={courseOpen}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: 0, cursor: "pointer" }}
+        >
+          COURSE CONTENTS
+          <span style={{ opacity: 0.5, fontSize: 10, transform: courseOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", marginRight: 2 }}>▲</span>
+        </button>
+        {courseOpen && (
         <nav role="navigation" aria-label="All lectures">
           <ol className="side-list">
             {LECTURES.map((sibling, i) => {
@@ -111,6 +122,7 @@ export default function LectureSidebar({
             })}
           </ol>
         </nav>
+        )}
 
         {/* Divider */}
         <div style={{ height: "1px", background: "var(--border-subtle)", margin: "16px 0" }} />

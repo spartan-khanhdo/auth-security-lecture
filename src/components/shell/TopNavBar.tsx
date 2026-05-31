@@ -78,6 +78,9 @@ export default function TopNavBar() {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
 
+  // Lecture pages have their own PlayerTopBar — hide global nav there
+  if (pathname.startsWith("/lecture/")) return null;
+
   return (
     <header
       style={{

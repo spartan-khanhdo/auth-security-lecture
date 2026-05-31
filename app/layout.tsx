@@ -39,7 +39,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-theme="dark"
-      className={`${spaceGrotesk.variable} ${dmSans.variable} ${jetbrainsMono.variable}`}
+      className={`dark ${spaceGrotesk.variable} ${dmSans.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
       <body className="antialiased">
