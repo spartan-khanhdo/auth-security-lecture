@@ -70,12 +70,12 @@ export const serviceToService: Lecture = {
       body: `When OAuth client credentials don't fit, consider:\n\n- **mTLS (mutual TLS):** strong identity at the transport layer; great for zero-trust / service mesh environments. Both sides present certificates; the handshake fails if either cert is invalid or expired.\n- **Service mesh identity (Istio/Linkerd):** automates cert rotation and policy enforcement via sidecars. The application code stays credential-free — the mesh handles it.\n- **API keys:** simplest to implement, but weaker governance (rotation, scoping, audit trail) unless you build significant infrastructure around them.\n- **JWT assertion / private_key_jwt:** avoids shared secrets entirely; the client signs a JWT with its private key instead of sending a \`client_secret\`. Better for high-security clients.\n\n> **Good mental model:** OAuth 2.0 tells you *how to obtain a token*; JWT tells you *what the token looks like*; Service B's policy tells you *what the caller can do*.`,
     },
 
-    // Unit 6 — OAuthFlowPlayer demo (mapped from MTLSVisualizer)
+    // Unit 6 — mTLS Handshake Visualizer
     {
       id: "service-to-service-unit-6",
       type: "demo",
-      title: "OAuth Flow Player: Client Credentials",
-      component: "OAuthFlowPlayer",
+      title: "mTLS Handshake Visualizer",
+      component: "MTLSVisualizer",
     },
 
     // No quiz units — service-to-service ships without trailing quizzes (intentional per plan).

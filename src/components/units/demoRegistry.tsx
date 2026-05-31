@@ -71,4 +71,8 @@ export const demoRegistry: Record<
     () => import('@/components/demos/StorageAttackMatrix'),
     { ssr: false, loading: DemoSkeleton }
   ),
+  MTLSVisualizer: dynamic(
+    () => import('@/components/demos/MTLSVisualizer'),
+    { ssr: false, loading: DemoSkeleton }
+  ),
 };

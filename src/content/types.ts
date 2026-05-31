@@ -33,7 +33,8 @@ export interface DemoUnit extends BaseUnit {
     | 'XSSSandbox'
     | 'DecisionTracer'
     | 'TokenLifetimeVisualizer'
-    | 'StorageAttackMatrix';
+    | 'StorageAttackMatrix'
+    | 'MTLSVisualizer';
   props?: Record<string, unknown>;
 }
 
