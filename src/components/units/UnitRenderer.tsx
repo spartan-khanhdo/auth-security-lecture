@@ -2,6 +2,7 @@ import type { Unit } from '@/content/types';
 import Callout from '@/components/ui/Callout';
 import ProseRenderer from './ProseRenderer';
 import DemoRenderer from './DemoRenderer';
+import DiagramRenderer from './DiagramRenderer';
 
 interface UnitRendererProps {
   unit: Unit;
@@ -16,11 +17,7 @@ export default function UnitRenderer({ unit }: UnitRendererProps) {
       return <DemoRenderer unit={unit} />;
 
     case 'diagram':
-      return (
-        <div className="max-w-3xl mx-auto w-full">
-          <Callout tone="info" text={`diagram renderer not yet implemented`} />
-        </div>
-      );
+      return <DiagramRenderer unit={unit} />;
 
     case 'code':
       return (
