@@ -78,8 +78,9 @@ export default function TopNavBar() {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
 
-  // Lecture pages have their own PlayerTopBar — hide global nav there
-  if (pathname.startsWith("/lecture/")) return null;
+  // Lecture pages have their own PlayerTopBar — hide global nav there.
+  // Admin pages have their own sidebar — hide global nav there too.
+  if (pathname.startsWith("/lecture/") || pathname.startsWith("/admin")) return null;
 
   return (
     <header
@@ -171,6 +172,30 @@ export default function TopNavBar() {
             }}
           >
             Quiz
+          </Link>
+
+          <Link
+            href="/admin/login"
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              color: "var(--text-faint)",
+              textDecoration: "none",
+              padding: "4px 10px",
+              borderRadius: "var(--radius)",
+              border: "1px solid var(--border-subtle)",
+              transition: "color 0.2s var(--ease), border-color 0.2s var(--ease)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)";
+              (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border-strong)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-faint)";
+              (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border-subtle)";
+            }}
+          >
+            Admin
           </Link>
 
           {/* Theme toggle */}

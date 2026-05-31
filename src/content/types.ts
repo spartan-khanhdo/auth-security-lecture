@@ -80,3 +80,24 @@ export interface Lecture {
   /** When true the card renders as muted "Coming soon" (non-interactive) */
   comingSoon: boolean;
 }
+
+// ---------------------------------------------------------------------------
+// Supabase `questions` table types
+// Used by src/lib/questions-admin.ts (admin CRUD) and the quiz engine.
+// ---------------------------------------------------------------------------
+
+export interface QuestionInsert {
+  lecture_slug: LectureSlug;
+  question: string;
+  options: string[];     // exactly 4 items
+  correct_idx: number;   // 0–3
+  explanation: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  order_idx: number;
+}
+
+export interface Question extends QuestionInsert {
+  id: string;
+  created_at: string;
+  updated_at: string;
+}
