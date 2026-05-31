@@ -56,13 +56,15 @@ export interface QuizUnit extends BaseUnit {
 
 export type Unit = ProseUnit | DiagramUnit | DemoUnit | CodeUnit | QuizUnit;
 
+export type LectureSlug =
+  | 'oauth-authn'
+  | 'jwt-best-practices'
+  | 'service-to-service'
+  | 'security-fundamentals'
+  | 'gaps';
+
 export interface Lecture {
-  slug:
-    | 'oauth-authn'
-    | 'jwt-best-practices'
-    | 'service-to-service'
-    | 'security-fundamentals'
-    | 'gaps';
+  slug: LectureSlug;
   title: string;
   subtitle: string;
   /** Short marketing line shown on the syllabus card (distinct from subtitle) */
