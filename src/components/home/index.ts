@@ -4,3 +4,4 @@ export { default as LectureCardIcon } from "@/components/home/LectureCardIcon";
 export { default as LiveQuizCTA } from "@/components/home/LiveQuizCTA";
 export { default as CourseFooter } from "@/components/home/CourseFooter";
 export { default as CourseProgressLabel } from "@/components/home/CourseProgressLabel";
+export { default as CourseProgressBar } from "@/components/home/CourseProgressBar";

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { authors } from "@/content/author";
+import CourseProgressBar from "@/components/home/CourseProgressBar";
 
 const TOPICS = [
   "OAuth 2.0",
@@ -336,6 +337,10 @@ export default function LandingHero() {
           >
             <Link href="/quiz">Jump to Quiz</Link>
           </Button>
+
+          {/* TODO(progress): CourseProgressBar shows static 0/5 until
+              useCourseProgress() is wired in epic-navigation-shell */}
+          <CourseProgressBar />
         </div>
 
         {/* Hero author chips */}
