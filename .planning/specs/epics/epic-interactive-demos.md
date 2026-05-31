@@ -1,7 +1,7 @@
 # Epic: Interactive Demos
 
 **Slug:** epic-interactive-demos
-**Status:** 🔜 Ready for planning
+**Status:** ✅ Done
 **Depends on:** epic-content-units (demoRegistry + DemoRenderer)
 **Estimated complexity:** XL
 
