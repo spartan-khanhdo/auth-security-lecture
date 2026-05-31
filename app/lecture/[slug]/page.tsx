@@ -1,12 +1,18 @@
+import { notFound } from "next/navigation";
+import { getLecture } from "@/content/queries";
+import LecturePlayer from "@/components/player/LecturePlayer";
+
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
 export default async function LecturePage({ params }: Props) {
   const { slug } = await params;
-  return (
-    <main>
-      <h1>Lecture: {slug}</h1>
-    </main>
-  );
+  const lecture = getLecture(slug);
+
+  if (!lecture) {
+    notFound();
+  }
+
+  return <LecturePlayer lecture={lecture} />;
 }
