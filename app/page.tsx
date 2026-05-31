@@ -1,5 +1,7 @@
 import LandingHero from "@/components/landing/LandingHero";
 import AuthorCard from "@/components/landing/AuthorCard";
+import LectureSyllabus from "@/components/home/LectureSyllabus";
+import CourseFooter from "@/components/home/CourseFooter";
 
 export default function HomePage() {
   return (
@@ -7,6 +9,8 @@ export default function HomePage() {
       <div className="wrap">
         <LandingHero />
         <AuthorCard />
+        <LectureSyllabus />
+        <CourseFooter />
       </div>
     </main>
   );

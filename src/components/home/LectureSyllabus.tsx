@@ -1,5 +1,6 @@
 import { lectures } from "@/content/lectures";
 import LectureCard from "@/components/home/LectureCard";
+import LiveQuizCTA from "@/components/home/LiveQuizCTA";
 
 export default function LectureSyllabus() {
   return (
@@ -16,6 +17,8 @@ export default function LectureSyllabus() {
           <LectureCard key={lecture.slug} lecture={lecture} index={i} />
         ))}
       </div>
+
+      <LiveQuizCTA />
     </section>
   );
 }
