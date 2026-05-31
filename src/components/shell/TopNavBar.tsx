@@ -1,10 +1,8 @@
-"use client"; // usePathname + useState require a Client Component
+"use client"; // usePathname requires a Client Component
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
-
-type Theme = "dark" | "light";
+import { useTheme } from "@/components/shell/ThemeProvider";
 
 function ShieldIcon() {
   return (
@@ -78,21 +76,7 @@ function MoonIcon() {
 
 export default function TopNavBar() {
   const pathname = usePathname();
-  const [theme, setTheme] = useState<Theme>("dark");
-
-  useEffect(() => {
-    // Sync initial state from the html attribute set server-side
-    const current = document.documentElement.getAttribute("data-theme");
-    if (current === "light" || current === "dark") {
-      setTheme(current);
-    }
-  }, []);
-
-  function toggleTheme() {
-    const next: Theme = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    document.documentElement.setAttribute("data-theme", next);
-  }
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <header
