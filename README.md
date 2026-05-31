@@ -88,3 +88,4 @@ app/
 ## Planning Docs
 
 Architecture decisions and locked choices live in `.planning/specs/auth-security-website.md`. Each feature epic has its own spec under `.planning/specs/epics/`. Implementation plans (one per epic, written before coding starts) are in `.planning/plans/`. Read the relevant spec before making any structural change.
+# auth-security-lecture
