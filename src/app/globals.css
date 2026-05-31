@@ -2,58 +2,263 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────
+   DESIGN TOKENS — Dark (default / :root)
+───────────────────────────────────────────────────────── */
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
+  :root,
+  [data-theme="dark"] {
+    /* Page backgrounds */
+    --bg: #14141f;
+    --bg-deep: #0f0f18;
+
+    /* Surfaces */
+    --surface: #1d1d2b;
+    --surface-2: #25263a;
+    --surface-3: #2e2f47;
+
+    /* Borders */
+    --border-subtle: rgba(255, 255, 255, 0.085);
+    --border-strong: rgba(255, 255, 255, 0.16);
+
+    /* Text */
+    --text: #edecf4;
+    --text-dim: #a3a4bb;
+    --text-faint: #6f7089;
+
+    /* Primary purple */
+    --primary: #8b7cf6;
+    --primary-2: #a99bff;
+    --primary-soft: rgba(139, 124, 246, 0.16);
+    --primary-soft-2: rgba(139, 124, 246, 0.38);
+
+    /* Accent colors */
+    --pink: #ef7ee4;
+    --blue: #57a9ff;
+    --orange: #ff9166;
+    --green: #46d6a0;
+    --amber: #f7c14b;
+    --red: #ff6b7a;
+
+    /* Code */
+    --code-bg: #16161f;
+
+    /* Ambient glow */
+    --glow-1: rgba(139, 124, 246, 0.2);
+    --glow-2: rgba(236, 110, 224, 0.16);
+
+    /* Grid */
+    --grid: rgba(255, 255, 255, 0.035);
+
+    /* ── shadcn token mapping (dark) ── */
+    --background: 234 28% 10%;       /* #14141f */
+    --foreground: 248 12% 95%;       /* #edecf4 */
+    --card: 235 22% 14%;             /* #1d1d2b */
+    --card-foreground: 248 12% 95%;
+    --popover: 235 22% 14%;
+    --popover-foreground: 248 12% 95%;
+    --primary-hsl: 249 87% 72%;      /* #8b7cf6 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 237 21% 19%;        /* #25263a */
+    --secondary-foreground: 248 12% 95%;
+    --muted: 237 21% 19%;
+    --muted-foreground: 238 12% 67%; /* #a3a4bb */
+    --accent: 237 21% 19%;
+    --accent-foreground: 248 12% 95%;
+    --destructive: 356 100% 71%;     /* #ff6b7a */
+    --destructive-foreground: 0 0% 100%;
+    --border: 237 21% 19%;
+    --input: 237 21% 19%;
+    --ring: 249 87% 72%;
     --radius: 0.5rem;
   }
 
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+  [data-theme="light"] {
+    /* Page backgrounds */
+    --bg: #f5f4fc;
+    --bg-deep: #ecebf7;
+
+    /* Surfaces */
+    --surface: #ffffff;
+    --surface-2: #f4f2fd;
+    --surface-3: #eae7f7;
+
+    /* Borders */
+    --border-subtle: rgba(30, 24, 70, 0.1);
+    --border-strong: rgba(30, 24, 70, 0.18);
+
+    /* Text */
+    --text: #211f33;
+    --text-dim: #5d5c76;
+    --text-faint: #908fa8;
+
+    /* Primary purple (slightly darker for contrast in light) */
+    --primary: #6d5be8;
+    --primary-2: #5a47d6;
+    --primary-soft: rgba(109, 91, 232, 0.12);
+    --primary-soft-2: rgba(109, 91, 232, 0.3);
+
+    /* Accent colors */
+    --pink: #d651c4;
+    --blue: #2f8de0;
+    --orange: #e07040;
+    --green: #18a877;
+    --amber: #cc9410;
+    --red: #e0455a;
+
+    /* Code */
+    --code-bg: #f7f6fd;
+
+    /* Ambient glow (lighter) */
+    --glow-1: rgba(109, 91, 232, 0.12);
+    --glow-2: rgba(214, 81, 196, 0.1);
+
+    /* Grid */
+    --grid: rgba(30, 24, 70, 0.035);
+
+    /* ── shadcn token mapping (light) ── */
+    --background: 246 43% 97%;       /* #f5f4fc */
+    --foreground: 247 24% 16%;       /* #211f33 */
+    --card: 0 0% 100%;
+    --card-foreground: 247 24% 16%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 247 24% 16%;
+    --primary-hsl: 252 75% 63%;      /* #6d5be8 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 249 68% 96%;        /* #f4f2fd */
+    --secondary-foreground: 247 24% 16%;
+    --muted: 249 68% 96%;
+    --muted-foreground: 245 11% 57%; /* #5d5c76 */
+    --accent: 249 48% 93%;           /* #eae7f7 */
+    --accent-foreground: 247 24% 16%;
+    --destructive: 352 71% 57%;      /* #e0455a */
+    --destructive-foreground: 0 0% 100%;
+    --border: 249 68% 96%;
+    --input: 249 68% 96%;
+    --ring: 252 75% 63%;
+    --radius: 0.5rem;
   }
 }
 
+/* ─────────────────────────────────────────────────────────
+   RADIUS SCALE
+───────────────────────────────────────────────────────── */
+:root {
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 26px;
+  --radius-xl: 34px;
+  --radius-pill: 999px;
+  --radius-brand: 9px;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SHADOW SCALE
+───────────────────────────────────────────────────────── */
+:root {
+  --shadow-sm: 0 1px 2px rgba(10, 8, 30, 0.18), 0 2px 8px rgba(10, 8, 30, 0.1);
+  --shadow-md: 0 8px 28px rgba(10, 8, 30, 0.28);
+  --shadow-lg: 0 24px 70px rgba(10, 8, 30, 0.4);
+  --shadow-glow: 0 10px 40px -8px var(--primary-soft-2);
+}
+
+/* ─────────────────────────────────────────────────────────
+   ANIMATION / EASING
+───────────────────────────────────────────────────────── */
+:root {
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ─────────────────────────────────────────────────────────
+   CANDY PILL COLORS (theme-invariant)
+───────────────────────────────────────────────────────── */
+:root {
+  --pill-person: #ff8a5b;
+  --pill-role: #ec6ee0;
+  --pill-object: #4aa3ff;
+  --pill-query: #8b7cf6;
+}
+
+/* ─────────────────────────────────────────────────────────
+   AMBIENT PAGE GLOW (body::before)
+───────────────────────────────────────────────────────── */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(60vw 50vh at 78% -8%, var(--glow-1), transparent 60%),
+    radial-gradient(55vw 45vh at 8% 12%, var(--glow-2), transparent 60%);
+}
+
+/* ─────────────────────────────────────────────────────────
+   BASE STYLES
+───────────────────────────────────────────────────────── */
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
+
+  html {
+    background-color: var(--bg);
+    color: var(--text);
+    transition: background-color 0.5s var(--ease), color 0.5s var(--ease);
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply antialiased;
+    font-family: var(--font-body), system-ui, sans-serif;
+    line-height: 1.6;
+    background-color: var(--bg);
+    color: var(--text);
+    position: relative;
+    z-index: 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display), system-ui, sans-serif;
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+  }
+
+  code,
+  pre,
+  kbd,
+  samp {
+    font-family: var(--font-mono), ui-monospace, monospace;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   LAYOUT UTILITIES
+───────────────────────────────────────────────────────── */
+@layer utilities {
+  .wrap {
+    width: min(1120px, 92vw);
+    margin-inline: auto;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   REDUCED MOTION
+───────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }
