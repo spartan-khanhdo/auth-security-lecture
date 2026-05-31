@@ -190,6 +190,7 @@ export default function TopNavBar() {
           <button
             onClick={toggleTheme}
             aria-label="Toggle light/dark theme"
+            className="theme-toggle-btn"
             style={{
               width: 38,
               height: 38,
@@ -201,11 +202,18 @@ export default function TopNavBar() {
               placeItems: "center",
               cursor: "pointer",
               flexShrink: 0,
-              transition: "background 0.2s var(--ease), border-color 0.2s var(--ease)",
+              transition: "transform 0.3s var(--ease-back), background 0.3s var(--ease)",
             }}
           >
             {theme === "dark" ? <SunIcon /> : <MoonIcon />}
           </button>
+
+          <style>{`
+            .theme-toggle-btn:hover {
+              transform: rotate(-18deg) scale(1.06);
+              background: var(--surface-3) !important;
+            }
+          `}</style>
         </div>
       </nav>
     </header>

@@ -193,6 +193,7 @@ body::before {
   background:
     radial-gradient(60vw 50vh at 78% -8%, var(--glow-1), transparent 60%),
     radial-gradient(55vw 45vh at 8% 12%, var(--glow-2), transparent 60%);
+  transition: opacity 0.5s var(--ease);
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -248,6 +249,24 @@ body::before {
     width: min(1120px, 92vw);
     margin-inline: auto;
   }
+}
+
+/* ─────────────────────────────────────────────────────────
+   ANIMATIONS
+───────────────────────────────────────────────────────── */
+@keyframes dotpulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.45; transform: scale(0.7); }
+}
+
+.dotpulse {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--green);
+  flex-shrink: 0;
+  animation: dotpulse 2s ease-in-out infinite;
 }
 
 /* ─────────────────────────────────────────────────────────
