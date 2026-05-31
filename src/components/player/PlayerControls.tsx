@@ -24,17 +24,19 @@ export default function PlayerControls({
       : "Finish"
     : "Next →";
 
-  const prevLabel = isFirst ? "Syllabus" : "Back";
-
   return (
     <div className="footernav">
-      <button
-        className="btn btn-ghost"
-        onClick={onPrev}
-        aria-label={isFirst ? "Back to syllabus" : "Previous step"}
-      >
-        {prevLabel}
-      </button>
+      {!isFirst ? (
+        <button
+          className="btn btn-ghost"
+          onClick={onPrev}
+          aria-label="Previous step"
+        >
+          ← Back
+        </button>
+      ) : (
+        <span />
+      )}
 
       <div className="fn-dots" aria-hidden="true">
         {Array.from({ length: totalSteps }).map((_, i) => {
