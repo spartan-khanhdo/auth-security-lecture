@@ -107,6 +107,19 @@ Always read before planning:
 5. **Flag conflicts.** If the request contradicts `CLAUDE.md` or an existing epic, stop and surface it before planning.
 6. **No code in plans.** Pseudocode / type sketches are fine. Full implementations belong in executor agents.
 
+## Design Recheck
+
+Only add a `## Design URL` section to a FE plan when the spec **originated from a Claude design file** — i.e. the user shared a `https://api.anthropic.com/v1/design/h/...` URL as the source.
+
+When that URL is present, record it at the top of the FE plan so fe-executor can fetch it after all phases:
+
+```markdown
+## Design URL
+https://api.anthropic.com/v1/design/h/<id>?open_file=<filename>
+```
+
+When the spec did NOT come from a Claude design file, omit `## Design URL` entirely. The fe-executor will skip the recheck automatically.
+
 ## When to Refuse
 
 Refuse (and ask for clarification) when:

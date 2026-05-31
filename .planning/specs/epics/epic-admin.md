@@ -1,7 +1,7 @@
 # Epic: Admin Panel
 
 **Slug:** epic-admin
-**Status:** Ready for planning
+**Status:** ⏳ Blocked on epic-quiz-engine, Supabase setup
 **Depends on:** epic-content-data, epic-navigation-shell, epic-quiz-engine
 **Estimated complexity:** L
 

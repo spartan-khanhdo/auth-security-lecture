@@ -1,7 +1,7 @@
 # Epic: Content Data Layer & Lecture Registry
 
 **Slug:** epic-content-data
-**Status:** Ready for planning
+**Status:** ✅ Done
 **Depends on:** none
 **Estimated complexity:** S
 

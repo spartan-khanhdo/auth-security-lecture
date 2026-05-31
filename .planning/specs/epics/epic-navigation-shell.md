@@ -1,7 +1,7 @@
 # Epic: Global Navigation Shell & Course Progress
 
 **Slug:** epic-navigation-shell
-**Status:** Ready for planning
+**Status:** ✅ Done
 **Depends on:** epic-content-data
 **Estimated complexity:** M
 

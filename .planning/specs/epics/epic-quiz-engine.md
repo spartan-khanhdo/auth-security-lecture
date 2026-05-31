@@ -1,7 +1,7 @@
 # Epic: Quiz Engine, Live Session & Leaderboard
 
 **Slug:** epic-quiz-engine
-**Status:** Ready for planning
+**Status:** ⏳ Blocked on epic-lecture-player, Supabase setup
 **Depends on:** epic-content-data, epic-content-units, epic-lecture-player, epic-navigation-shell
 **Estimated complexity:** XL
 

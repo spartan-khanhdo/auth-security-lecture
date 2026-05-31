@@ -1,7 +1,7 @@
 # Epic: Course Home (Index Page)
 
 **Slug:** epic-course-home
-**Status:** Ready for planning
+**Status:** ✅ Done
 **Depends on:** epic-content-data, epic-navigation-shell
 **Estimated complexity:** S
 

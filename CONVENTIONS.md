@@ -62,3 +62,23 @@ All Supabase and admin secrets go in `.env.local`. Never commit `.env.local`. Th
 # copy and fill in values
 cp .env.local.example .env.local
 ```
+
+## 7. Design Recheck (only when spec came from a Claude design)
+
+When a FE plan includes a `## Design URL` section, the fe-executor **must** recheck the implementation against that design before closing the task.
+
+**How it works:**
+1. feature-planner records the Claude design URL in the plan under `## Design URL` when the spec originated from a Claude design file
+2. fe-executor implements all plan phases
+3. fe-executor fetches the design URL, diffs against the implementation, produces a gap analysis
+4. All fixable gaps are corrected in the same session
+5. Unfixable gaps are flagged with `⚠️ DEFERRED: <reason>`
+6. Fixes committed as: `fix(<scope>): align with Claude design spec`
+
+**When there is no `## Design URL` in the plan** — skip the recheck entirely. Do not ask for a URL.
+
+**For feature-planner:** If the user provides a Claude design URL when requesting the plan, record it at the top of the FE plan:
+```markdown
+## Design URL
+https://api.anthropic.com/v1/design/h/<id>?open_file=<filename>
+```

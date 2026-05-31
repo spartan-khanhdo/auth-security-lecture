@@ -1,7 +1,7 @@
 # Epic: Lecture Player (Step-Through Engine)
 
 **Slug:** epic-lecture-player
-**Status:** Ready for planning
+**Status:** 🔜 Up next
 **Depends on:** epic-content-data, epic-content-units, epic-navigation-shell
 **Estimated complexity:** L
 

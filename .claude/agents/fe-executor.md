@@ -37,6 +37,30 @@ Read before executing:
    - `npm run build` — compiles successfully
 5. **Never break the build.** A phase that would break the build must be fixed before committing.
 6. **Use existing patterns.** Before writing a new hook or component, check if a similar one exists in `src/`.
+7. **Design recheck is mandatory after all phases complete.** See below.
+
+## Design Recheck — When the Plan Includes a Design URL
+
+Run a design recheck **only when the plan has a `## Design URL` section**. This means the spec originated from a Claude design file and the implementation must be validated against it.
+
+### How to run it
+
+1. Read the `## Design URL` from the plan
+2. Fetch that URL — read the design file fully (layout, colors, typography, spacing, interactions, copy)
+3. Read every file modified during this execution
+4. Produce a **gap analysis table**:
+
+| # | Gap | Design shows | Current impl | Fix? |
+|---|---|---|---|---|
+
+5. Fix every gap that is buildable without a new dependency
+6. For gaps that require a new package or a separate epic, flag them clearly: `⚠️ DEFERRED: <reason>`
+7. Verify fixes: `npx tsc --noEmit` + `npm run lint` + `npm run build`
+8. Commit fixes as: `fix(<scope>): align with Claude design spec`
+
+### When the plan has NO `## Design URL`
+
+Skip the recheck entirely. Do not ask the user for a URL. Simply finish with the build/lint summary.
 
 ## Component Conventions
 

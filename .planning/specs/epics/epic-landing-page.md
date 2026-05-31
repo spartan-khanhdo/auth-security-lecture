@@ -1,7 +1,7 @@
 # Epic: Landing Page
 
 **Slug:** epic-landing-page
-**Status:** Ready for planning
+**Status:** ✅ Done
 **Depends on:** epic-navigation-shell (TopNavBar, theme toggle)
 **Estimated complexity:** S
 
