@@ -1,9 +1,9 @@
 import type { Unit } from '@/content/types';
-import Callout from '@/components/ui/Callout';
 import ProseRenderer from './ProseRenderer';
 import DemoRenderer from './DemoRenderer';
 import DiagramRenderer from './DiagramRenderer';
 import CodeRenderer from './CodeRenderer';
+import QuizRenderer from './QuizRenderer';
 
 interface UnitRendererProps {
   unit: Unit;
@@ -24,11 +24,7 @@ export default function UnitRenderer({ unit }: UnitRendererProps) {
       return <CodeRenderer unit={unit} />;
 
     case 'quiz':
-      return (
-        <div className="max-w-3xl mx-auto w-full">
-          <Callout tone="info" text={`quiz renderer not yet implemented`} />
-        </div>
-      );
+      return <QuizRenderer unit={unit} />;
 
     default: {
       const _exhaustive: never = unit;
