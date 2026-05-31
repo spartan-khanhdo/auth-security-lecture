@@ -61,16 +61,6 @@ export default function PlayerTopBar({
           <HamburgerIcon />
         </button>
 
-        <Link
-          href="/course"
-          className="tb-crumb"
-          style={{ display: "flex", alignItems: "center", gap: 5, textDecoration: "none" }}
-          aria-label="Back to course"
-        >
-          <BackArrowIcon />
-          Course
-        </Link>
-
         <span className="brand-lecture">{lecture.title}</span>
       </div>
 

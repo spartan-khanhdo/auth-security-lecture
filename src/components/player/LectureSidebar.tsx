@@ -106,15 +106,10 @@ export default function LectureSidebar({
                     <span className="si-txt">{sibling.title}</span>
                   </Link>
 
-                  {/* Step indicators for active lecture */}
-                  {isActive && (
-                    <div className="si-steps" aria-hidden="true">
-                      {Array.from({ length: lecture.units.length + 1 }).map((_, s) => (
-                        <span
-                          key={s}
-                          className={`si-step${s === stepIndex ? " on" : ""}${s < stepIndex ? " past" : ""}`}
-                        />
-                      ))}
+                  {/* Progress % for this lecture */}
+                  {siblingProgress && siblingProgress.totalSteps > 0 && (
+                    <div className="si-pct" aria-label={`${Math.round((siblingProgress.lastStep / (siblingProgress.totalSteps - 1)) * 100)}% complete`}>
+                      {Math.round((siblingProgress.lastStep / (siblingProgress.totalSteps - 1)) * 100)}%
                     </div>
                   )}
                 </li>

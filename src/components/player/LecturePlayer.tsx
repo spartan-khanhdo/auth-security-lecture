@@ -42,10 +42,6 @@ export default function LecturePlayer({ lecture }: ILecturePlayerProps) {
   const stageRef = useRef<HTMLDivElement | null>(null);
   const didMountRef = useRef(false);
 
-  // Set sidebar default based on viewport after mount
-  useEffect(() => {
-    setSideOpen(window.innerWidth >= 980);
-  }, []);
 
   // Write corrected step back if clamped on mount
   useEffect(() => {
