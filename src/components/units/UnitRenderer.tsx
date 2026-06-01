@@ -4,6 +4,8 @@ import DemoRenderer from './DemoRenderer';
 import DiagramRenderer from './DiagramRenderer';
 import CodeRenderer from './CodeRenderer';
 import QuizRenderer from './QuizRenderer';
+import MediaRenderer from './MediaRenderer';
+import TwoColumnRenderer from './TwoColumnRenderer';
 
 interface UnitRendererProps {
   unit: Unit;
@@ -25,6 +27,12 @@ export default function UnitRenderer({ unit }: UnitRendererProps) {
 
     case 'quiz':
       return <QuizRenderer unit={unit} />;
+
+    case 'media':
+      return <MediaRenderer unit={unit} />;
+
+    case 'two-column':
+      return <TwoColumnRenderer unit={unit} />;
 
     default: {
       const _exhaustive: never = unit;

@@ -2,33 +2,25 @@ import type { Lecture } from "@/content/types";
 
 export const gaps: Lecture = {
   slug: "gaps",
-  title: "OIDC, CSRF, RBAC/ABAC",
+  title: "What's Missing: Fill These Gaps",
   subtitle:
-    "Tie it all together with OpenID Connect, cross-site request forgery defenses, and role/attribute-based access control.",
-  tagline: "The missing pieces: identity layers, CSRF tokens, and fine-grained access control.",
+    "Tie it all together with cross-site request forgery defenses and role/attribute-based access control.",
+  tagline: "The missing pieces: CSRF tokens and fine-grained access control.",
   estMinutes: 10,
-  topics: ["OpenID Connect", "CSRF Defense", "RBAC", "ABAC"],
+  topics: ["CSRF Defense", "RBAC", "ABAC"],
   color: "green",
   iconKey: "puzzle",
   comingSoon: false,
   units: [
-    // Unit 0 — OIDC: The Identity Layer
-    {
-      id: "gaps-unit-0",
-      type: "prose",
-      title: "OIDC: The Identity Layer",
-      body: `> **OAuth 2.0 handles authorization. OIDC handles identity. They're not the same thing.**\n>\n> OAuth 2.0 answers "can this app access my data?" — it says nothing about *who* you are. OIDC is a thin identity layer built *on top of* OAuth 2.0 that adds the **ID token**: a JWT that tells your app who just logged in.\n\n**The one-line difference:**\n\n|  | OAuth 2.0 | OIDC |\n|---|---|---|\n| **Purpose** | Delegated authorization | User authentication / identity |\n| **Token issued** | Access token | Access token + ID token |\n| **Answers** | "Can this app read my Drive?" | "Who just logged in?" |\n\n**Rule:** "Login with Google / GitHub / Microsoft" = OIDC, not plain OAuth 2.0. The ID token is for your app to read identity claims (\`sub\`, \`email\`, \`name\`). The access token is for calling APIs. **Never use the ID token as an API bearer token.**\n\nEvery OIDC provider publishes a discovery endpoint:\n\n\`\`\`\nhttps://accounts.google.com/.well-known/openid-configuration\n\`\`\`\n\nYour app fetches this once to get \`authorization_endpoint\`, \`token_endpoint\`, \`jwks_uri\`. No hardcoding needed.`,
-    },
-
-    // Unit 1 — CSRF
+    // Unit 1 — CSRF (was gaps-unit-1, kept stable)
     {
       id: "gaps-unit-1",
       type: "prose",
       title: "CSRF: Cross-Site Request Forgery",
-      body: `**What it is:** a malicious site tricks the user's browser into making a credentialed request to your API — the browser automatically sends cookies, so the server thinks it's legitimate.\n\n**Classic example:** you're logged into your bank. A malicious page has \`<img src="https://bank.com/transfer?to=attacker&amount=1000">\`. Your browser fires the request with your session cookie. The bank sees a valid session and processes it.\n\n**Fix checklist:**\n\n- \`SameSite=Strict\` on cookies — browser won't send them on cross-site requests\n- CSRF tokens — server issues a secret per session; every mutating request must echo it back\n- Tokens sent via \`Authorization: Bearer\` header are naturally CSRF-safe — a cross-site page can't set custom headers\n\n> This is exactly why the JWT best-practices section sets \`SameSite=Strict\` on the refresh cookie — it's not just style, it's CSRF protection baked in.`,
+      body: `**What it is:** a malicious site tricks the user's browser into making a credentialed request to your API — the browser automatically sends cookies, so the server thinks it's legitimate.\n\n**Classic example:** you're logged into your bank. A malicious page has \`<img src="https://bank.com/transfer?to=attacker&amount=1000">\`. Your browser fires the request with your session cookie. The bank sees a valid session and processes it.\n\n**Fix checklist:**\n\n- \`SameSite=Strict\` on cookies — browser won't send them on cross-site requests\n- CSRF tokens — server issues a secret per session; every mutating request must echo it back\n- Tokens sent via \`Authorization: Bearer\` header are naturally CSRF-safe — a cross-site page can't set custom headers\n\n> 💡 This is exactly why Lecture 2 sets \`SameSite=Strict\` on the refresh cookie — it's not just style, it's CSRF protection baked in.`,
     },
 
-    // Unit 2 — RBAC vs ABAC
+    // Unit 2 — RBAC vs ABAC (was gaps-unit-2, kept stable)
     {
       id: "gaps-unit-2",
       type: "prose",
@@ -36,7 +28,7 @@ export const gaps: Lecture = {
       body: `> AuthZ says *what someone can do* — but how does your system decide that? That's where RBAC and ABAC come in.\n\n**RBAC (Role-Based Access Control)** — permissions tied to roles, roles assigned to users.\n\n\`\`\`\nadmin   → full access\neditor  → read + write\nviewer  → read only\n\`\`\`\n\nSimple, easy to reason about. Most apps start here. **Limitation:** roles bloat fast as edge cases pile up — "editors can only edit *their own* posts" requires either a new role per user or a different model entirely.\n\n**ABAC (Attribute-Based Access Control)** — permissions evaluated from policies combining multiple attributes (user, resource, environment).\n\n\`\`\`\n"allow if user.department == resource.department AND action == 'read' AND time.hour < 18"\n\`\`\`\n\nMore flexible, handles complex rules. Harder to debug and audit. Common in enterprise / compliance-heavy systems.\n\n**Rule of thumb:** start with RBAC. Move to ABAC when roles alone can't express the policy cleanly — e.g. "editors can only edit *their own* posts."`,
     },
 
-    // Unit 3 — RBACPlayground demo
+    // Unit 3 — RBACPlayground demo (was gaps-unit-3, kept stable)
     {
       id: "gaps-unit-3",
       type: "demo",
@@ -44,33 +36,9 @@ export const gaps: Lecture = {
       component: "RBACPlayground",
     },
 
-    // Units 4–7 — Quiz (trailing run, 4 quizzes)
+    // Quiz units (gaps-unit-4 removed — OIDC quiz no longer relevant)
 
-    // Quiz Unit 12 — OIDC adds what (easy)
-    {
-      id: "gaps-unit-4",
-      type: "quiz",
-      difficulty: "easy",
-      title: "What Does OIDC Add?",
-      question:
-        "What does OIDC add on top of OAuth 2.0? What's the ID token for, and what should you never use it for?",
-      choices: [
-        { id: "a", label: "OIDC replaces OAuth 2.0 entirely." },
-        {
-          id: "b",
-          label:
-            "OIDC adds an identity layer with an ID token (JWT with `sub`, `email`, `name`). It is consumed by your app to know *who logged in*. Never use it as a bearer token to call APIs — that's the access token's job.",
-        },
-        { id: "c", label: "OIDC issues only access tokens, no ID token." },
-        { id: "d", label: "OIDC is identical to OAuth 2.0 but with a longer name." },
-      ],
-      correctChoiceId: "b",
-      explanation:
-        'OAuth = "can this app access my data?". OIDC = "who just logged in?". ID tokens are for your app to read identity claims; access tokens are for calling resource APIs.',
-      points: 1,
-    },
-
-    // Quiz Unit 14 — CSRF and Bearer headers (easy)
+    // Quiz Unit — CSRF and Bearer headers (was gaps-unit-5, kept stable)
     {
       id: "gaps-unit-5",
       type: "quiz",
@@ -94,7 +62,7 @@ export const gaps: Lecture = {
       points: 1,
     },
 
-    // Quiz Unit 15 — SameSite=Strict on Refresh Cookie (medium)
+    // Quiz Unit — SameSite=Strict on Refresh Cookie (was gaps-unit-6, kept stable)
     {
       id: "gaps-unit-6",
       type: "quiz",
@@ -118,7 +86,7 @@ export const gaps: Lecture = {
       points: 1,
     },
 
-    // Quiz Unit 16 — RBAC's ownership limitation (medium)
+    // Quiz Unit — RBAC's ownership limitation (was gaps-unit-7, kept stable)
     {
       id: "gaps-unit-7",
       type: "quiz",

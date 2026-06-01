@@ -1,6 +1,6 @@
 "use client"; // owns stepIndex + URL sync
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import type { Lecture } from "@/content/types";
 import { getNextLectureSlug } from "@/content/queries";
@@ -38,6 +38,11 @@ export default function LecturePlayer({ lecture }: ILecturePlayerProps) {
   const [stepIndex, setStepIndex] = useState<number>(initStep);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [sideOpen, setSideOpen] = useState<boolean>(false); // false for SSR safety
+
+  // ── Presentation mode ────────────────────────────────────────────────────
+  const [isPresentation, setIsPresentation] = useState(false);
+  const [showTop, setShowTop] = useState(false);
+  const [showBottom, setShowBottom] = useState(false);
 
   const stageRef = useRef<HTMLDivElement | null>(null);
   const didMountRef = useRef(false);
@@ -104,6 +109,35 @@ export default function LecturePlayer({ lecture }: ILecturePlayerProps) {
     setStepIndex(clamped);
   };
 
+  // ── Presentation mode logic ──────────────────────────────────────────────
+  const enterPresentation = useCallback(() => {
+    document.documentElement.requestFullscreen().catch(() => {});
+  }, []);
+
+  const exitPresentation = useCallback(() => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    setIsPresentation(false);
+    setShowTop(false);
+    setShowBottom(false);
+  }, []);
+
+  useEffect(() => {
+    const onFsChange = () => {
+      if (document.fullscreenElement) {
+        setIsPresentation(true);
+        setShowTop(false);
+        setShowBottom(false);
+      } else {
+        setIsPresentation(false);
+        setShowTop(false);
+        setShowBottom(false);
+      }
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
+
   // ── Keyboard handler ─────────────────────────────────────────────────────
   useEffect(() => {
     if (isStub) return;
@@ -169,8 +203,23 @@ export default function LecturePlayer({ lecture }: ILecturePlayerProps) {
         onJump={jumpTo}
       />
 
+      {isPresentation && (
+        <>
+          <div
+            aria-hidden="true"
+            style={{ position: "fixed", top: 0, left: 0, right: 0, height: 8, zIndex: 101 }}
+            onMouseEnter={() => setShowTop(true)}
+          />
+          <div
+            aria-hidden="true"
+            style={{ position: "fixed", bottom: 0, left: 0, right: 0, height: 8, zIndex: 101 }}
+            onMouseEnter={() => setShowBottom(true)}
+          />
+        </>
+      )}
+
       <main
-        className="stage"
+        className={`stage${isPresentation ? " presentation" : ""}`}
         ref={stageRef}
         tabIndex={-1}
         aria-label={`Lecture: ${lecture.title}`}
@@ -178,9 +227,12 @@ export default function LecturePlayer({ lecture }: ILecturePlayerProps) {
       >
         <PlayerTopBar
           lecture={lecture}
-          stepIndex={stepIndex}
-          totalSteps={totalSteps}
           onToggleSidebar={() => setSideOpen((v) => !v)}
+          isPresentation={isPresentation}
+          showChrome={showTop}
+          onEnterPresentation={enterPresentation}
+          onExitPresentation={exitPresentation}
+          onMouseLeaveChrome={() => setShowTop(false)}
         />
 
         <UnitStage
@@ -200,6 +252,9 @@ export default function LecturePlayer({ lecture }: ILecturePlayerProps) {
           hasNextLecture={hasNextLecture}
           onPrev={goPrev}
           onNext={goNext}
+          isPresentation={isPresentation}
+          showChrome={showBottom}
+          onMouseLeaveChrome={() => setShowBottom(false)}
         />
       </main>
     </div>

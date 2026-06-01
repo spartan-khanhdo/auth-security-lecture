@@ -7,6 +7,7 @@ import KeyboardHints from "@/components/player/KeyboardHints";
 const COLOR_VAR: Record<Lecture["color"], string> = {
   teal: "var(--pill-query)",
   indigo: "var(--primary)",
+  purple: "var(--purple, #9333ea)",
   pink: "var(--pink)",
   amber: "var(--amber)",
   green: "var(--green)",

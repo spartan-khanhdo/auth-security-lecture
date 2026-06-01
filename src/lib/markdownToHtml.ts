@@ -13,6 +13,48 @@ export function markdownToHtml(md: string): string {
   while (i < lines.length) {
     const line = lines[i];
 
+    // Fenced code block (```)
+    if (line.startsWith('```')) {
+      const lang = line.slice(3).trim();
+      const codeLines: string[] = [];
+      i++;
+      while (i < lines.length && !lines[i].startsWith('```')) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      i++; // skip closing ```
+      const escaped = codeLines
+        .join('\n')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      output.push(`<pre><code${lang ? ` class="language-${lang}"` : ''}>${escaped}</code></pre>`);
+      continue;
+    }
+
+    // Blockquote (lines starting with "> ")
+    if (line.startsWith('> ')) {
+      const quoteLines: string[] = [];
+      while (i < lines.length && lines[i].startsWith('> ')) {
+        quoteLines.push(lines[i].slice(2));
+        i++;
+      }
+      const inner = quoteLines.map((l) => `<p>${inlineFormat(l)}</p>`).join('');
+      output.push(`<blockquote>${inner}</blockquote>`);
+      continue;
+    }
+
+    // Ordered list (lines starting with "1. ", "2. ", etc.)
+    if (/^\d+\. /.test(line)) {
+      const items: string[] = [];
+      while (i < lines.length && /^\d+\. /.test(lines[i])) {
+        items.push(`<li>${inlineFormat(lines[i].replace(/^\d+\. /, ''))}</li>`);
+        i++;
+      }
+      output.push(`<ol>${items.join('')}</ol>`);
+      continue;
+    }
+
     // Heading
     const h3 = line.match(/^### (.+)/);
     const h2 = line.match(/^## (.+)/);
@@ -46,13 +88,17 @@ export function markdownToHtml(md: string): string {
     // Blank line — skip (paragraph separator handled by chunk joining below)
     if (line.trim() === '') { i++; continue; }
 
-    // Regular paragraph line — collect until blank or structural line
+    // Regular paragraph line — collect until blank or structural line.
+    // Must also stop on ordered-list lines (/^\d+\. /) and fenced code fences
+    // (```), otherwise those structural elements get absorbed into the <p>.
     const paraLines: string[] = [];
     while (
       i < lines.length &&
       lines[i].trim() !== '' &&
       !lines[i].match(/^#{1,3} /) &&
       !lines[i].match(/^- /) &&
+      !lines[i].match(/^\d+\. /) &&
+      !lines[i].startsWith('```') &&
       !lines[i].trimStart().startsWith('|')
     ) {
       paraLines.push(inlineFormat(lines[i]));

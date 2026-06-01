@@ -1,9 +1,9 @@
-# Lecture 4 — Security Fundamentals
+# Lecture 5 — Security Fundamentals
 
 ## Unit 1 — Goal
 **type:** prose
 
-## 4. Security Fundamentals
+## 5. Security Fundamentals
 
 > 🛡️ **Goal:** Reduce risk by protecting the **CIA triad** (Confidentiality, Integrity, Availability) across data, services, and users.
 
@@ -12,7 +12,7 @@
 ## Unit 2 — Why Security Matters & CIA Triad
 **type:** prose
 
-### 4.1 Why security matters (real impact)
+### 5.1 Why security matters (real impact)
 
 In modern systems (APIs + microservices + third-party integrations), a single weakness can cascade.
 
@@ -41,7 +41,7 @@ graph LR
 ## Unit 4 — Hashing vs Encryption
 **type:** prose
 
-### 4.2 Hashing vs. encryption (don't mix them)
+### 5.2 Hashing vs. encryption (don't mix them)
 
 > 🔑 **Hashing = one-way** (verify) • **Encryption = two-way** (protect + recover)
 
@@ -87,7 +87,7 @@ Type a password and compare its representation under MD5, SHA-256, bcrypt, and A
 ## Unit 6 — Top Vulnerabilities (OWASP Mindset)
 **type:** prose
 
-### 4.3 Top vulnerabilities you must recognize (OWASP mindset)
+### 5.3 Top vulnerabilities you must recognize (OWASP mindset)
 
 > 📌 **Pattern:** Most attacks are just "untrusted input reaches a sensitive sink."
 
@@ -96,7 +96,7 @@ Type a password and compare its representation under MD5, SHA-256, bcrypt, and A
 ## Unit 7 — SQL Injection
 **type:** prose
 
-#### 4.3.1 SQL Injection
+#### 5.3.1 SQL Injection
 
 **How it happens:** user input is concatenated into SQL.
 
@@ -116,7 +116,7 @@ SELECT * FROM users WHERE email = '" + input + "'
 ## Unit 8 — XSS (Cross-Site Scripting)
 **type:** prose
 
-#### 4.3.2 XSS (Cross-Site Scripting)
+#### 5.3.2 XSS (Cross-Site Scripting)
 
 **What it is:** attacker-controlled JS runs in the victim's browser.
 
@@ -133,7 +133,7 @@ SELECT * FROM users WHERE email = '" + input + "'
 ## Unit 9 — Broken Access Control
 **type:** prose
 
-#### 4.3.3 Broken Access Control
+#### 5.3.3 Broken Access Control
 
 **What it is:** users can access resources they shouldn't (IDOR, missing checks).
 
@@ -156,7 +156,7 @@ A sandbox API with three vulnerable endpoints (SQLi, reflected XSS, IDOR). Toggl
 ## Unit 11 — Core Security Principles
 **type:** prose
 
-### 4.4 Core security principles (engineering habits)
+### 5.4 Core security principles (engineering habits)
 
 **1) Never trust client input**
 
@@ -183,7 +183,7 @@ A sandbox API with three vulnerable endpoints (SQLi, reflected XSS, IDOR). Toggl
 ## Unit 12 — "In Our System" Mapping & Key Takeaway
 **type:** prose
 
-### 4.5 "In our system" mapping (example)
+### 5.5 "In our system" mapping (example)
 
 - Passwords: hashed (bcrypt/Argon2)
 - Auth: JWT validated on the API
@@ -192,7 +192,7 @@ A sandbox API with three vulnerable endpoints (SQLi, reflected XSS, IDOR). Toggl
 
 > ✅ **Outcome:** Only authenticated identities with the right permissions can access protected resources.
 
-### 4.6 Key takeaway
+### 5.6 Key takeaway
 
 Security = **correctness under attack**:
 

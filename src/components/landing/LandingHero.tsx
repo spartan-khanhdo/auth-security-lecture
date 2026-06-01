@@ -211,7 +211,7 @@ export default function LandingHero() {
           }}
         >
           <span className="dotpulse" aria-hidden="true" />
-          An interactive course · 5 lectures
+          An interactive course · 6 lectures
         </div>
 
         {/* H1 */}
@@ -259,7 +259,7 @@ export default function LandingHero() {
           }}
         >
           How apps know <em style={{ color: "var(--text)", fontStyle: "italic" }}>who you are</em> — and decide{" "}
-          <em style={{ color: "var(--text)", fontStyle: "italic" }}>what you&apos;re allowed to do</em>. Five short
+          <em style={{ color: "var(--text)", fontStyle: "italic" }}>what you&apos;re allowed to do</em>. Six short
           lectures, each ending in a demo you can actually poke at.
         </p>
 
@@ -338,7 +338,7 @@ export default function LandingHero() {
             <Link href="/quiz">Jump to Quiz</Link>
           </Button>
 
-          {/* TODO(progress): CourseProgressBar shows static 0/5 until
+          {/* TODO(progress): CourseProgressBar shows static 0/6 until
               useCourseProgress() is wired in epic-navigation-shell */}
           <CourseProgressBar />
         </div>

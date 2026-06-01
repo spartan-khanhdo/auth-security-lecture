@@ -28,7 +28,7 @@ export default function LiveQuizCTA() {
         </span>
         <div className="qeb-text">
           <strong>Live Quiz</strong>
-          <span>Test your knowledge across all 5 lectures — host a room or join one</span>
+          <span>Test your knowledge across all 6 lectures — host a room or join one</span>
         </div>
         <span className="qeb-arrow">
           <ArrowIcon />

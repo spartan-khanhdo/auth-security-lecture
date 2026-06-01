@@ -1,11 +1,16 @@
 "use client";
 
+const DOT_THRESHOLD = 12;
+
 interface IPlayerControlsProps {
   stepIndex: number;
   totalSteps: number;
   hasNextLecture: boolean;
   onPrev: () => void;
   onNext: () => void;
+  isPresentation?: boolean;
+  showChrome?: boolean;
+  onMouseLeaveChrome?: () => void;
 }
 
 export default function PlayerControls({
@@ -14,7 +19,11 @@ export default function PlayerControls({
   hasNextLecture,
   onPrev,
   onNext,
+  isPresentation = false,
+  showChrome = false,
+  onMouseLeaveChrome,
 }: IPlayerControlsProps) {
+  const hidden = isPresentation && !showChrome;
   const isFirst = stepIndex === 0;
   const isLast = stepIndex === totalSteps - 1;
 
@@ -25,7 +34,10 @@ export default function PlayerControls({
     : "Next →";
 
   return (
-    <div className="footernav">
+    <div
+      className={`footernav${hidden ? " pres-hidden" : ""}`}
+      onMouseLeave={isPresentation ? onMouseLeaveChrome : undefined}
+    >
       {!isFirst ? (
         <button
           className="btn btn-ghost"
@@ -38,18 +50,24 @@ export default function PlayerControls({
         <span />
       )}
 
-      <div className="fn-dots" aria-hidden="true">
-        {Array.from({ length: totalSteps }).map((_, i) => {
-          const isOn = i === stepIndex;
-          const isPast = i < stepIndex;
-          return (
-            <span
-              key={i}
-              className={`fn-dot${isOn ? " on" : ""}${isPast ? " past" : ""}`}
-            />
-          );
-        })}
-      </div>
+      {totalSteps <= DOT_THRESHOLD ? (
+        <div className="fn-dots" aria-hidden="true">
+          {Array.from({ length: totalSteps }).map((_, i) => {
+            const isOn = i === stepIndex;
+            const isPast = i < stepIndex;
+            return (
+              <span
+                key={i}
+                className={`fn-dot${isOn ? " on" : ""}${isPast ? " past" : ""}`}
+              />
+            );
+          })}
+        </div>
+      ) : (
+        <span className="text-sm text-[var(--text-faint)] tabular-nums">
+          {stepIndex + 1} / {totalSteps}
+        </span>
+      )}
 
       <button
         className="btn btn-primary"

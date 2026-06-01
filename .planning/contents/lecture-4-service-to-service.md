@@ -1,9 +1,9 @@
-# Lecture 3 — Service-to-Service Authentication
+# Lecture 4 — Service-to-Service Authentication
 
 ## Unit 1 — Goal
 **type:** prose
 
-## 3. Service-to-Service Authentication
+## 4. Service-to-Service Authentication
 
 > 🔐 **Goal:** When Service A calls Service B, Service B must be able to verify **who** is calling and **what** that caller is allowed to do — even when there is **no user session**.
 
@@ -12,7 +12,7 @@
 ## Unit 2 — The Problem: "Who is the caller?"
 **type:** prose
 
-### 3.1 The problem: "Who is the caller?"
+### 4.1 The problem: "Who is the caller?"
 
 In microservices, traffic is often:
 
@@ -32,7 +32,7 @@ In microservices, traffic is often:
 ## Unit 3 — Baseline Architecture
 **type:** prose
 
-### 3.2 Baseline architecture: Auth Server issues access tokens
+### 4.2 Baseline architecture: Auth Server issues access tokens
 
 **Participants**
 
@@ -70,7 +70,7 @@ sequenceDiagram
 ## Unit 5 — OAuth 2.0 Client Credentials Grant
 **type:** prose
 
-### 3.3 OAuth 2.0 Client Credentials (most common for M2M)
+### 4.3 OAuth 2.0 Client Credentials (most common for M2M)
 
 **When to use:** no end user, purely service-to-service (batch jobs, internal APIs, cron workers).
 
@@ -97,7 +97,7 @@ sequenceDiagram
 ## Unit 6 — JWT Claims for M2M
 **type:** prose
 
-### 3.4 What the token should contain (JWT claims that matter)
+### 4.4 What the token should contain (JWT claims that matter)
 
 JWT is popular because Service B can validate it locally (stateless), but you must encode the right information.
 
@@ -116,7 +116,7 @@ JWT is popular because Service B can validate it locally (stateless), but you mu
 ## Unit 7 — Validation and Authorization
 **type:** prose
 
-### 3.5 How Service B validates and authorizes requests
+### 4.5 How Service B validates and authorizes requests
 
 **Validation (authn for services):**
 
@@ -140,7 +140,7 @@ JWT is popular because Service B can validate it locally (stateless), but you mu
 ## Unit 8 — Alternatives: mTLS, Service Mesh, API Keys
 **type:** prose
 
-### 3.6 Alternatives & when to consider them
+### 4.6 Alternatives & when to consider them
 
 - **mTLS (mutual TLS)**: strong identity at transport layer; great for zero-trust / service mesh
 - **Service mesh identity (Istio/Linkerd)**: can automate cert rotation + policy enforcement
@@ -160,7 +160,7 @@ Watch Service A and Service B exchange certificates during the TLS handshake. Ea
 ## Unit 10 — Best Practices & Architecture Diagram
 **type:** diagram
 
-### 3.7 Best practices checklist
+### 4.7 Best practices checklist
 
 - Short-lived access tokens (5–15 min)
 - Always validate `iss`, `aud`, signature, and expiry

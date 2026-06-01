@@ -2,17 +2,222 @@ import type { Lecture } from "@/content/types";
 
 export const jwtBestPractices: Lecture = {
   slug: "jwt-best-practices",
-  title: "JWT Best Practices",
+  title: "OAuth: Delegated Authorization",
   subtitle:
-    "Learn to issue, validate, and secure JSON Web Tokens — and understand the pitfalls that lead to vulnerabilities.",
-  tagline: "Sign it, verify it, and never trust the 'alg: none' crowd.",
-  estMinutes: 12,
-  topics: ["JWT Structure", "Signing Algorithms", "Token Expiry", "Common Pitfalls"],
+    "In Lecture 1 we built auth ourselves. This lecture explains why that boundary forced the creation of OAuth, how OAuth 2.0 works, and the token lifecycle best practices that go with it.",
+  tagline: "From the password anti-pattern to PKCE, token rotation, and key management.",
+  estMinutes: 20,
+  topics: ["OAuth 1.0 → 2.0", "PKCE", "Token Lifetime", "Refresh Token Rotation", "Storage"],
   color: "indigo",
   iconKey: "key",
   comingSoon: false,
   units: [
-    // Unit 0 — Token Lifetime
+    // ── Unit 0: Section Intro ────────────────────────────────────────────────
+
+    {
+      id: "jwt-bp-intro",
+      type: "prose",
+      title: "OAuth — Delegated Authorization",
+      body: `In Lecture 1 we built auth ourselves: hash passwords, mint JWTs, rotate refresh tokens. That works — until a third-party app needs to act on a user's behalf. This lecture explains why that boundary forced the creation of OAuth, how OAuth 2.0 works, and the token lifecycle best practices that go with it.`,
+    },
+
+    // ── Unit 1: Why OAuth? ───────────────────────────────────────────────────
+
+    {
+      id: "jwt-bp-why-oauth",
+      type: "prose",
+      title: "Why OAuth? The Problem with Self-Managed Auth",
+      body: `Self-managed auth is fine when *your* app talks to *your* API. It breaks down the moment a third party needs delegated access.\n\n**The scenario:**\n> A user wants to let a travel-planning app read their Google Calendar to find free slots. How does the travel app get access?\n\n**Before OAuth — The Password Anti-Pattern:**\nThe only option was to give the travel app your Google username and password. Once you did:\n\n- A breach at the travel app meant **your Google password was exposed**\n- The app had **unlimited access** — it could read email, delete events, access Drive\n- **No revocation** — to cut off the app you had to change your Google password everywhere\n- **No scope** — impossible to say "read calendar only"; the app got everything\n\nOAuth solves this by separating *who grants access* (the user + Google) from *who uses the access* (the travel app) — without the travel app ever seeing your Google password.`,
+      callouts: [
+        {
+          tone: "info",
+          text: "Self-managed JWT auth (Lecture 1) and OAuth answer different questions.\n\n- Self-managed: \"How does my app authenticate its own users?\"\n- OAuth: \"How does an external app act on a user's behalf without seeing their credentials?\"",
+        },
+      ],
+    },
+
+    // ── Unit 2: OAuth 1.0 ────────────────────────────────────────────────────
+
+    {
+      id: "jwt-bp-oauth1",
+      type: "prose",
+      title: "OAuth 1.0: The Password Anti-Pattern Era",
+      body: `OAuth 1.0 (RFC 5849, 2010) introduced **delegated authorization** — letting third-party apps act on a user's behalf **without ever seeing their password**.\n\n**3-Legged Flow:**\n\n1. App requests a temporary **Request Token** from the provider\n2. User is redirected to the provider, logs in, and grants access\n3. App exchanges the token + verifier for a permanent **Access Token**\n4. Every API call is **cryptographically signed** with HMAC-SHA1\n\nEvery API call was cryptographically signed: \`HMAC-SHA1(method + URL + params, consumer_secret + token_secret)\` sent as an \`Authorization: OAuth ...\` header. Exact parameter ordering was required — one wrong encoding broke the signature entirely.`,
+    },
+
+    // ── Unit 3: OAuth 1.0 Demo ───────────────────────────────────────────────
+
+    {
+      id: "jwt-bp-oauth1-demo",
+      type: "demo",
+      title: "OAuth 1.0 Flow",
+      component: "OAuthFlowPlayer",
+    },
+
+    // ── Unit 4: OAuth 1.0 Diagram ────────────────────────────────────────────
+
+    {
+      id: "jwt-bp-oauth1-diagram",
+      type: "diagram",
+      title: "OAuth 1.0 3-Legged Flow",
+      mermaid: `sequenceDiagram
+    actor User
+    participant App as Client App
+    participant Provider as OAuth Provider
+
+    App->>Provider: 1. Request Temporary Token
+    Provider-->>App: Temporary Token
+    App->>User: 2. Redirect to Provider Login
+    User->>Provider: Login and Grant Access
+    Provider-->>App: Redirect with Verifier Code
+    App->>Provider: 3. Exchange Token + Verifier
+    Provider-->>App: Access Token + Token Secret
+    loop Every API Call
+        App->>Provider: Signed Request HMAC-SHA1
+        Note right of App: Signature = HMAC(method+url+params, secret)
+        Provider-->>App: Protected Resource
+    end`,
+      caption: "OAuth 1.0 3-legged flow. Every API call required a HMAC-SHA1 signature over exact parameter ordering.",
+    },
+
+    // ── Unit 5: OAuth 2.0 ────────────────────────────────────────────────────
+
+    {
+      id: "jwt-bp-oauth2",
+      type: "prose",
+      title: "OAuth 2.0: Why OAuth 1.0 Was Replaced",
+      body: `**The Problems with OAuth 1.0 (that led to OAuth 2.0)**\n\n- **Signature complexity** — Every request required computing HMAC-SHA1 over exact parameter ordering. One wrong encoding or missing parameter broke the signature.\n- **Mobile-unfriendly** — The 3-legged flow required browser redirects. Native mobile apps had no clean way to receive the OAuth callback.\n- **Token secret on the client** — The \`token_secret\` had to be stored client-side, replacing the password problem with a different secret management problem.\n- **No scopes** — OAuth 1.0 was all-or-nothing. You couldn't express "read contacts only."\n\nOAuth 2.0 (RFC 6749, 2012) dropped signatures entirely, relying on **HTTPS for transport security**. It introduced multiple **grant types** for different use cases instead of one-size-fits-all.`,
+      callouts: [
+        {
+          tone: "warn",
+          text: "Why it was replaced: Signature computation was complex and error-prone. Parameter order mattered exactly. No mobile-friendly flows. Libraries implemented it inconsistently.",
+        },
+      ],
+    },
+
+    // ── Unit 6: Grant Types ──────────────────────────────────────────────────
+
+    {
+      id: "jwt-bp-grant-types",
+      type: "prose",
+      title: "OAuth 2.0 Grant Types Overview",
+      body: `**Grant Types at a glance:**\n\n| Grant Type | Use Case | Key Characteristic |\n|---|---|---|\n| **Authorization Code + PKCE** | Web apps, SPAs, mobile | Redirect flow + code exchange; PKCE prevents interception |\n| **Client Credentials** | Backend service-to-service (M2M) | No user involved; app authenticates with \`client_id\` + \`client_secret\` |\n| **Device Code** | Smart TVs, CLIs | Device shows code → user authorizes on phone → device polls for token |`,
+    },
+
+    // ── Unit 7: Client ID vs Secret ──────────────────────────────────────────
+
+    {
+      id: "jwt-bp-client-id-secret",
+      type: "prose",
+      title: "Client ID vs. Client Secret",
+      body: `Every app registered with an OAuth authorization server gets two identifiers:\n\n- **\`client_id\`** — A **public** identifier for your app. Safe to include in URLs, frontend code, and mobile app bundles. The auth server uses it to look up your registered redirect URIs and display your app name on the consent screen.\n- **\`client_secret\`** — A **private password** for your app. Proves the app really is who it claims to be during the token exchange. **Must never appear in frontend JavaScript, mobile app binaries, or public source code.**\n\n|  | **client_id** | **client_secret** |\n|---|---|---|\n| **Visibility** | Public — safe in URLs and frontend JS | Private — server-side only, never in client code |\n| **Purpose** | Identifies *which app* is requesting access | Authenticates *that the app is legitimate* |\n| **Used in auth redirect** | ✅ Always (\`?client_id=...\`) | ❌ Never in the URL redirect |\n| **Used in token exchange** | ✅ Required | ✅ Confidential clients (backends) only |\n| **Public clients (SPA/mobile)** | ✅ Used | ❌ Cannot store securely → use PKCE instead |`,
+    },
+
+    // ── Unit 8: PKCE ─────────────────────────────────────────────────────────
+
+    {
+      id: "jwt-bp-pkce",
+      type: "prose",
+      title: "PKCE & Authorization Code Interception Attack",
+      body: `The Authorization Code flow was originally designed for **confidential clients** (backends that can safely store \`client_secret\`). But SPAs and mobile apps are **public clients** — their code runs in the user's hands.\n\n> ⚠️ **The attack (on mobile, without PKCE):**\n> 1. Your app registers \`myapp://callback\` as its redirect URI\n> 2. A *malicious app* also registers \`myapp://callback\` — custom URL schemes are not exclusive on Android/iOS\n> 3. User logs in via browser → Google redirects with \`?code=AUTH_CODE\`\n> 4. The OS asks which app handles \`myapp://\` — the malicious app wins\n> 5. Malicious app has the auth code — and since public clients often skip \`client_secret\`, it exchanges \`code\` for tokens\n> 6. **Result: attacker owns the user's session**\n\n**PKCE (RFC 7636)** binds the token exchange to the exact device that started the flow using a one-time cryptographic proof.\n\n**Why it works:** The \`code_verifier\` never travels over the network until the legitimate exchange. Even if an attacker captures the \`AUTH_CODE\`, they cannot complete the exchange without the verifier that only the real client generated. No shared secret needed — PKCE works for all public clients.`,
+    },
+
+    // ── Unit 9: PKCE Simulator ───────────────────────────────────────────────
+
+    {
+      id: "jwt-bp-pkce-demo",
+      type: "demo",
+      title: "PKCE Simulator",
+      component: "PKCESimulator",
+    },
+
+    // ── Unit 10: Auth Server internals (code) ────────────────────────────────
+
+    {
+      id: "jwt-bp-auth-server-code",
+      type: "code",
+      title: "Behind the Scenes: How the Auth Server Manages Clients",
+      language: "py",
+      code: `# Step 1 — Registration (when the developer creates an app in the console)
+client_id     = base64url(secureRandom(16 bytes))
+client_secret = base64url(secureRandom(32 bytes))
+
+client_secret_hash = bcrypt(client_secret, cost=12)
+
+db.insert("oauth_clients", {
+    client_id:          client_id,
+    client_secret_hash: client_secret_hash,
+    redirect_uris:      ["https://app.com/callback"],
+    allowed_grants:     ["authorization_code", "refresh_token"],
+    is_confidential:    True,
+    is_active:          True,
+})
+
+return { client_id, client_secret }  # Secret shown ONCE — never retrievable again
+
+# Step 2 — Verification at /token
+def exchange_code_for_token(request):
+    client_id, provided_secret = parse_client_credentials(request)
+    client = db.get("SELECT * FROM oauth_clients WHERE client_id = ?", client_id)
+    if not client:
+        raise Unauthorized("unknown_client")
+
+    if client.is_confidential:
+        if not bcrypt.verify(provided_secret, client.client_secret_hash):
+            raise Unauthorized("invalid_client")  # vague — don't reveal why
+
+    if request.redirect_uri not in client.redirect_uris:
+        raise InvalidRequest("redirect_uri_mismatch")
+
+    auth_code = db.get("SELECT * FROM auth_codes WHERE code = ?", request.code)
+    if not auth_code or auth_code.client_id != client_id:
+        raise InvalidGrant("code_invalid_or_stolen")
+    if auth_code.expires_at < now():
+        raise InvalidGrant("code_expired")
+
+    db.delete(auth_code)  # Auth codes are single-use — delete immediately
+
+    return issue_tokens(client, auth_code.user_id, auth_code.scope)`,
+    },
+
+    // ── Unit 11: Full OAuth 2.0 Flow Demo ────────────────────────────────────
+
+    {
+      id: "jwt-bp-oauth2-demo",
+      type: "demo",
+      title: "Authorization Code + PKCE Full Flow",
+      component: "OAuthFlowPlayer",
+    },
+
+    // ── Unit 12: OAuth 2.0 Sequence Diagram ──────────────────────────────────
+
+    {
+      id: "jwt-bp-oauth2-diagram",
+      type: "diagram",
+      title: "Authorization Code + PKCE Sequence Diagram",
+      mermaid: `sequenceDiagram
+    actor User
+    participant App as Client SPA or Mobile
+    participant AS as Authorization Server
+    participant RS as Resource Server
+
+    App->>App: Generate code_verifier + code_challenge SHA-256
+    App->>User: Redirect to /authorize?code_challenge=...
+    User->>AS: Authenticate and Consent
+    AS-->>App: Redirect to /callback?code=AUTH_CODE
+    App->>AS: POST /token  code + code_verifier
+    AS->>AS: Verify SHA-256(code_verifier) == code_challenge
+    AS-->>App: access_token 15min + refresh_token 7-30d
+    App->>RS: GET /api  Bearer access_token
+    RS-->>App: Protected Resource
+    Note over App,AS: On expiry — silent refresh
+    App->>AS: POST /token  with refresh_token cookie
+    AS-->>App: New access_token + New refresh_token`,
+      caption: "Authorization Code + PKCE is the standard flow for all public clients (SPAs and mobile apps). PKCE replaces the client_secret for public clients.",
+    },
+
+    // ── Unit 13: Token Lifetime ───────────────────────────────────────────────
+
     {
       id: "jwt-best-practices-unit-0",
       type: "prose",
@@ -20,39 +225,59 @@ export const jwtBestPractices: Lecture = {
       body: `Short-lived tokens limit the window of exposure if a token is stolen. The industry consensus on lifetimes:\n\n| Token | Recommended TTL | Notes |\n|---|---|---|\n| **Access token** | 5–15 minutes | 5 min for banking/healthcare; 15 min for general web apps |\n| **Refresh token** | 7–30 days | Always rotate on every use; 7–14 days with rotation is the consensus |\n| **ID token (OIDC)** | Same as access token | For identity only — never use as API bearer token |\n\nGoing beyond 60 minutes for access tokens is an anti-pattern — it widens the window during which a stolen token grants access. PCI DSS environments require session termination after 15 minutes of inactivity; NIST SP 800-63B caps sessions at 12 hours for moderate assurance.`,
     },
 
-    // Unit 1 — Refresh Token Rotation + Reuse Detection
+    // ── Unit 14: Refresh Token Rotation ──────────────────────────────────────
+
     {
       id: "jwt-best-practices-unit-1",
       type: "prose",
       title: "Refresh Token Rotation & Reuse Detection",
-      body: `Every time a refresh token is used, issue a **new one and immediately invalidate the old**. If a previously-used token is presented, the entire token family is revoked.\n\n\`\`\`\nLogin          → issues AT₁ + RT₁\nAT₁ expires   → client sends RT₁ → server issues AT₂ + RT₂, invalidates RT₁\nAttacker uses stolen RT₁ → server detects reuse → revokes entire family\nBoth user and attacker must re-authenticate\n\`\`\`\n\nTwo implementation strategies: **401 handler** (catch expired responses and refresh) or **silent refresh** (proactively refresh at ~75% of the access token's lifetime before expiry).\n\nShort-lived access tokens paired with long-lived refresh tokens form the standard JWT lifecycle pattern. The access token is stateless and fast to validate; the refresh token is stateful and enables revocation.`,
+      body: `Every time a refresh token is used, issue a **new one and immediately invalidate the old**. If a previously-used token is presented → the entire token family is revoked.\n\n\`\`\`\nLogin          → issues AT₁ + RT₁\nAT₁ expires   → client sends RT₁ → server issues AT₂ + RT₂, invalidates RT₁\nAttacker uses stolen RT₁ → server detects reuse → revokes entire family\nBoth user and attacker must re-authenticate\n\`\`\`\n\nTwo FE implementation strategies: **401 handler** (catch expired responses and refresh) or **silent refresh** (proactively refresh at ~75% of the access token's lifetime before expiry).\n\n> 💡 Short-lived access tokens paired with long-lived refresh tokens form the standard JWT lifecycle. The access token is stateless and fast to validate; the refresh token is stateful and enables revocation.`,
     },
 
-    // Unit 2 — Token Storage Deep Dive
+    // ── Unit 15: Token Storage ────────────────────────────────────────────────
+
     {
       id: "jwt-best-practices-unit-2",
       type: "prose",
-      title: "Token Storage Deep Dive",
-      body: `**The recommended defense-in-depth pattern:**\n\n- Store the **access token in JavaScript memory only** (a variable or closure). Protected from CSRF because it must be explicitly attached via \`Authorization\` header. Lost on page refresh — client silently fetches a new one via the refresh cookie.\n- Store the **refresh token in an \`HttpOnly; Secure; SameSite=Strict\` cookie**. JavaScript cannot read it, neutralizing XSS-based theft. The \`SameSite\` attribute prevents CSRF. The server issues a new access token when the refresh cookie arrives.\n\n**Full comparison of all client-side storage options:**\n\n| Storage | XSS Risk | CSRF Risk | Survives Refresh | Verdict |\n|---|---|---|---|---|\n| **\`localStorage\`** | ❌ High — any JS on the page can read it | ✅ Safe | ✅ Yes | ❌ Never use for tokens — one XSS = full account takeover |\n| **\`sessionStorage\`** | ❌ High — same XSS exposure as localStorage | ✅ Safe | ❌ No (clears on tab close) | ❌ No meaningful security advantage over localStorage |\n| **JS Memory (variable)** | ✅ Safe | ✅ Safe | ❌ No | ✅ Best for access tokens in SPAs — pair with silent refresh |\n| **HttpOnly Cookie** | ✅ Safe — JS cannot read it at all | ⚠️ Needs SameSite + CSRF token | ✅ Yes | ✅ Best for refresh tokens and server-rendered apps |\n\n> ⚠️ \`sessionStorage\` is NOT safer than \`localStorage\` for tokens. Both are accessible by any JavaScript running on the page. The only difference is \`sessionStorage\` clears on tab close — it provides zero XSS protection.\n\n**Cookie attributes that matter:**\n\n\`\`\`\nSet-Cookie: refresh_token=eyJ...\n  HttpOnly        ← JS cannot read — blocks XSS token theft\n  Secure          ← HTTPS only — prevents network interception\n  SameSite=Strict ← blocks CSRF — cookie not sent on cross-site requests\n  Path=/auth      ← scoped to auth endpoints only\n  Max-Age=604800  ← 7 days\n\`\`\``,
+      title: "Token Storage — Deep Dive",
+      body: `**The recommended defense-in-depth pattern:**\n\n- Store the **access token in JavaScript memory only**. Protected from CSRF because it must be explicitly attached via \`Authorization\` header. Lost on page refresh — client silently fetches a new one via the refresh cookie.\n- Store the **refresh token in an \`HttpOnly; Secure; SameSite=Strict\` cookie**. JavaScript cannot read it, neutralizing XSS-based theft.\n\n**Full comparison:**\n\n| Storage | XSS Risk | CSRF Risk | Survives Refresh | Verdict |\n|---|---|---|---|---|\n| **\`localStorage\`** | ❌ High | ✅ Safe | ✅ Yes | ❌ Never use for tokens |\n| **\`sessionStorage\`** | ❌ High | ✅ Safe | ❌ No | ❌ No meaningful security advantage over localStorage |\n| **JS Memory** | ✅ Safe | ✅ Safe | ❌ No | ✅ Best for access tokens in SPAs |\n| **HttpOnly Cookie** | ✅ Safe | ⚠️ Needs SameSite + CSRF token | ✅ Yes | ✅ Best for refresh tokens |\n\n> ⚠️ \`sessionStorage\` is NOT safer than \`localStorage\` for tokens. Both are accessible by any JavaScript running on the page.\n\n**Cookie attributes that matter:**\n\`\`\`\nSet-Cookie: refresh_token=eyJ...\n  HttpOnly        ← JS cannot read — blocks XSS token theft\n  Secure          ← HTTPS only\n  SameSite=Strict ← blocks CSRF\n  Path=/auth      ← scoped to auth endpoints only\n  Max-Age=604800  ← 7 days\n\`\`\``,
     },
 
-    // Unit 3 — JWT Attacks
+    // ── Unit 16: Revocation Strategies ───────────────────────────────────────
+
     {
-      id: "jwt-best-practices-unit-3",
+      id: "jwt-bp-revocation",
       type: "prose",
-      title: "JWT Attacks",
-      body: `Knowing the most common JWT attacks is the first step to preventing them.\n\n| Attack | What happens | Mitigation |\n|---|---|---|\n| **\`alg:none\`** | Attacker strips the signature — library accepts unsigned token with any payload | Whitelist allowed algorithms server-side; never trust the token's own \`alg\` header |\n| **Algorithm Confusion** | RS256 server gets HS256 token; vulnerable library uses the (public) RSA key as HMAC secret — forged signature validates | Fix the expected algorithm server-side; never let the token header drive key selection |\n| **\`kid\` Injection** | Attacker manipulates the Key ID header to control which key is loaded (path traversal, SQL injection) | Validate \`kid\` against a strict allowlist; never interpolate it into file paths or queries |\n| **Token Replay** | Stolen valid JWT reused — leaked via logs, browser history, XSS, or network | Short TTLs + \`jti\` denylist + never put tokens in URLs |`,
+      title: "Revocation Strategies",
+      body: `The core tension: **JWTs are stateless by design, but real apps need to revoke access immediately** — on logout, password change, or account compromise.\n\n**Strategy 1 — Short TTL (pseudo-revocation)**\nWith 5–15 min access tokens, revoking only the refresh token limits the exposure window. Maintains pure statelessness but accepts a brief vulnerability window. Acceptable for most apps.\n\n**Strategy 2 — Redis Denylist (production standard)**\nStore revoked \`jti\` values in Redis with TTL = token's remaining lifetime — Redis auto-expires them, no cleanup needed. Overhead: ~1–2ms per request. For "log out everywhere": store a \`revoked_at\` timestamp per user and reject any token whose \`iat\` is earlier than that timestamp.\n\n**Strategy 3 — Token Versioning**\nStore a \`jwt_version\` integer per user in DB. Embed it as a \`ver\` claim in every JWT. On a security event, increment the version — all previous tokens instantly invalid. Tradeoff: requires a DB/cache lookup per request.\n\n**Always trigger revocation on:**\n- Password change or reset\n- Account compromise detected\n- Admin deactivation\n- MFA enrollment changes\n- Role or permission changes\n- Explicit "log out everywhere"`,
+      callouts: [
+        {
+          tone: "warn",
+          text: "Client-side token deletion alone is NOT revocation. A stolen token can still be used even after the client deletes it locally.",
+        },
+      ],
     },
 
-    // Unit 4 — JWT Validation Checklist
+    // ── Unit 17: Key Management ───────────────────────────────────────────────
+
     {
-      id: "jwt-best-practices-unit-4",
+      id: "jwt-bp-key-management",
       type: "prose",
-      title: "JWT Validation Checklist (10 Points)",
-      body: `Every incoming request must pass **all** of these checks:\n\n1. ✅ **Structural** — exactly three Base64URL parts separated by periods\n2. ✅ **Algorithm** — \`alg\` header matches server-side whitelist (never trust the header alone)\n3. ✅ **Signature** — cryptographic verification using key identified by \`kid\`\n4. ✅ **Expiration** — \`exp > now\` (allow ≤60 seconds clock skew tolerance)\n5. ✅ **Not Before** — \`nbf ≤ now\` if present\n6. ✅ **Issuer** — \`iss\` matches expected value exactly\n7. ✅ **Audience** — \`aud\` contains this service's identifier\n8. ✅ **Subject** — \`sub\` is present and non-empty\n9. ✅ **Type** — \`typ\` header is \`"at+jwt"\` for access tokens (prevents cross-JWT confusion attacks)\n10. ✅ **Revocation** — \`jti\` not in denylist (if revocation is implemented)`,
+      title: "Key Management & Rotation",
+      body: `Rotate signing keys every **90 days** (NIST). Three phases:\n\n1. **Announce** — generate new keypair, publish to JWKS, keep signing with old key\n2. **Activate** — switch to signing with new key, keep old public key in JWKS for still-valid tokens\n3. **Retire** — remove old key once all tokens it signed have expired\n\nAlways store private keys in a KMS (AWS KMS, HashiCorp Vault) — never in source code or environment variables committed to git.`,
     },
 
-    // Unit 5 — Micronaut JWT config (code)
+    // ── Unit 18: Security Checklist ──────────────────────────────────────────
+
+    {
+      id: "jwt-bp-security-checklist",
+      type: "prose",
+      title: "Security Checklist",
+      body: `- ✅ Use PKCE for all Authorization Code flows (all public clients)\n- ✅ Use RS256 or ES256 over HS256 in multi-service environments\n- ✅ Enable refresh token rotation with reuse detection\n- ✅ Store access token in JS memory; refresh token in HttpOnly cookie\n- ✅ Never use \`localStorage\` or \`sessionStorage\` for tokens\n- ✅ Set \`HttpOnly; Secure; SameSite=Strict\` on all auth cookies\n- ✅ Never put sensitive data in JWT payload (Base64 is not encryption)\n- ✅ Rotate signing keys every 90 days via JWKS\n- ✅ Maintain Redis denylist for immediate revocation on logout or compromise\n- ✅ Never send JWTs in URL query parameters`,
+    },
+
+    // ── Unit 19: Micronaut Config ─────────────────────────────────────────────
+
     {
       id: "jwt-best-practices-unit-5",
       type: "code",
@@ -81,17 +306,26 @@ export const jwtBestPractices: Lecture = {
           expiration: 900  # 15 minutes`,
     },
 
-    // Unit 6 — JWTDecoder demo
+    // ── Unit 20: Myth-Buster ──────────────────────────────────────────────────
+
     {
-      id: "jwt-best-practices-unit-6",
-      type: "demo",
-      title: "JWT Decoder",
-      component: "JWTDecoder",
+      id: "jwt-bp-myth-buster",
+      type: "prose",
+      title: "Myth-Buster: \"Login with Google\" Is Not OAuth",
+      body: `> ❌ **Common belief:** "Login with Google" uses OAuth 2.0\n> ✅ **Reality:** It uses **OpenID Connect (OIDC)** — a thin identity layer built *on top of* OAuth 2.0\n\nThis is one of the most widespread misconceptions in the industry. Here's the precise distinction:\n\n| | OAuth 2.0 | OpenID Connect (OIDC) |\n|---|---|---|\n| **Question it answers** | "Can this app access your Google Drive?" | "Who are you?" |\n| **Purpose** | Authorization — delegate resource access | Authentication — assert user identity |\n| **Returns** | Access token (opaque, for resource access) | Access token **+ ID token** (a JWT with identity claims) |\n| **Standard** | RFC 6749 (2012) | Built on OAuth 2.0 (2014) |\n\n**OAuth 2.0 alone:**\n\`\`\`\n"App X is allowed to read your Google Calendar"\n→ Server gets an access_token to call the Calendar API\n→ Server does NOT know who you are — only that access was granted\n\`\`\`\n\n**OIDC:**\n\`\`\`\n"You are truc@gmail.com"\n→ Server gets an access_token (for API access) + an id_token (your identity)\n→ id_token is a JWT: { sub: "google|12345", email: "truc@gmail.com", name: "Truc Le" }\n\`\`\`\n\n> 💡 **Rule of thumb:**\n> - Need to *access a resource* on behalf of a user? → OAuth 2.0\n> - Need to know *who the user is*? → OIDC (which uses OAuth 2.0 underneath)\n> - "Login with X" is always OIDC — never bare OAuth 2.0\n\nWe cover OIDC in depth in **Lecture 3**.`,
     },
 
-    // Units 7–9 — Quiz (trailing run, 3 quizzes)
+    // ── Unit 21: References ───────────────────────────────────────────────────
 
-    // Quiz Unit 2 — JWT and OAuth Independence (easy)
+    {
+      id: "jwt-bp-references",
+      type: "prose",
+      title: "References",
+      body: `**References:**\n\n- [RFC 6749 — OAuth 2.0](https://datatracker.ietf.org/doc/html/rfc6749)\n- [RFC 7636 — PKCE](https://datatracker.ietf.org/doc/html/rfc7636)\n- [RFC 8725 — JWT Best Current Practices](https://datatracker.ietf.org/doc/html/rfc8725)\n- [OWASP JWT Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html)\n- [Auth0 — Refresh Token Rotation](https://auth0.com/docs/secure/tokens/refresh-tokens/refresh-token-rotation)\n- [FusionAuth — Revoking JWTs](https://fusionauth.io/articles/tokens/revoking-jwts)\n- [NIST SP 800-63B](https://pages.nist.gov/800-63-3/sp800-63b.html)\n- [Scott Brady — Which JWT Signing Algorithm Should I Use?](https://www.scottbrady.io/jose/jwts-which-signing-algorithm-should-i-use)`,
+    },
+
+    // ── Quiz units (from existing file, preserved IDs) ────────────────────────
+
     {
       id: "jwt-best-practices-unit-7",
       type: "quiz",
@@ -115,7 +349,6 @@ export const jwtBestPractices: Lecture = {
       points: 1,
     },
 
-    // Quiz Unit 6 — Why Refresh Tokens Exist (medium)
     {
       id: "jwt-best-practices-unit-8",
       type: "quiz",
@@ -142,7 +375,6 @@ export const jwtBestPractices: Lecture = {
       points: 1,
     },
 
-    // Quiz Unit 7 — Token Storage Comparison (medium)
     {
       id: "jwt-best-practices-unit-9",
       type: "quiz",

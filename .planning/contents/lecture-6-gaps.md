@@ -1,42 +1,18 @@
-# Lecture 5 — What's Missing: Fill These Gaps
+# Lecture 6 — What's Missing: Fill These Gaps
 
-## Unit 1 — OIDC: The Identity Layer
+## Unit 1 — Section Intro
 **type:** prose
 
-## 5. What's Missing — Fill These Gaps
+## 6. What's Missing — Fill These Gaps
 
-### 5.1 OIDC (OpenID Connect) — The Identity Layer
-
-> 💡 **OAuth 2.0 handles authorization. OIDC handles identity. They're not the same thing.**
->
-> OAuth 2.0 answers "can this app access my data?" — it says nothing about *who* you are. OIDC is a thin identity layer built *on top of* OAuth 2.0 that adds the **ID token**: a JWT that tells your app who just logged in.
-
-**Keywords:** `ID token`, `userinfo endpoint`, `/.well-known/openid-configuration`, `sub`, `email`, `name`
-
-**The one-line difference:**
-
-|  | OAuth 2.0 | OIDC |
-|---|---|---|
-| **Purpose** | Delegated authorization | User authentication / identity |
-| **Token issued** | Access token | Access token  • ID token |
-| **Answers** | "Can this app read my Drive?" | "Who just logged in?" |
-
-**Rule:** "Login with Google / GitHub / Microsoft" = OIDC, not plain OAuth 2.0. The ID token is for your app to read identity claims (`sub`, `email`, `name`). The access token is for calling APIs. **Never use the ID token as an API bearer token.**
-
-Every OIDC provider publishes a discovery endpoint:
-
-```javascript
-https://accounts.google.com/.well-known/openid-configuration
-```
-
-Your app fetches this once to get `authorization_endpoint`, `token_endpoint`, `jwks_uri`. No hardcoding needed.
+Lectures 1–5 covered the core foundations: passwords, JWT, OAuth, sessions, MFA, OIDC, service-to-service auth, and security fundamentals. This lecture covers three topics that don't fit neatly into those lectures but come up constantly in real systems.
 
 ---
 
 ## Unit 2 — CSRF (Cross-Site Request Forgery)
 **type:** prose
 
-### 5.2 CSRF (Cross-Site Request Forgery)
+### 6.1 CSRF (Cross-Site Request Forgery)
 
 **What it is:** a malicious site tricks the user's browser into making a credentialed request to your API — the browser automatically sends cookies, so the server thinks it's legitimate.
 
@@ -48,14 +24,14 @@ Your app fetches this once to get `authorization_endpoint`, `token_endpoint`, `j
 - CSRF tokens — server issues a secret per session; every mutating request must echo it back
 - Tokens sent via `Authorization: Bearer` header are naturally CSRF-safe — a cross-site page can't set custom headers
 
-> 💡 This is exactly why section 2.3 sets `SameSite=Strict` on the refresh cookie — it's not just style, it's CSRF protection baked in.
+> 💡 This is exactly why Lecture 2 sets `SameSite=Strict` on the refresh cookie — it's not just style, it's CSRF protection baked in.
 
 ---
 
 ## Unit 3 — RBAC vs. ABAC
 **type:** prose
 
-### 5.3 RBAC vs. ABAC — Modeling Permissions
+### 6.2 RBAC vs. ABAC — Modeling Permissions
 
 > 💡 AuthZ says *what someone can do* — but how does your system decide that? That's where RBAC and ABAC come in.
 
@@ -99,10 +75,13 @@ Two columns side-by-side: RBAC and ABAC. Pick a user (role + department), a reso
 - [RFC 7519 — JWT](https://datatracker.ietf.org/doc/html/rfc7519)
 - [RFC 7636 — PKCE](https://datatracker.ietf.org/doc/html/rfc7636)
 - [RFC 8725 — JWT Best Current Practices](https://datatracker.ietf.org/doc/html/rfc8725)
+- [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)
 - [Refresh Token Rotation — Auth0](https://auth0.com/docs/secure/tokens/refresh-tokens/refresh-token-rotation)
 - [OWASP JWT Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html)
+- [OWASP Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)
 - [NIST SP 800-63B](https://pages.nist.gov/800-63-3/sp800-63b.html)
 - [FusionAuth — Revoking JWTs](https://fusionauth.io/articles/tokens/revoking-jwts)
+- [passkeys.dev](https://passkeys.dev/)
 
 Related Notion pages:
 - [Revolution of AuthN & AuthZ](https://www.notion.so/32a01fb05bf18139b980fc2d4c6369b9)

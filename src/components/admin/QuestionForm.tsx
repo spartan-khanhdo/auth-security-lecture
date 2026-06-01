@@ -11,11 +11,12 @@ interface QuestionFormProps {
 }
 
 const LECTURE_OPTIONS: { value: LectureSlug; label: string }[] = [
-  { value: "oauth-authn", label: "OAuth & AuthN Fundamentals" },
-  { value: "jwt-best-practices", label: "JWT Best Practices" },
+  { value: "oauth-authn", label: "The Foundation: Stateless, Passwords & JWT" },
+  { value: "jwt-best-practices", label: "OAuth: Delegated Authorization" },
+  { value: "sessions-mfa-modern-authn", label: "Sessions, MFA & Modern AuthN" },
   { value: "service-to-service", label: "Service-to-Service Auth" },
   { value: "security-fundamentals", label: "Security Fundamentals" },
-  { value: "gaps", label: "OIDC, CSRF, RBAC/ABAC" },
+  { value: "gaps", label: "What's Missing: Fill These Gaps" },
 ];
 
 const DIFFICULTY_OPTIONS: Array<"easy" | "medium" | "hard"> = ["easy", "medium", "hard"];
