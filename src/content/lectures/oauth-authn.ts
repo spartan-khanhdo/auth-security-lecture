@@ -264,9 +264,14 @@ export const oauthAuthn: Lecture = {
       component: "DecisionTracer",
     },
 
-    // ── Block 7: Quiz ────────────────────────────────────────────────────────
+    // ── Block 7: Checkpoint ──────────────────────────────────────────────────
 
-    // New quiz unit 1 — JWT storage in SPA
+    {
+      id: "oauth-authn-checkpoint",
+      type: "checkpoint",
+      title: "Checkpoint",
+      questions: [
+    // question 1 — JWT storage in SPA
     {
       id: "oauth-authn-quiz-storage",
       type: "quiz",
@@ -298,7 +303,7 @@ export const oauthAuthn: Lecture = {
       points: 1,
     },
 
-    // New quiz unit 2 — JWT tampering
+    // question 2 — JWT tampering
     {
       id: "oauth-authn-quiz-tampering",
       type: "quiz",
@@ -330,7 +335,7 @@ export const oauthAuthn: Lecture = {
       points: 1,
     },
 
-    // New quiz unit 3 — JWT payload safety
+    // question 3 — JWT payload safety
     {
       id: "oauth-authn-quiz-payload",
       type: "quiz",
@@ -361,8 +366,7 @@ export const oauthAuthn: Lecture = {
       points: 1,
     },
 
-    // Existing quiz units (preserved IDs)
-
+    // question 4
     {
       id: "oauth-authn-unit-7",
       type: "quiz",
@@ -485,5 +489,7 @@ export const oauthAuthn: Lecture = {
         "Participants: User (consents), App (public client, generates and holds verifier), Auth Server (validates user, binds code-to-verifier, issues tokens), Resource Server (verifies JWT signature/claims, serves data).",
       points: 1,
     },
+      ], // end questions
+    },  // end checkpoint
   ],
 };

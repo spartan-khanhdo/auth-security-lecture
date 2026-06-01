@@ -1,16 +1,47 @@
 "use client";
 
-const DOT_THRESHOLD = 12;
-
 interface IPlayerControlsProps {
   stepIndex: number;
   totalSteps: number;
   hasNextLecture: boolean;
   onPrev: () => void;
   onNext: () => void;
-  isPresentation?: boolean;
-  showChrome?: boolean;
-  onMouseLeaveChrome?: () => void;
+}
+
+function ChevronLeftIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      width="16"
+      height="16"
+      aria-hidden="true"
+    >
+      <polyline points="15 18 9 12 15 6" />
+    </svg>
+  );
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      width="16"
+      height="16"
+      aria-hidden="true"
+    >
+      <polyline points="9 18 15 12 9 6" />
+    </svg>
+  );
 }
 
 export default function PlayerControls({
@@ -19,63 +50,43 @@ export default function PlayerControls({
   hasNextLecture,
   onPrev,
   onNext,
-  isPresentation = false,
-  showChrome = false,
-  onMouseLeaveChrome,
 }: IPlayerControlsProps) {
-  const hidden = isPresentation && !showChrome;
   const isFirst = stepIndex === 0;
   const isLast = stepIndex === totalSteps - 1;
 
   const nextLabel = isLast
     ? hasNextLecture
-      ? "Complete & continue →"
+      ? "Complete"
       : "Finish"
-    : "Next →";
+    : "Next";
 
   return (
-    <div
-      className={`footernav${hidden ? " pres-hidden" : ""}`}
-      onMouseLeave={isPresentation ? onMouseLeaveChrome : undefined}
-    >
-      {!isFirst ? (
+    <>
+      {!isFirst && (
         <button
-          className="btn btn-ghost"
+          className="side-nav-btn side-nav-back"
           onClick={onPrev}
           aria-label="Previous step"
         >
-          ← Back
+          <ChevronLeftIcon />
+          <span className="side-nav-label">Back</span>
         </button>
-      ) : (
-        <span />
-      )}
-
-      {totalSteps <= DOT_THRESHOLD ? (
-        <div className="fn-dots" aria-hidden="true">
-          {Array.from({ length: totalSteps }).map((_, i) => {
-            const isOn = i === stepIndex;
-            const isPast = i < stepIndex;
-            return (
-              <span
-                key={i}
-                className={`fn-dot${isOn ? " on" : ""}${isPast ? " past" : ""}`}
-              />
-            );
-          })}
-        </div>
-      ) : (
-        <span className="text-sm text-[var(--text-faint)] tabular-nums">
-          {stepIndex + 1} / {totalSteps}
-        </span>
       )}
 
       <button
-        className="btn btn-primary"
+        className="side-nav-btn side-nav-next"
         onClick={onNext}
-        aria-label={isLast ? (hasNextLecture ? "Complete lecture and continue to next" : "Finish course") : "Next step"}
+        aria-label={
+          isLast
+            ? hasNextLecture
+              ? "Complete lecture and continue to next"
+              : "Finish course"
+            : "Next step"
+        }
       >
-        {nextLabel}
+        <span className="side-nav-label">{nextLabel}</span>
+        <ChevronRightIcon />
       </button>
-    </div>
+    </>
   );
 }

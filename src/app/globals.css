@@ -1287,40 +1287,56 @@ body::before {
   margin-bottom: 14px;
 }
 
-/* Footer nav */
-.footernav {
-  position: sticky;
-  bottom: 0;
+/* Side nav buttons */
+.side-nav-btn {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 50;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 15px clamp(20px, 5vw, 64px);
-  border-top: 1px solid var(--border-subtle);
-  background: color-mix(in srgb, var(--bg) 84%, transparent);
-  backdrop-filter: blur(14px);
+  justify-content: center;
+  gap: 0;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .18s var(--ease), border-color .18s, color .18s, opacity .18s, transform .18s;
 }
 
-.fn-dots {
-  display: flex;
-  gap: 8px;
+.side-nav-back {
+  left: clamp(8px, 2vw, 24px);
+  color: var(--text-dim);
+  background: color-mix(in srgb, var(--surface-2) 90%, transparent);
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(12px);
 }
 
-.fn-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--border-strong);
-  transition: all .3s var(--ease-back);
+.side-nav-back:hover {
+  background: var(--surface-3);
+  border-color: var(--border-strong);
+  color: var(--text);
+  transform: translateY(-50%) translateX(-2px);
 }
 
-.fn-dot.on {
+.side-nav-next {
+  right: clamp(8px, 2vw, 24px);
+  color: #fff;
   background: var(--primary);
-  width: 22px;
+  border: 1px solid var(--primary);
 }
 
-.fn-dot.past {
-  background: var(--primary-soft-2);
+.side-nav-next:hover {
+  background: var(--primary-hover, color-mix(in srgb, var(--primary) 85%, #fff));
+  border-color: var(--primary-hover, color-mix(in srgb, var(--primary) 85%, #fff));
+  transform: translateY(-50%) translateX(2px);
+}
+
+.side-nav-label {
+  display: none;
 }
 
 /* Player top bar */
@@ -1419,32 +1435,18 @@ body::before {
 }
 
 /* Presentation mode — fixed chrome with slide-in/out transitions */
-.stage.presentation .player-topbar,
-.stage.presentation .footernav {
+.stage.presentation .player-topbar {
   position: fixed;
+  top: 0;
   left: 0;
   right: 0;
   z-index: 100;
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-.stage.presentation .player-topbar {
-  top: 0;
-}
-
-.stage.presentation .footernav {
-  bottom: 0;
-}
-
 .stage.presentation .player-topbar.pres-hidden {
   opacity: 0;
   transform: translateY(-100%);
-  pointer-events: none;
-}
-
-.stage.presentation .footernav.pres-hidden {
-  opacity: 0;
-  transform: translateY(100%);
   pointer-events: none;
 }
 
@@ -1623,10 +1625,6 @@ body::before {
 
   .prose table {
     font-size: 17px;
-  }
-
-  .footernav {
-    padding: 18px clamp(40px, 6vw, 100px);
   }
 
   .player-topbar {

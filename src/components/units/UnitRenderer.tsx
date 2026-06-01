@@ -6,6 +6,7 @@ import CodeRenderer from './CodeRenderer';
 import QuizRenderer from './QuizRenderer';
 import MediaRenderer from './MediaRenderer';
 import TwoColumnRenderer from './TwoColumnRenderer';
+import CheckpointRenderer from './CheckpointRenderer';
 
 interface UnitRendererProps {
   unit: Unit;
@@ -33,6 +34,9 @@ export default function UnitRenderer({ unit }: UnitRendererProps) {
 
     case 'two-column':
       return <TwoColumnRenderer unit={unit} />;
+
+    case 'checkpoint':
+      return <CheckpointRenderer unit={unit} />;
 
     default: {
       const _exhaustive: never = unit;

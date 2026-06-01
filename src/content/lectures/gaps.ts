@@ -36,9 +36,14 @@ export const gaps: Lecture = {
       component: "RBACPlayground",
     },
 
-    // Quiz units (gaps-unit-4 removed — OIDC quiz no longer relevant)
+    // ── Checkpoint ────────────────────────────────────────────────────────────
 
-    // Quiz Unit — CSRF and Bearer headers (was gaps-unit-5, kept stable)
+    {
+      id: "gaps-checkpoint",
+      type: "checkpoint",
+      title: "Checkpoint",
+      questions: [
+    // CSRF and Bearer headers (was gaps-unit-5)
     {
       id: "gaps-unit-5",
       type: "quiz",
@@ -109,5 +114,7 @@ export const gaps: Lecture = {
         'RBAC scales with the number of roles; ownership multiplies roles unmanageably ("editor-of-doc-1", "editor-of-doc-2"). ABAC evaluates policies like `user.id == resource.owner_id && user.role == \'editor\'`, expressed cleanly in one rule.',
       points: 1,
     },
+      ], // end questions
+    },  // end checkpoint
   ],
 };

@@ -42,7 +42,6 @@ export default function LecturePlayer({ lecture }: ILecturePlayerProps) {
   // ── Presentation mode ────────────────────────────────────────────────────
   const [isPresentation, setIsPresentation] = useState(false);
   const [showTop, setShowTop] = useState(false);
-  const [showBottom, setShowBottom] = useState(false);
 
   const stageRef = useRef<HTMLDivElement | null>(null);
   const didMountRef = useRef(false);
@@ -118,7 +117,6 @@ export default function LecturePlayer({ lecture }: ILecturePlayerProps) {
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     setIsPresentation(false);
     setShowTop(false);
-    setShowBottom(false);
   }, []);
 
   useEffect(() => {
@@ -126,11 +124,9 @@ export default function LecturePlayer({ lecture }: ILecturePlayerProps) {
       if (document.fullscreenElement) {
         setIsPresentation(true);
         setShowTop(false);
-        setShowBottom(false);
       } else {
         setIsPresentation(false);
         setShowTop(false);
-        setShowBottom(false);
       }
     };
     document.addEventListener("fullscreenchange", onFsChange);
@@ -204,18 +200,11 @@ export default function LecturePlayer({ lecture }: ILecturePlayerProps) {
       />
 
       {isPresentation && (
-        <>
-          <div
-            aria-hidden="true"
-            style={{ position: "fixed", top: 0, left: 0, right: 0, height: 8, zIndex: 101 }}
-            onMouseEnter={() => setShowTop(true)}
-          />
-          <div
-            aria-hidden="true"
-            style={{ position: "fixed", bottom: 0, left: 0, right: 0, height: 8, zIndex: 101 }}
-            onMouseEnter={() => setShowBottom(true)}
-          />
-        </>
+        <div
+          aria-hidden="true"
+          style={{ position: "fixed", top: 0, left: 0, right: 0, height: 8, zIndex: 101 }}
+          onMouseEnter={() => setShowTop(true)}
+        />
       )}
 
       <main
@@ -252,9 +241,6 @@ export default function LecturePlayer({ lecture }: ILecturePlayerProps) {
           hasNextLecture={hasNextLecture}
           onPrev={goPrev}
           onNext={goNext}
-          isPresentation={isPresentation}
-          showChrome={showBottom}
-          onMouseLeaveChrome={() => setShowBottom(false)}
         />
       </main>
     </div>

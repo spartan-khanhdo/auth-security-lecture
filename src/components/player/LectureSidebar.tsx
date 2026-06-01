@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import type { Lecture } from "@/content/types";
+import type { Lecture, Unit } from "@/content/types";
 import { LECTURES } from "@/content/lectures";
 import { useCourseProgress } from "@/components/shell/CourseProgressProvider";
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
 
 function CheckIcon() {
   return (
@@ -38,6 +40,76 @@ function HomeArrowIcon() {
   );
 }
 
+/** Flag icon used in the si-dot for a Checkpoint group entry. */
+function FlagIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+      <line x1="4" y1="22" x2="4" y2="15" />
+    </svg>
+  );
+}
+
+// ─── Sidebar item model ───────────────────────────────────────────────────────
+
+/**
+ * Derived representation of the sidebar list.
+ * `checkpoint` units render as a single "Checkpoint (N questions)" entry.
+ * All other unit types render as individual entries.
+ * Legacy consecutive `quiz` units (if any remain) are also collapsed as a fallback.
+ */
+type SidebarItem =
+  | { kind: "unit"; step: number; unit: Unit }
+  | { kind: "checkpoint"; firstStep: number; lastStep: number; count: number };
+
+function buildSidebarItems(units: Unit[]): SidebarItem[] {
+  const items: SidebarItem[] = [];
+  let i = 0;
+
+  while (i < units.length) {
+    const unit = units[i];
+    const step = i + 1; // steps are 1-indexed (step 0 = cover)
+
+    if (unit.type === "checkpoint") {
+      // First-class checkpoint unit — one player step, N questions inside.
+      items.push({
+        kind: "checkpoint",
+        firstStep: step,
+        lastStep: step,
+        count: unit.questions.length,
+      });
+      i++;
+    } else if (unit.type === "quiz") {
+      // Fallback: group consecutive standalone quiz units (legacy content).
+      const firstStep = step;
+      while (i < units.length && units[i].type === "quiz") {
+        i++;
+      }
+      items.push({
+        kind: "checkpoint",
+        firstStep,
+        lastStep: i,
+        count: i - firstStep + 1,
+      });
+    } else {
+      items.push({ kind: "unit", step, unit });
+      i++;
+    }
+  }
+
+  return items;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 interface ILectureSidebarProps {
   lecture: Lecture;
   stepIndex: number;
@@ -56,7 +128,7 @@ export default function LectureSidebar({
   const { getResumeStep, progress } = useCourseProgress();
   const [courseOpen, setCourseOpen] = useState(false);
 
-  const currentLectureIndex = LECTURES.findIndex((l) => l.slug === lecture.slug);
+  const sidebarItems = buildSidebarItems(lecture.units);
 
   return (
     <>
@@ -65,6 +137,7 @@ export default function LectureSidebar({
 
       {/* Sidebar drawer */}
       <aside className="sidebar" aria-label="Course navigation">
+
         {/* Section 1: Sibling lectures (collapsible) */}
         <button
           className="side-title side-title-btn"
@@ -75,87 +148,111 @@ export default function LectureSidebar({
           COURSE CONTENTS
           <span style={{ opacity: 0.5, fontSize: 10, transform: courseOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", marginRight: 2 }}>▲</span>
         </button>
+
         {courseOpen && (
-        <nav role="navigation" aria-label="All lectures">
-          <ol className="side-list">
-            {LECTURES.map((sibling, i) => {
-              const isActive = sibling.slug === lecture.slug;
-              const resumeStep = getResumeStep(sibling.slug);
-              const siblingProgress = progress[sibling.slug];
-              const isDone =
-                siblingProgress !== undefined &&
-                siblingProgress.lastStep > 0 &&
-                siblingProgress.lastStep >= siblingProgress.totalSteps - 1;
-              const href = `/lecture/${sibling.slug}${resumeStep > 0 ? `?step=${resumeStep}` : ""}`;
+          <nav role="navigation" aria-label="All lectures">
+            <ol className="side-list">
+              {LECTURES.map((sibling, i) => {
+                const isActive = sibling.slug === lecture.slug;
+                const resumeStep = getResumeStep(sibling.slug);
+                const siblingProgress = progress[sibling.slug];
+                const isDone =
+                  siblingProgress !== undefined &&
+                  siblingProgress.lastStep > 0 &&
+                  siblingProgress.lastStep >= siblingProgress.totalSteps - 1;
+                const href = `/lecture/${sibling.slug}${resumeStep > 0 ? `?step=${resumeStep}` : ""}`;
 
-              return (
-                <li key={sibling.slug}>
-                  <Link
-                    href={href}
-                    className={`side-item${isActive ? " active" : ""}${isDone ? " done" : ""}`}
-                    aria-current={isActive ? "page" : undefined}
-                    style={{ textDecoration: "none" }}
-                  >
-                    <span className="si-dot">
-                      {isDone ? (
-                        <CheckIcon />
-                      ) : (
-                        <span>{i + 1}</span>
-                      )}
-                    </span>
-                    <span className="si-txt">{sibling.title}</span>
-                  </Link>
+                return (
+                  <li key={sibling.slug}>
+                    <Link
+                      href={href}
+                      className={`side-item${isActive ? " active" : ""}${isDone ? " done" : ""}`}
+                      aria-current={isActive ? "page" : undefined}
+                      style={{ textDecoration: "none" }}
+                    >
+                      <span className="si-dot">
+                        {isDone ? <CheckIcon /> : <span>{i + 1}</span>}
+                      </span>
+                      <span className="si-txt">{sibling.title}</span>
+                    </Link>
 
-                  {/* Progress % — only show once the learner has actually advanced */}
-                  {siblingProgress && siblingProgress.lastStep > 0 && siblingProgress.totalSteps > 1 && (
-                    <div className="si-pct" aria-label={`${Math.round((siblingProgress.lastStep / (siblingProgress.totalSteps - 1)) * 100)}% complete`}>
-                      {Math.round((siblingProgress.lastStep / (siblingProgress.totalSteps - 1)) * 100)}%
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ol>
-        </nav>
+                    {siblingProgress && siblingProgress.lastStep > 0 && siblingProgress.totalSteps > 1 && (
+                      <div
+                        className="si-pct"
+                        aria-label={`${Math.round((siblingProgress.lastStep / (siblingProgress.totalSteps - 1)) * 100)}% complete`}
+                      >
+                        {Math.round((siblingProgress.lastStep / (siblingProgress.totalSteps - 1)) * 100)}%
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
         )}
 
         {/* Divider */}
         <div style={{ height: "1px", background: "var(--border-subtle)", margin: "16px 0" }} />
 
-        {/* Section 2: Unit outline for current lecture */}
+        {/* Section 2: Unit outline for current lecture.
+            Cover (step 0) is intentionally omitted — it is not a content unit
+            and adding it as an entry clutters the list with no navigation value. */}
         <div className="side-title">IN THIS LECTURE</div>
         <nav role="navigation" aria-label="Lecture units">
           <ol className="side-list">
-            {/* Cover */}
-            <li>
-              <button
-                className={`side-item${stepIndex === 0 ? " active" : ""}`}
-                onClick={() => onJump(0)}
-                aria-current={stepIndex === 0 ? "step" : undefined}
-              >
-                <span className="si-dot">
-                  <span>{currentLectureIndex + 1}</span>
-                </span>
-                <span className="si-txt">Cover</span>
-              </button>
-            </li>
+            {sidebarItems.map((item) => {
+              if (item.kind === "unit") {
+                const { step, unit } = item;
+                const isActive = stepIndex === step;
+                const isPast = stepIndex > step;
 
-            {/* Units */}
-            {lecture.units.map((unit, i) => {
-              const step = i + 1;
-              const isActiveUnit = stepIndex === step;
-              const isPastUnit = stepIndex > step;
+                return (
+                  <li key={unit.id}>
+                    <button
+                      className={`side-item${isActive ? " active" : ""}${isPast ? " done" : ""}`}
+                      onClick={() => onJump(step)}
+                      aria-current={isActive ? "step" : undefined}
+                    >
+                      <span className="si-dot">
+                        {isPast ? <CheckIcon /> : <span>{step}</span>}
+                      </span>
+                      <span className="si-txt">{unit.title ?? `Unit ${step}`}</span>
+                    </button>
+                  </li>
+                );
+              }
+
+              // Checkpoint group — all consecutive quiz units collapsed into one entry.
+              const { firstStep, lastStep, count } = item;
+              const isActive = stepIndex >= firstStep && stepIndex <= lastStep;
+              const isPast = stepIndex > lastStep;
+
               return (
-                <li key={unit.id}>
+                <li key={`checkpoint-${firstStep}`}>
                   <button
-                    className={`side-item${isActiveUnit ? " active" : ""}${isPastUnit ? " done" : ""}`}
-                    onClick={() => onJump(step)}
-                    aria-current={isActiveUnit ? "step" : undefined}
+                    className={`side-item${isActive ? " active" : ""}${isPast ? " done" : ""}`}
+                    onClick={() => onJump(firstStep)}
+                    aria-current={isActive ? "step" : undefined}
+                    aria-label={`Checkpoint, ${count} quiz question${count !== 1 ? "s" : ""}`}
                   >
                     <span className="si-dot">
-                      {isPastUnit ? <CheckIcon /> : <span>{step}</span>}
+                      {isPast ? <CheckIcon /> : <FlagIcon />}
                     </span>
-                    <span className="si-txt">{unit.title ?? `Unit ${step}`}</span>
+                    <span className="si-txt">
+                      Checkpoint
+                      <span
+                        style={{
+                          display: "block",
+                          fontFamily: "var(--font-mono)",
+                          fontSize: "11px",
+                          color: "var(--text-faint)",
+                          fontWeight: 400,
+                          marginTop: "1px",
+                        }}
+                      >
+                        {count} question{count !== 1 ? "s" : ""}
+                      </span>
+                    </span>
                   </button>
                 </li>
               );

@@ -28,6 +28,40 @@ export const securityFundamentals: Lecture = {
       body: `> **Hashing = one-way** (verify) · **Encryption = two-way** (protect + recover)\n\n**Hashing (one-way) — for passwords:**\n\n- Purpose: store something you can **verify** but never need to recover\n- Use: **bcrypt** / **Argon2** (slow by design → resists brute force)\n- Always add a unique **salt** (good libs do this automatically)\n\n\`\`\`\npassword → hash(password + salt) → store hash\nlogin → hash(input + same salt) → compare\n\`\`\`\n\n> ⚠️ Never use MD5/SHA-1/SHA-256 plain hashing for passwords. They are too fast — attackers can crack at scale (billions of hashes/second on GPUs).\n\n**Encryption (two-way) — for sensitive data:**\n\n- Purpose: store/transmit data that must be **recovered** later\n- Typical: **AES-256-GCM** (confidentiality + integrity)\n- Keys must live in **KMS/Vault**, not in code or config\n\n\`\`\`\nplaintext → encrypt(key) → ciphertext\nciphertext → decrypt(key) → plaintext\n\`\`\`\n\n**Common examples:**\n\n- Encrypt: PII fields, API tokens at rest, secrets in DB\n- Hash: passwords, (sometimes) refresh token hashes`,
     },
 
+    // Unit 1b — Two-column: bcrypt vs plaintext (layout test)
+    {
+      id: "security-fundamentals-unit-1b",
+      type: "two-column",
+      title: "bcrypt vs. Plaintext — Side by Side",
+      ratio: "1:1",
+      left: {
+        id: "security-fundamentals-unit-1b-left",
+        type: "prose",
+        title: "Why bcrypt?",
+        body: `**bcrypt is deliberately slow.**\n\nEach hash takes ~100–300 ms on modern hardware. That sounds bad, but it means an attacker trying a billion passwords would need 3+ years — not seconds.\n\n**Key properties:**\n\n- Built-in **salt** (random per user — same password → different hash every time)\n- Configurable **cost factor** — increase as hardware improves\n- Widely audited, battle-tested since 1999\n\n> ⚠️ Never use MD5, SHA-1, or plain SHA-256 for passwords — they run at **billions of hashes per second** on a GPU.`,
+      },
+      right: {
+        id: "security-fundamentals-unit-1b-right",
+        type: "code",
+        language: "ts",
+        code: `import bcrypt from "bcrypt";
+
+// Storing a password
+const COST = 12; // work factor — higher = slower = more secure
+const hash = await bcrypt.hash(plainPassword, COST);
+// e.g. "$2b$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW"
+
+// Verifying at login
+const match = await bcrypt.compare(loginAttempt, storedHash);
+// true → passwords match; false → wrong password
+
+// ─────────────────────────────────────────────
+// ❌ WRONG — never do this:
+const badHash = createHash("md5").update(plainPassword).digest("hex");
+// Crackable in seconds on a $50 GPU rental.`,
+      },
+    },
+
     // Unit 2 — HashingPlayground demo
     {
       id: "security-fundamentals-unit-2",
@@ -99,7 +133,12 @@ Users.selectAll()
       body: `**1) Never trust client input**\n\n- Validate types, ranges, formats server-side\n- Treat every string as potentially malicious\n\n**2) Least privilege**\n\n- Minimal scopes/roles per service, per endpoint\n- Separate credentials for read/write paths\n- DB user has only the permissions the app actually needs\n\n**3) Defense in depth**\n\n- Multiple layers: authn + authz + validation + logging + rate limiting\n- No single control is relied upon alone\n\n**4) Secure secret management**\n\n- No secrets in code or config files\n- Rotation + audit logs\n- Use KMS/Vault + short-lived credentials where possible\n\n**In our system:**\n\n- Passwords: hashed (bcrypt/Argon2)\n- Auth: JWT validated on the API\n- Transport: HTTPS everywhere\n- Authorization: enforced on backend routes\n\n> **Key takeaway:** Security = **correctness under attack**. Strong authentication, consistent authorization, safe data handling (hash vs encrypt), and secure defaults layered together.`,
     },
 
-    // Unit 9 — Quiz Unit 4 (easy: password hashing) — single trailing quiz
+    // Unit 9 — Checkpoint (single question)
+    {
+      id: "security-fundamentals-checkpoint",
+      type: "checkpoint",
+      title: "Checkpoint",
+      questions: [
     {
       id: "security-fundamentals-unit-9",
       type: "quiz",
@@ -122,5 +161,7 @@ Users.selectAll()
         "Plain text means a breach exposes every password. MD5/SHA-256 are too fast — attackers crack them at billions/sec on GPUs. bcrypt/Argon2 are intentionally slow and use per-user salts.",
       points: 1,
     },
+      ], // end questions
+    },  // end checkpoint
   ],
 };

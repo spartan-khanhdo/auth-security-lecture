@@ -324,8 +324,13 @@ def exchange_code_for_token(request):
       body: `**References:**\n\n- [RFC 6749 — OAuth 2.0](https://datatracker.ietf.org/doc/html/rfc6749)\n- [RFC 7636 — PKCE](https://datatracker.ietf.org/doc/html/rfc7636)\n- [RFC 8725 — JWT Best Current Practices](https://datatracker.ietf.org/doc/html/rfc8725)\n- [OWASP JWT Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html)\n- [Auth0 — Refresh Token Rotation](https://auth0.com/docs/secure/tokens/refresh-tokens/refresh-token-rotation)\n- [FusionAuth — Revoking JWTs](https://fusionauth.io/articles/tokens/revoking-jwts)\n- [NIST SP 800-63B](https://pages.nist.gov/800-63-3/sp800-63b.html)\n- [Scott Brady — Which JWT Signing Algorithm Should I Use?](https://www.scottbrady.io/jose/jwts-which-signing-algorithm-should-i-use)`,
     },
 
-    // ── Quiz units (from existing file, preserved IDs) ────────────────────────
+    // ── Checkpoint ────────────────────────────────────────────────────────────
 
+    {
+      id: "jwt-best-practices-checkpoint",
+      type: "checkpoint",
+      title: "Checkpoint",
+      questions: [
     {
       id: "jwt-best-practices-unit-7",
       type: "quiz",
@@ -397,5 +402,7 @@ def exchange_code_for_token(request):
         "`localStorage`/`sessionStorage` are both readable by any JS on the page — one XSS = full takeover. JS memory keeps the AT out of any persisted store. HttpOnly cookie shields the RT from JS entirely; `SameSite=Strict` blocks CSRF.",
       points: 1,
     },
+      ], // end questions
+    },  // end checkpoint
   ],
 };

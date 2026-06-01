@@ -1,4 +1,4 @@
-export type UnitType = 'prose' | 'diagram' | 'demo' | 'code' | 'quiz' | 'media' | 'two-column';
+export type UnitType = 'prose' | 'diagram' | 'demo' | 'code' | 'quiz' | 'media' | 'two-column' | 'checkpoint';
 
 export interface BaseUnit {
   id: string;
@@ -79,6 +79,20 @@ export interface MediaUnit extends BaseUnit {
   aspectRatio?: string;
 }
 
+/**
+ * A single-step quiz block containing one or more questions.
+ * Renders all questions on one scrollable screen so the learner completes
+ * the entire checkpoint in one player step — no per-question step navigation.
+ *
+ * Use this instead of individual `quiz` units at the end of a lecture.
+ * The `quiz` type is reserved for standalone inline quiz questions.
+ */
+export interface CheckpointUnit extends BaseUnit {
+  type: 'checkpoint';
+  /** All quiz questions shown together on this slide. */
+  questions: QuizUnit[];
+}
+
 /** Leaf unit types that can appear inside a TwoColumnUnit (no recursive nesting). */
 export type LeafUnit = ProseUnit | DiagramUnit | DemoUnit | CodeUnit | QuizUnit | MediaUnit;
 
@@ -100,7 +114,7 @@ export interface TwoColumnUnit extends BaseUnit {
   ratio?: '1:1' | '2:3' | '3:2';
 }
 
-export type Unit = ProseUnit | DiagramUnit | DemoUnit | CodeUnit | QuizUnit | MediaUnit | TwoColumnUnit;
+export type Unit = ProseUnit | DiagramUnit | DemoUnit | CodeUnit | QuizUnit | MediaUnit | TwoColumnUnit | CheckpointUnit;
 
 export type LectureSlug =
   | 'oauth-authn'
