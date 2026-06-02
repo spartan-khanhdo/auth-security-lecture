@@ -1595,11 +1595,11 @@ body::before {
 ───────────────────────────────────────────────────────── */
 @media (min-width: 1400px) {
   .panel {
-    width: min(1080px, 100%);
+    width: min(1200px, 100%);
   }
 
   .panel-shell {
-    padding: clamp(40px, 5vh, 80px) clamp(40px, 6vw, 100px);
+    padding: clamp(40px, 5vh, 80px) clamp(32px, 4vw, 72px);
   }
 
   .prose,
@@ -1634,6 +1634,61 @@ body::before {
 
   .brand-lecture {
     font-size: 17px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   EXTRA LARGE / PRESENTATION DISPLAY (1920px+)
+   Expand content further for wide monitors and TVs.
+───────────────────────────────────────────────────────── */
+@media (min-width: 1920px) {
+  .panel {
+    width: min(1560px, 92vw);
+  }
+
+  .panel-shell {
+    padding: clamp(48px, 5vh, 90px) clamp(40px, 4vw, 80px);
+  }
+
+  .prose,
+  .prose p,
+  .prose li {
+    font-size: 19px;
+    line-height: 1.8;
+  }
+
+  .prose h1,
+  .cover-title {
+    font-size: clamp(44px, 3.5vw, 68px);
+  }
+
+  .prose h2,
+  .concept-title {
+    font-size: clamp(32px, 2.8vw, 50px);
+  }
+
+  .prose h3 {
+    font-size: clamp(24px, 2vw, 36px);
+  }
+
+  .player-topbar {
+    height: 64px;
+  }
+
+  .brand-lecture {
+    font-size: 18px;
+  }
+
+  .side-nav-btn {
+    padding: 14px;
+  }
+
+  .side-nav-back {
+    left: clamp(20px, 2.5vw, 48px);
+  }
+
+  .side-nav-next {
+    right: clamp(20px, 2.5vw, 48px);
   }
 }
 

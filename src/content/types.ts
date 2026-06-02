@@ -22,6 +22,9 @@ export interface DiagramUnit extends BaseUnit {
 export interface DemoUnit extends BaseUnit {
   type: 'demo';
   component:
+    | 'AuthNAuthZAnimator'
+    | 'SessionFlowLane'
+    | 'PasswordProgression'
     | 'JWTDecoder'
     | 'JWTForger'
     | 'PKCEGenerator'

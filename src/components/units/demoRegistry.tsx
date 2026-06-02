@@ -19,6 +19,18 @@ export const demoRegistry: Record<
   DemoUnit['component'],
   ComponentType<Record<string, unknown>>
 > = {
+  AuthNAuthZAnimator: dynamic(
+    () => import('@/components/demos/AuthNAuthZAnimator'),
+    { ssr: false, loading: DemoSkeleton }
+  ),
+  SessionFlowLane: dynamic(
+    () => import('@/components/demos/SessionFlowLane'),
+    { ssr: false, loading: DemoSkeleton }
+  ),
+  PasswordProgression: dynamic(
+    () => import('@/components/demos/PasswordProgression'),
+    { ssr: false, loading: DemoSkeleton }
+  ),
   JWTDecoder: dynamic(
     () => import('@/components/demos/JWTDecoder'),
     { ssr: false, loading: DemoSkeleton }

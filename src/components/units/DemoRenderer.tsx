@@ -20,7 +20,7 @@ export default function DemoRenderer({ unit }: DemoRendererProps) {
   }
 
   return (
-    <div className="max-w-3xl mx-auto w-full">
+    <div className="max-w-5xl mx-auto w-full">
       <Demo {...(unit.props ?? {})} />
     </div>
   );

@@ -16,9 +16,18 @@ export const oauthAuthn: Lecture = {
 
     {
       id: "oauth-authn-unit-0",
-      type: "prose",
-      title: "AuthN vs AuthZ",
-      body: `**Authentication (AuthN)** — Verifies *who you are*. You prove your identity via password, biometric, OTP, etc.\n\n**Authorization (AuthZ)** — Determines *what you can do*. Once identity is confirmed, the system checks what resources or actions are permitted.\n\n\`\`\`\nAuthN → "Are you Truc?" → Yes (correct password + OTP ✅)\nAuthZ → "Can Truc delete users?" → No, Truc is a viewer, not an admin ❌\n\`\`\`\n\nThese two concerns are **always separate layers** — even when they appear in the same request. Keep them separate in your code too.`,
+      type: "two-column",
+      ratio: "2:3",
+      left: {
+        id: "oauth-authn-unit-0-prose",
+        type: "prose",
+        body: `**Authentication (AuthN)** — Verifies *who you are*. You prove your identity via password, biometric, OTP, etc.\n\n**Authorization (AuthZ)** — Determines *what you can do*. Once identity is confirmed, the system checks what resources or actions are permitted.\n\nThese two concerns are **always separate layers** — even when they appear in the same request. Keep them separate in your code too.`,
+      },
+      right: {
+        id: "oauth-authn-unit-0-demo",
+        type: "demo",
+        component: "AuthNAuthZAnimator",
+      },
     },
 
     // ── Block 1: Stateless vs Stateful ──────────────────────────────────────
@@ -38,40 +47,31 @@ export const oauthAuthn: Lecture = {
 
     {
       id: "oauth-authn-stateless-diagram",
-      type: "diagram",
-      title: "Stateless vs Stateful Sequence",
-      mermaid: `sequenceDiagram
-    participant C as Client
-    participant S as Server
-    participant DB as Session Store
-
-    Note over C,DB: Stateful — Session-Based
-
-    C->>S: POST /login
-    S->>DB: INSERT session record
-    S-->>C: Set-Cookie: session_id=abc123 (HttpOnly)
-    C->>S: GET /api/me  Cookie: session_id=abc123
-    S->>DB: SELECT * FROM sessions WHERE session_id = abc123
-    DB-->>S: user_id: 42
-    S-->>C: user data
-
-    Note over C,DB: Stateless — Token-Based (JWT)
-
-    C->>S: POST /login
-    S-->>C: access_token (JWT)
-    C->>S: GET /api/me  Authorization: Bearer token
-    S->>S: Verify JWT signature — no DB call
-    S-->>C: user data`,
-      caption: "Session-based auth requires a DB lookup on every request. JWT-based auth verifies the signature locally — the DB is only needed on login.",
+      type: "demo",
+      title: "Stateful vs Stateless — Flow",
+      component: "SessionFlowLane",
     },
 
     // ── Block 2: Password Management ────────────────────────────────────────
 
     {
       id: "oauth-authn-password-mgmt",
-      type: "prose",
+      type: "demo",
       title: "Password Management on the Backend",
-      body: `Before tokens, before OAuth — your app needs to store and verify passwords safely.\n\n**The progression (and why each step matters):**\n\n**Step 1 — Plain text ❌ Never do this**\n\`\`\`python\ndb.store("password", "hunter2")\n# One DB breach → every password exposed immediately\n\`\`\`\n\n**Step 2 — SHA-256 ❌ Looks smart, still wrong**\n\`\`\`python\ndb.store("password_hash", sha256("hunter2"))\n# Fast hash → rainbow table attack → cracked in milliseconds\n# Same password always produces the same hash → one crack = many accounts\n\`\`\`\n\n**Step 3 — bcrypt ✅ The minimum standard**\n\`\`\`python\ndb.store("password_hash", bcrypt.hash("hunter2", rounds=12))\n# Slow by design — cost factor 12 ≈ 250ms per attempt\n# Built-in random salt → same password produces a different hash every time\n# At 10 billion guesses/sec: SHA-256 cracks in ~0.1ms, bcrypt takes ~350 years\n\`\`\`\n\n**Production note:** Argon2id (winner of the Password Hashing Competition, 2015) is now preferred over bcrypt — stronger memory-hardness prevents GPU/ASIC attacks. bcrypt is still acceptable and battle-tested.\n\n**The timing attack — always use constant-time comparison:**\n\`\`\`python\n# ❌ Leaks timing information — attacker can measure character matches\nif password == stored_password:\n\n# ✅ Constant-time — safe\nif bcrypt.verify(password, stored_hash):\n\`\`\`\n\n**Three rules to tattoo on your memory:**\n1. Never store plaintext passwords — not even temporarily\n2. Never use a fast hash (SHA-256, MD5) for passwords — only use a slow, purpose-built one\n3. Never compare passwords with \`==\` — use the library's verify function`,
+      component: "PasswordProgression",
+    },
+
+    {
+      id: "oauth-authn-password-rules",
+      type: "prose",
+      title: "Three Rules",
+      body: `**Three rules to tattoo on your memory:**\n\n1. Never store plaintext passwords — not even temporarily\n2. Never use a fast hash (SHA-256, MD5) for passwords — only use a slow, purpose-built one\n3. Never compare passwords with \`==\` — use the library's verify function`,
+      callouts: [
+        {
+          tone: "info",
+          text: "For new systems: Argon2id > bcrypt > scrypt. For existing bcrypt deployments, stay on bcrypt — upgrading costs more than it saves unless you're starting fresh.",
+        },
+      ],
     },
 
     {
@@ -92,33 +92,20 @@ export const oauthAuthn: Lecture = {
 
     {
       id: "oauth-authn-unit-11",
-      type: "prose",
-      title: "JWT Standard Claims Reference",
-      body: `**Standard claims reference:**\n\n| Claim | Purpose | Recommended value |\n|---|---|---|\n| **\`iss\`** | Identifies the auth server | Your canonical auth URL: \`"https://auth.example.com"\` |\n| **\`sub\`** | Identifies the user | Opaque, immutable UUID — never email or username |\n| **\`aud\`** | Intended recipient(s) | API identifier: \`"https://api.example.com"\` |\n| **\`exp\`** | Expiration timestamp | \`now() + 900\` for a 15-minute access token |\n| \`iat\` | Issued-at timestamp | Always set to current time |\n| \`jti\` | Unique token ID | UUIDv4 — enables per-token revocation & replay detection |\n\n**Production rule:** Use RS256 or ES256. Services download the public key from \`/.well-known/jwks.json\` — no secret sharing needed.\n\n**Never include** in payload: passwords, API keys, credit card numbers, SSNs, health records, or full addresses.`,
-    },
-
-    {
-      id: "oauth-authn-unit-12-decoder",
-      type: "demo",
-      title: "JWT Decoder",
-      component: "JWTDecoder",
-    },
-
-    {
-      id: "oauth-authn-unit-13-diagram",
-      type: "diagram",
-      title: "JWT Structure Diagram",
-      mermaid: `graph LR
-    subgraph JWT_Token[JWT Token Structure]
-        H[Header\nalg: RS256\ntyp: at+jwt]
-        P[Payload\nsub: user_uuid\niss: auth.example.com\naud: api.example.com\nexp: now+900s\njti: unique-id\nroles: admin]
-        S[Signature\nRSA-SHA256\nbase64url-header + . + base64url-payload\nsigned with privateKey]
-    end
-    H -- base64url --> T[eyJhbGci...  .  eyJzdWIi...  .  SflKxw...]
-    P -- base64url --> T
-    S -- base64url --> T
-    T --> V[Any service verifies\nusing public key from\n/.well-known/jwks.json]`,
-      caption: "JWT is three Base64URL segments: header (algorithm), payload (claims), signature. Any service with the public key can verify it — no database call needed.",
+      type: "two-column",
+      ratio: "1:1",
+      left: {
+        id: "oauth-authn-unit-11-prose",
+        type: "prose",
+        title: "JWT Standard Claims Reference",
+        body: `**Standard claims reference:**\n\n| Claim | Purpose | Recommended value |\n|---|---|---|\n| **\`iss\`** | Identifies the auth server | Your canonical auth URL: \`"https://auth.example.com"\` |\n| **\`sub\`** | Identifies the user | Opaque, immutable UUID — never email or username |\n| **\`aud\`** | Intended recipient(s) | API identifier: \`"https://api.example.com"\` |\n| **\`exp\`** | Expiration timestamp | \`now() + 900\` for a 15-minute access token |\n| \`iat\` | Issued-at timestamp | Always set to current time |\n| \`jti\` | Unique token ID | UUIDv4 — enables per-token revocation & replay detection |\n\n**Production rule:** Use RS256 or ES256. Services download the public key from \`/.well-known/jwks.json\` — no secret sharing needed.\n\n**Never include** in payload: passwords, API keys, credit card numbers, SSNs, health records, or full addresses.`,
+      },
+      right: {
+        id: "oauth-authn-unit-12-decoder",
+        type: "demo",
+        title: "JWT Decoder",
+        component: "JWTDecoder",
+      },
     },
 
     // ── Block 4: Self-Managed Token Flow ────────────────────────────────────

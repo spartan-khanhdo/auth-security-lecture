@@ -17,7 +17,7 @@ interface DiagramRendererProps {
 
 export default function DiagramRenderer({ unit }: DiagramRendererProps) {
   return (
-    <div className="max-w-3xl mx-auto w-full space-y-2">
+    <div className="max-w-5xl mx-auto w-full space-y-2">
       <MermaidDiagram id={unit.id} mermaid={unit.mermaid} />
       {unit.caption && <Caption>{unit.caption}</Caption>}
     </div>

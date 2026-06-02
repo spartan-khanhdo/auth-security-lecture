@@ -104,7 +104,7 @@ export default function MediaRenderer({ unit, inline = false }: MediaRendererPro
   if (inline) return content;
 
   return (
-    <div className="max-w-3xl mx-auto w-full">
+    <div className="max-w-5xl mx-auto w-full">
       {content}
     </div>
   );

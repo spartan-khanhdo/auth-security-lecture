@@ -18,7 +18,7 @@ export default function TwoColumnRenderer({ unit }: TwoColumnRendererProps) {
   const colsClass = RATIO_CLASS[ratio];
 
   return (
-    <div className="max-w-5xl mx-auto w-full space-y-4">
+    <div className="w-full space-y-4">
       {unit.title && (
         <p className="eyebrow">{unit.title}</p>
       )}

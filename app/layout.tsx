@@ -27,7 +27,33 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "Authentication & Security — Course",
-  description: "An interactive course on authentication and security fundamentals.",
+  description:
+    "An interactive course covering JWT, OAuth 2.0, PKCE, mTLS, OWASP, and ReBAC — 5 lectures with interactive demos and quizzes.",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+  },
+  openGraph: {
+    title: "Authentication & Security — Course",
+    description:
+      "An interactive course covering JWT, OAuth 2.0, PKCE, mTLS, OWASP, and ReBAC — 5 lectures with interactive demos and quizzes.",
+    type: "website",
+    images: [
+      {
+        url: "/thumbnail.png",
+        width: 1200,
+        height: 630,
+        alt: "Authentication & Security — An Interactive Course",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Authentication & Security — Course",
+    description:
+      "An interactive course covering JWT, OAuth 2.0, PKCE, mTLS, OWASP, and ReBAC — 5 lectures with interactive demos and quizzes.",
+    images: ["/thumbnail.png"],
+  },
 };
 
 export default function RootLayout({
