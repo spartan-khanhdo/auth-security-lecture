@@ -1,197 +1,149 @@
 # Lecture 4 — Service-to-Service Authentication
 
-## Unit 1 — Goal
-**type:** prose
+> Structure follows source §3.1–3.7, condensed to **10 steps**. Each `##` block maps
+> 1:1 to a unit in `src/content/lectures/service-to-service.ts`. Speaker talk-track
+> lives in `lecture-4-service-to-service-speaker-notes.md`.
+>
+> Most prose steps are paired with their diagram in a **two-column** unit (text left,
+> diagram right) so a topic and its picture share one step. Every unit sets a `section`
+> kicker (e.g. "§ 3.3 · Client Credentials") rendered as a small per-step header.
 
-## 4. Service-to-Service Authentication
+## Step 1 — 3.1 The Problem: Who Is the Caller?
+**type:** two-column (prose + diagram) · **section:** § 3.1 · The Problem
 
-> 🔐 **Goal:** When Service A calls Service B, Service B must be able to verify **who** is calling and **what** that caller is allowed to do — even when there is **no user session**.
+**Left (prose):** Goal callout, east-west / automated / sessionless traits, threat model, "what we want", anti-pattern warn callout.
 
----
-
-## Unit 2 — The Problem: "Who is the caller?"
-**type:** prose
-
-### 4.1 The problem: "Who is the caller?"
-
-In microservices, traffic is often:
-
-- Internal (east-west) traffic over private networks
-- High volume + automated
-- Not tied to a human user session
-
-**Threat model:** if Service B trusts "anything inside the VPC/cluster," then any compromised pod/service (or misconfigured workload) can call privileged endpoints.
-
-> ⚠️ **Anti-pattern:** "Internal API = trusted API."
-> Private network boundaries are not an authentication mechanism.
-
-**What we want instead:** strong, verifiable identity for services + enforceable authorization.
-
----
-
-## Unit 3 — Baseline Architecture
-**type:** prose
-
-### 4.2 Baseline architecture: Auth Server issues access tokens
-
-**Participants**
-
-- **Service A (Client)**: the caller
-- **Auth Server (AS)**: verifies credentials, issues tokens
-- **Service B (Resource Server / RS)**: validates token and serves protected resources
-
-**High-level flow:**
-
-1. Service A authenticates to the Auth Server
-2. Auth Server issues an access token (often JWT)
-3. Service A calls Service B with `Authorization: Bearer <access_token>`
-4. Service B validates the token and applies authorization rules
-
----
-
-## Unit 4 — Baseline Architecture Diagram
-**type:** diagram
+**Right (diagram) — east-west threat:**
 
 ```mermaid
-sequenceDiagram
-    participant SA as Service A (Client)
-    participant AS as Auth Server
-    participant SB as Service B (Resource Server)
-
-    SA->>AS: (1) Request token (client credentials)
-    AS-->>SA: (2) access_token (JWT)
-    SA->>SB: (3) Call API + Authorization: Bearer JWT
-    SB->>SB: (4) Validate JWT (sig, exp, iss, aud)
-    SB-->>SA: (5) Protected response
+graph TD
+    FE["Client / Frontend"] --> A["Orders Service"]
+    A --> B["Inventory Service"]
+    A --> C["Payments Service"]
+    X["Compromised Pod"] -.->|"no identity check"| C
+    style X fill:#7f1d1d,stroke:#ef4444,color:#ffffff
+    style C fill:#1f2937,stroke:#f59e0b,color:#ffffff
 ```
 
 ---
 
-## Unit 5 — OAuth 2.0 Client Credentials Grant
-**type:** prose
+## Step 2 — 3.2 Baseline Architecture
+**type:** two-column (prose + diagram) · **section:** § 3.2 · Baseline Architecture
 
-### 4.3 OAuth 2.0 Client Credentials (most common for M2M)
+**Left (prose):** Auth Server in the middle; participants (A / AS / B); 4-step flow; "Service B validates locally."
 
-**When to use:** no end user, purely service-to-service (batch jobs, internal APIs, cron workers).
+**Right (diagram) — participants:**
 
-**Inputs:** `client_id` + `client_secret` (or private key, depending on setup).
-
-> 📨 Example token request (form-encoded)
->
-> ```
-> POST /oauth/token
-> Content-Type: application/x-www-form-urlencoded
->
-> grant_type=client_credentials&client_id=...&client_secret=...&scope=orders.read
-> ```
-
-**What the Auth Server checks before issuing a token (typical):**
-
-- client exists + active
-- secret (or credential) is valid
-- requested scopes are allowed
-- optional: audience / allowed APIs / IP allowlist
+```mermaid
+graph TD
+    SA["Service A<br/>caller"] -->|"1. authenticate"| AS["Auth Server<br/>issues tokens"]
+    AS -->|"2. access token (JWT)"| SA
+    SA -->|"3. Bearer token"| SB["Service B<br/>validates + authorizes"]
+```
 
 ---
 
-## Unit 6 — JWT Claims for M2M
-**type:** prose
+## Step 3 — 3.3 Client Credentials: How a Service Logs In as Itself
+**type:** two-column (prose + diagram) · **section:** § 3.3 · Client Credentials
 
-### 4.4 What the token should contain (JWT claims that matter)
+**Left (prose):** "Logs in as itself" analogy (id/secret = app's username+password), the 4-step exchange, form-encoded token request, "credentials in, scoped token out", + callout on why exchange the secret for a token.
 
-JWT is popular because Service B can validate it locally (stateless), but you must encode the right information.
+**Right (diagram) — AS decision flow:**
 
-**Common claims for M2M:**
-
-- `sub`: the calling service identity (e.g., `service-a`)
-- `iss`: your Auth Server
-- `aud`: the API/service that should accept this token (e.g., `service-b`)
-- `exp`: short expiry (5–15 minutes)
-- `scope` or `scp`: allowed permissions
-
-> 🧾 **Rule of thumb:** put *authorization hints* (scopes/roles) in the token, but never put secrets or PII.
-
----
-
-## Unit 7 — Validation and Authorization
-**type:** prose
-
-### 4.5 How Service B validates and authorizes requests
-
-**Validation (authn for services):**
-
-- verify signature using JWKS/public key
-- verify `exp` (and optionally `nbf`)
-- verify `iss` and `aud`
-- optionally: verify `typ` (e.g., `at+jwt`)
-
-**Authorization:**
-
-- map `scope` → allowed endpoints/actions
-- enforce least privilege per route
-
-**Mini example: mapping scope to API**
-
-- `orders.read` → `GET /orders/*`
-- `orders.write` → `POST /orders`, `PATCH /orders/*`
+```mermaid
+graph TD
+    R["POST /oauth/token<br/>id + secret + scope"] --> Q1{"Client active?"}
+    Q1 -->|"No"| F1["401 invalid_client"]
+    Q1 -->|"Yes"| Q2{"Secret valid<br/>via bcrypt?"}
+    Q2 -->|"No"| F1
+    Q2 -->|"Yes"| Q3{"Scopes allowed?"}
+    Q3 -->|"No"| F2["400 invalid_scope"]
+    Q3 -->|"Yes"| OK["Issue JWT<br/>short exp + scopes"]
+```
 
 ---
 
-## Unit 8 — Alternatives: mTLS, Service Mesh, API Keys
-**type:** prose
+## Step 4 — 3.4 JWT Claims for M2M
+**type:** prose · **section:** § 3.4 · JWT Claims
 
-### 4.6 Alternatives & when to consider them
-
-- **mTLS (mutual TLS)**: strong identity at transport layer; great for zero-trust / service mesh
-- **Service mesh identity (Istio/Linkerd)**: can automate cert rotation + policy enforcement
-- **API keys**: simplest, but weaker governance (rotation, scoping, audit) unless you build a lot around it
-- **JWT assertion / private_key_jwt**: avoid shared secrets; better for high-security clients
+Claims that matter (`sub`, `iss`, `aud`, `exp`, `scope`/`scp`) + rule-of-thumb callout (authorization hints yes, secrets/PII no — Base64 is encoding, not encryption).
 
 ---
 
-## Unit 9 — mTLS Visualizer (Demo)
-**type:** demo
-**demo_key:** MTLSVisualizer
+## Step 5 — Decode an M2M Token (Demo)
+**type:** demo · **section:** § 3.4 · JWT Claims · **demo_key:** JWTDecoder
 
-Watch Service A and Service B exchange certificates during the TLS handshake. Each side validates the other's cert against a trusted CA. Toggle "expired cert" or "wrong CN" to see the handshake fail before any application data is exchanged.
+Decode a sample M2M token; inspect `sub`/`aud`/`exp`/`scope`; tamper to break the signature.
 
 ---
 
-## Unit 10 — Best Practices & Architecture Diagram
-**type:** diagram
+## Step 6 — 3.5 Validation & Authorization
+**type:** two-column (prose + diagram) · **section:** § 3.5 · Validation & Authorization
 
-### 4.7 Best practices checklist
+**Left (prose):** Validation ("is this token real and meant for me?") vs Authorization ("is this caller allowed?") — both must pass.
 
-- Short-lived access tokens (5–15 min)
-- Always validate `iss`, `aud`, signature, and expiry
-- Store secrets in a secret manager (Vault/KMS), never in code
-- Rotate credentials and signing keys
-- Prefer per-service identity (no shared clients across many services)
-- Log token identifiers safely (avoid logging full tokens)
+**Right (diagram) — scope → API:**
 
-> 🧭 **Good mental model:** OAuth 2.0 tells you *how to obtain a token*; JWT tells you *what the token looks like*; Service B's policy tells you *what the caller can do*.
+```mermaid
+graph TD
+    T["JWT scope claim"] --> S1["orders.read"]
+    T --> S2["orders.write"]
+    S1 --> E1["GET /orders/*"]
+    S2 --> E2["POST /orders"]
+    S2 --> E3["PATCH /orders/*"]
+```
+
+---
+
+## Step 7 — Trace Service B's Decision (Demo)
+**type:** demo · **section:** § 3.5 · JWT Validation · **demo_key:** DecisionTracer
+
+Toggle each validation check and watch Service B accept/reject. First failure wins.
+
+---
+
+## Step 8 — 3.6 Alternatives
+**type:** prose · **section:** § 3.6 · Alternatives
+
+mTLS / service mesh / API keys / `private_key_jwt`, plus the mental model: OAuth = how to obtain a token; JWT = what it looks like; Service B's policy = what the caller can do.
+
+---
+
+## Step 9 — mTLS Handshake (Demo)
+**type:** demo · **section:** § 3.6 · Alternatives · **demo_key:** MTLSVisualizer
+
+Watch the certificate exchange; toggle "expired cert" / "wrong CN" to see the handshake fail before any application data.
+
+---
+
+## Step 10 — 3.7 Best Practices: Putting It All Together
+**type:** two-column (prose + diagram) · **section:** § 3.7 · Best Practices
+
+**Left (prose):** the operational checklist (short-lived tokens, validate iss/aud/sig/exp, secrets in Vault/KMS, rotate, per-service identity, log token IDs only).
+
+**Right (diagram) — M2M architecture:**
 
 ```mermaid
 graph TB
-    subgraph AuthLayer[Auth Layer]
-        AS[Auth Server\nKeycloak / Auth0 / Azure AD]
-        JWKS[.well-known/jwks.json\nPublic Keys]
+    subgraph AuthLayer["Auth Layer"]
+        AS["Auth Server<br/>Keycloak / Auth0 / Azure AD"]
+        JWKS[".well-known/jwks.json<br/>Public Keys"]
     end
-    subgraph Services[Microservices]
-        SA[Service A]
-        SB[Service B]
-        SC[Service C]
+    subgraph Services["Microservices"]
+        SA["Service A"]
+        SB["Service B"]
+        SC["Service C"]
     end
-    subgraph Mesh[Service Mesh optional]
-        P[Sidecar Proxy\nmTLS]
+    subgraph Mesh["Service Mesh (optional)"]
+        P["Sidecar Proxy<br/>mTLS"]
     end
 
-    SA -->|1. client_credentials| AS
-    AS -->|2. JWT access_token| SA
-    SA -->|3. Bearer token| SB
-    SB -->|4. Verify signature| JWKS
-    SB <-->|optional mTLS| P
-    P <-->|mTLS| SC
+    SA -->|"1. client_credentials"| AS
+    AS -->|"2. JWT access_token"| SA
+    SA -->|"3. Bearer token"| SB
+    SB -->|"4. Verify signature"| JWKS
+    SB <-->|"optional mTLS"| P
+    P <-->|"mTLS"| SC
 ```
 
 ---

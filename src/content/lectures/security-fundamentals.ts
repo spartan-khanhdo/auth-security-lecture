@@ -20,6 +20,19 @@ export const securityFundamentals: Lecture = {
       body: `> **Goal:** Reduce risk by protecting the **CIA triad** (Confidentiality, Integrity, Availability) across data, services, and users.\n\nIn modern systems — APIs, microservices, third-party integrations — a single weakness can cascade into a full breach.\n\n**CIA triad — quick mapping:**\n\n- **Confidentiality:** prevent data leakage (PII, tokens, secrets)\n- **Integrity:** prevent unauthorized changes (balances, permissions, orders)\n- **Availability:** keep systems usable (DDoS, resource exhaustion)\n\n> **Rule:** Security is not "extra features" — it's correctness under adversarial input.\n\nMost attacks follow the same pattern: **Vulnerability → Exploit → Impact → CIA loss**. Identifying vulnerabilities before attackers do is the entire game.`,
     },
 
+    // Unit 0b — Attack chain diagram (Vulnerability → Exploit → Impact → CIA loss)
+    {
+      id: "security-fundamentals-unit-0b",
+      type: "diagram",
+      title: "The Attack Chain",
+      mermaid: `graph LR
+    V["Vulnerability"] --> E["Exploit"]
+    E --> I["Impact"]
+    I --> C["CIA Loss"]`,
+      caption:
+        "Every breach follows the same chain. Catching the vulnerability before an attacker does is the entire game.",
+    },
+
     // Unit 1 — Hashing vs Encryption
     {
       id: "security-fundamentals-unit-1",

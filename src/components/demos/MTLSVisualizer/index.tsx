@@ -184,7 +184,9 @@ export default function MTLSVisualizer() {
       }
     : null;
 
-  const canNext = !isIdle && !isDone && !isFailed;
+  // NOTE: must allow advancing from idle (step === -1) so the "Start handshake"
+  // button is enabled — gating on !isIdle disabled the very button that starts it.
+  const canNext = !isDone && !isFailed;
 
   return (
     <DemoFrame

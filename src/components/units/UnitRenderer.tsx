@@ -7,12 +7,13 @@ import QuizRenderer from './QuizRenderer';
 import MediaRenderer from './MediaRenderer';
 import TwoColumnRenderer from './TwoColumnRenderer';
 import CheckpointRenderer from './CheckpointRenderer';
+import StepHeader from './StepHeader';
 
 interface UnitRendererProps {
   unit: Unit;
 }
 
-export default function UnitRenderer({ unit }: UnitRendererProps) {
+function renderBody(unit: Unit) {
   switch (unit.type) {
     case 'prose':
       return <ProseRenderer unit={unit} />;
@@ -40,7 +41,28 @@ export default function UnitRenderer({ unit }: UnitRendererProps) {
 
     default: {
       const _exhaustive: never = unit;
+      void _exhaustive;
       return null;
     }
   }
+}
+
+export default function UnitRenderer({ unit }: UnitRendererProps) {
+  const body = renderBody(unit);
+
+  // two-column and checkpoint render their own headings, so only the simple
+  // content types opt into the shared StepHeader.
+  const showHeader =
+    Boolean(unit.section) &&
+    unit.type !== 'two-column' &&
+    unit.type !== 'checkpoint';
+
+  if (!showHeader) return body;
+
+  return (
+    <div className="w-full space-y-5">
+      <StepHeader section={unit.section} title={unit.title} />
+      {body}
+    </div>
+  );
 }

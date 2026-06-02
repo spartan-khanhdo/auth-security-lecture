@@ -4,6 +4,12 @@ export interface BaseUnit {
   id: string;
   type: UnitType;
   title?: string;
+  /**
+   * Small kicker/eyebrow shown above the title on the slide so the learner
+   * always knows which topic this step belongs to (e.g. "§ 3.3 · Client
+   * Credentials"). Rendered by StepHeader via UnitRenderer when present.
+   */
+  section?: string;
 }
 
 export interface ProseUnit extends BaseUnit {

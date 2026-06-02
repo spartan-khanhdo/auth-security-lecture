@@ -1,6 +1,7 @@
 import type { TwoColumnUnit } from '@/content/types';
 import UnitRenderer from './UnitRenderer';
 import MediaRenderer from './MediaRenderer';
+import StepHeader from './StepHeader';
 
 interface TwoColumnRendererProps {
   unit: TwoColumnUnit;
@@ -19,8 +20,10 @@ export default function TwoColumnRenderer({ unit }: TwoColumnRendererProps) {
 
   return (
     <div className="w-full space-y-4">
-      {unit.title && (
-        <p className="eyebrow">{unit.title}</p>
+      {unit.section ? (
+        <StepHeader section={unit.section} title={unit.title} />
+      ) : (
+        unit.title && <p className="eyebrow">{unit.title}</p>
       )}
       <div className={`grid grid-cols-1 ${colsClass} gap-6 items-start`}>
         <div>

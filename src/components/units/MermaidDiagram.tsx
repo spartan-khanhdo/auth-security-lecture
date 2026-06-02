@@ -81,5 +81,5 @@ export default function MermaidDiagram({ id, mermaid: source }: MermaidDiagramPr
     );
   }
 
-  return <div ref={containerRef} className="overflow-x-auto" />;
+  return <div ref={containerRef} className="overflow-x-auto flex justify-center [&_svg]:mx-auto" />;
 }
