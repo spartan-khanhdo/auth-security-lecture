@@ -1,71 +1,122 @@
 # Lecture 6 — What's Missing: Fill These Gaps
 
-## Unit 1 — Section Intro
-**type:** prose
+> Structure follows source §5.1–5.3, **8 steps**. Each `##` block maps 1:1 to a unit in
+> `src/content/lectures/gaps.ts`. Concept steps are **two-column** (prose left, diagram
+> right) with a `section` kicker (e.g. "§ 5.2 · CSRF"); the RBAC explanation is split
+> into a full-width prose + a full-width diagram so the model picture renders large.
+>
+> Covers three topics that don't fit neatly into Lectures 1–5 but come up constantly:
+> the OIDC identity layer, CSRF, and RBAC vs ABAC.
+>
+> **Demos:** trimmed to a single "hero" demo (CSRF Sandbox) for the live 45-minute slot.
+> RBACPlayground was removed from the deck.
 
-## 6. What's Missing — Fill These Gaps
+## Step 1 — 5.1 OIDC: OAuth Authorizes, OIDC Identifies
+**type:** two-column (prose + diagram) · **section:** § 5.1 · OpenID Connect
 
-Lectures 1–5 covered the core foundations: passwords, JWT, OAuth, sessions, MFA, OIDC, service-to-service auth, and security fundamentals. This lecture covers three topics that don't fit neatly into those lectures but come up constantly in real systems.
+**Left (prose):** OAuth = authorization, OIDC = identity; OIDC is a thin layer adding the **ID token** (a JWT: `sub`, `email`, `name`); keywords; "Login with Google/GitHub/Microsoft" = OIDC; + danger callout *"never use the ID token as an API bearer token."*
 
----
+**Right (diagram) — Login-with-Google flow:**
 
-## Unit 2 — CSRF (Cross-Site Request Forgery)
-**type:** prose
-
-### 6.1 CSRF (Cross-Site Request Forgery)
-
-**What it is:** a malicious site tricks the user's browser into making a credentialed request to your API — the browser automatically sends cookies, so the server thinks it's legitimate.
-
-**Classic example:** you're logged into your bank. A malicious page has `<img src="https://bank.com/transfer?to=attacker&amount=1000">`. Your browser fires the request with your session cookie. The bank sees a valid session and processes it.
-
-**Fix checklist:**
-
-- `SameSite=Strict` on cookies — browser won't send them on cross-site requests
-- CSRF tokens — server issues a secret per session; every mutating request must echo it back
-- Tokens sent via `Authorization: Bearer` header are naturally CSRF-safe — a cross-site page can't set custom headers
-
-> 💡 This is exactly why Lecture 2 sets `SameSite=Strict` on the refresh cookie — it's not just style, it's CSRF protection baked in.
-
----
-
-## Unit 3 — RBAC vs. ABAC
-**type:** prose
-
-### 6.2 RBAC vs. ABAC — Modeling Permissions
-
-> 💡 AuthZ says *what someone can do* — but how does your system decide that? That's where RBAC and ABAC come in.
-
-**RBAC (Role-Based Access Control)** — permissions tied to roles, roles assigned to users.
-
-```javascript
-admin   → full access
-editor  → read + write
-viewer  → read only
+```mermaid
+graph TD
+    U["User clicks<br/>Login with Google"] --> P["Google · OIDC Provider<br/>authenticates user"]
+    P -->|"ID token (JWT)"| APP["Your App<br/>who logged in?<br/>sub · email · name"]
+    P -->|"access token"| API["Google APIs<br/>call on user's behalf"]
+    style APP fill:#1f2937,stroke:#10b981,color:#ffffff
 ```
 
-Simple, easy to reason about. Most apps start here. Limitation: roles bloat fast as edge cases pile up.
+---
 
-**ABAC (Attribute-Based Access Control)** — permissions evaluated from policies combining multiple attributes (user, resource, environment).
+## Step 2 — 5.1 OIDC: One Difference, Zero Hardcoding
+**type:** two-column (prose + diagram) · **section:** § 5.1 · OpenID Connect
 
-```javascript
-"allow if user.department == resource.department AND action == 'read' AND time.hour < 18"
+**Left (prose):** one-line difference table (OAuth = authorization / access token; OIDC = authentication / access + ID token); the discovery endpoint `/.well-known/openid-configuration` → fetched once for `authorization_endpoint`, `token_endpoint`, `jwks_uri` (no hardcoding).
+
+**Right (diagram) — discovery:**
+
+```mermaid
+graph TD
+    APP["Your App"] -->|"GET /.well-known/<br/>openid-configuration"| D["Discovery Document"]
+    D --> A["authorization_endpoint"]
+    D --> T["token_endpoint"]
+    D --> J["jwks_uri"]
+    style D fill:#1f2937,stroke:#f59e0b,color:#ffffff
 ```
 
-More flexible, handles complex rules. Harder to debug. Common in enterprise / compliance-heavy systems.
+---
 
-**Rule of thumb:** start with RBAC. Move to ABAC when roles alone can't express the policy cleanly — e.g. "editors can only edit *their own* posts."
+## Step 3 — 5.2 CSRF: The Browser Sends Cookies for You
+**type:** two-column (prose + diagram) · **section:** § 5.2 · CSRF
+
+**Left (prose):** malicious site triggers a credentialed cross-site request (browser auto-sends cookies); bank `<img src=...transfer>` example; fix checklist (`SameSite=Strict`, CSRF tokens, Bearer headers are naturally CSRF-safe); + info callout tying back to Lecture 2's `SameSite=Strict` refresh cookie.
+
+**Right (diagram) — CSRF attack flow:**
+
+```mermaid
+graph TD
+    M["Malicious page<br/>img src=bank.com/transfer"] --> B["Victim's browser<br/>auto-attaches session cookie"]
+    B --> S["bank.com<br/>sees a valid session"]
+    S --> X["💥 transfer processed"]
+    style X fill:#7f1d1d,stroke:#ef4444,color:#ffffff
+```
 
 ---
 
-## Unit 4 — RBAC vs ABAC Playground (Demo)
-**type:** demo
-**demo_key:** RBACPlayground
+## Step 4 — CSRF Sandbox (Demo)
+**type:** demo · **section:** § 5.2 · CSRF · **demo_key:** CSRFSandbox
 
-Two columns side-by-side: RBAC and ABAC. Pick a user (role + department), a resource (owner + department), and an action. Watch each model arrive at a decision. Demonstrates "editors can only edit their own posts" — RBAC fails, ABAC succeeds.
+Fire a forged cross-site request, then toggle `SameSite=Strict` / a CSRF token to watch it get blocked. *(Only live demo in this lecture.)*
 
 ---
 
-## Unit 5 — Sources
+## Step 5 — 5.3 RBAC vs ABAC: Modeling Permissions
+**type:** prose (full-width) · **section:** § 5.3 · RBAC vs ABAC
+
+RBAC (roles → permissions; simple, roles bloat) vs ABAC (policies over user/resource/env attributes; flexible, harder to debug). Rule of thumb: start with RBAC, move to ABAC when roles can't express the policy — e.g. *"editors can edit only their own posts."*
+
+---
+
+## Step 6 — 5.3 RBAC vs ABAC: Two Ways to Decide
+**type:** diagram (full-width) · **section:** § 5.3 · RBAC vs ABAC
+
+Full-width model diagram so it renders large (replaced the cramped two-column version).
+
+```mermaid
+graph TB
+    subgraph RBAC["RBAC · role-based — who you are → what you can do"]
+        direction LR
+        U1["User"] --> RO["Role"] --> PE["Permissions"] --> RD["allow / deny"]
+    end
+    subgraph ABAC["ABAC · attribute-based — evaluate attributes per request"]
+        direction LR
+        REQ["Request"] --> POL["Policy engine"]
+        UA["user attrs"] --> POL
+        RA["resource attrs"] --> POL
+        EA["env attrs"] --> POL
+        POL --> AD{"allow / deny"}
+    end
+    style RO fill:#1f2937,stroke:#f59e0b,color:#ffffff
+    style RD fill:#1f2937,stroke:#10b981,color:#ffffff
+    style POL fill:#1f2937,stroke:#f59e0b,color:#ffffff
+    style AD fill:#1f2937,stroke:#10b981,color:#ffffff
+```
+
+---
+
+## Step 7 — Checkpoint
+**type:** checkpoint (6 questions)
+
+- **OIDC [Easy]** What does OIDC add on top of OAuth 2.0? What's the ID token for, and what must you never use it for?
+- **OIDC [Medium]** Where does OIDC fit in a "Login with Google" flow? Which step yields the ID token, and who consumes it?
+- **CSRF [Easy]** Explain CSRF in one sentence. Why are `Authorization: Bearer` tokens naturally CSRF-safe?
+- **CSRF [Medium]** Refresh token in an HttpOnly cookie — which cookie attribute prevents CSRF, and how? (`SameSite=Strict`)
+- **RBAC [Medium]** "Editors can edit only documents they own" — can pure RBAC handle it? Reach for ABAC.
+- **RBAC/ABAC [Hard]** Multi-tenant SaaS, per-org roles + subscription tier — RBAC or ABAC, and why? (ABAC territory / RBAC + attributes.)
+
+---
+
+## Sources
 **type:** prose
 
 # Sources

@@ -1,7 +1,7 @@
 # Kịch bản thuyết trình — Phần 3: Service-to-Service Authentication
 
 **Người trình bày:** Khanh Do
-**Thời lượng:** ~14 phút · **10 step**
+**Thời lượng:** ~11 phút · **8 step**
 **Đường dẫn:** `/lecture/service-to-service`
 **Nguồn:** Lecture 5 §3 (Notion / PDF)
 
@@ -66,21 +66,11 @@
 - "Với M2M, ý nghĩa các claim đổi đi. **`sub` không còn là con người — mà là *service* đang gọi.** `aud` là service nào được phép nhận token. `scope` là những gì nó được làm."
 - Chốt callout: "**Base64 là mã hóa-định-dạng chứ không phải mã hóa-bảo-mật (encoding ≠ encryption).** Ai chặn được token đều đọc được payload — nên chỉ nhét gợi ý phân quyền (scope/role) vào, tuyệt đối không nhét secret hay PII."
 
-**CHUYỂN Ý:** "Đừng tin lời tôi — ta giải mã thử một cái."
+**CHUYỂN Ý:** "Vậy Service B nhận được token này — nó làm gì tiếp?"
 
 ---
 
-## Step 5 — § 3.4 · Decode an M2M Token `(demo: JWTDecoder, ~1.5 phút)`
-
-**DEMO:** Bấm mẫu **"RS256 (service)"**. Mở phần **payload**. Chỉ vào `sub` / `aud` / `exp` / `scope`. Tùy chọn: sửa một claim → phần signature sẽ không còn khớp.
-
-**NÓI:** "Header = thuật toán. Payload = các claim, đọc được hoàn toàn. Chỉ có signature mới cần key. **Đây đúng là những gì Service B sẽ đọc để ra quyết định.**"
-
-**CHUYỂN Ý:** "Vậy Service B nhận được token này. Nó làm gì tiếp?"
-
----
-
-## Step 6 — § 3.5 · Validation & Authorization: How Service B Decides `(2 cột, ~1.5 phút)`
+## Step 5 — § 3.5 · Validation & Authorization: How Service B Decides `(2 cột, ~1.5 phút)`
 
 **MÀN HÌNH:** Trái — danh sách validation vs authorization. Phải — sơ đồ scope → endpoint.
 
@@ -89,21 +79,11 @@
 - "Validation là: kiểm **signature** bằng JWKS/public key, kiểm `exp`/`nbf`, kiểm `iss` và `aud`, tùy chọn kiểm `typ`."
 - Chỉ vào sơ đồ: "`orders.read` cho phép GET; `orders.write` cho phép POST và PATCH. **Token chỉ có orders.read thì không bao giờ ghi được — least privilege gói gọn trong một hình.**"
 
-**CHUYỂN Ý:** "Để tôi cho phần validation thành tương tác được."
+**CHUYỂN Ý:** "JWT + client credentials là mặc định — nhưng không phải cách duy nhất để chứng minh danh tính."
 
 ---
 
-## Step 7 — § 3.5 · Trace Service B's Decision `(demo: DecisionTracer, ~1.5 phút)`
-
-**DEMO:** Mặc định tất cả check xanh → **"Accept"**. Tắt **sig** → bị từ chối ngay. Tắt **exp** → token hết hạn. Tắt **aud** → token dành cho service khác. Tắt **scope** → đã xác thực nhưng không đủ quyền. Bấm Reset.
-
-**NÓI:** "Mỗi công tắc là một bước kiểm thật của Service B. Điểm mấu chốt: **request chỉ thành công khi *mọi* cổng đều qua — gặp lỗi đầu tiên là dừng.**"
-
-**CHUYỂN Ý:** "JWT + client credentials là mặc định. Nhưng không phải cách duy nhất để chứng minh danh tính."
-
----
-
-## Step 8 — § 3.6 · Alternatives: Beyond Client Credentials `(prose, ~1.5 phút)`
+## Step 6 — § 3.6 · Alternatives: Beyond Client Credentials `(prose, ~1.5 phút)`
 
 **MÀN HÌNH:** mTLS / service mesh / API keys / private_key_jwt + blockquote mental model.
 
@@ -118,7 +98,7 @@
 
 ---
 
-## Step 9 — § 3.6 · mTLS Handshake `(demo: MTLSVisualizer, ~1 phút)`
+## Step 7 — § 3.6 · mTLS Handshake `(demo: MTLSVisualizer, ~1.5 phút)`
 
 **DEMO:** Chọn tab **"Happy path"**, bấm **"Start handshake"**, đi từng bước tới khi handshake hoàn tất (CN=service-a verified). Sau đó thử **"Expired server cert"** hoặc **"Unknown CA"** → handshake **fail trước khi** bất kỳ dữ liệu ứng dụng nào được trao đổi.
 
@@ -128,7 +108,7 @@
 
 ---
 
-## Step 10 — § 3.7 · Best Practices: Putting It All Together `(2 cột, ~1.5 phút)`
+## Step 8 — § 3.7 · Best Practices: Putting It All Together `(2 cột, ~1.5 phút)`
 
 **MÀN HÌNH:** Trái — checklist vận hành. Phải — sơ đồ kiến trúc M2M đầy đủ (Auth Layer + Microservices + Service Mesh tùy chọn).
 

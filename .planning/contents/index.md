@@ -19,9 +19,9 @@
 |---|------|-------|------------|------------|
 | 1 | `lecture-1-oauth-authn` | Fundamentals of OAuth & Authentication | AuthN vs AuthZ, OAuth 1.0, OAuth 2.0 (grant types, client_id/secret, PKCE), JWT structure, MFA (TOTP, WebAuthn, SMS) | ~14 |
 | 2 | `lecture-2-jwt-best-practices` | Best Practices — OAuth 2.0 & JWT | Token lifetime, refresh rotation & reuse detection, token storage, revocation strategies, JWT attacks, validation checklist, key rotation, security checklist | ~12 |
-| 3 | `lecture-3-service-to-service` | Service-to-Service Authentication | M2M problem, Client Credentials grant, JWT claims for M2M, validation/authorization, mTLS, service mesh, best practices | ~10 |
-| 4 | `lecture-4-security-fundamentals` | Security Fundamentals | CIA triad, hashing vs encryption, OWASP top vulnerabilities (SQLi, XSS, BAC), core principles, system mapping | ~12 |
-| 5 | `lecture-5-gaps` | What's Missing — Fill These Gaps | OIDC (identity layer), CSRF, RBAC vs ABAC | ~6 |
+| 3 | `lecture-3-service-to-service` | Service-to-Service Authentication | M2M problem, Client Credentials grant, JWT claims for M2M, validation/authorization, mTLS, service mesh, best practices | 8 |
+| 4 | `lecture-4-security-fundamentals` | Security Fundamentals | CIA triad, hashing vs encryption, OWASP top vulnerabilities (SQLi, XSS, BAC), core principles, system mapping | 8 |
+| 5 | `lecture-5-gaps` | What's Missing — Fill These Gaps | OIDC (identity layer), CSRF, RBAC vs ABAC | 8 |
 
 Plus:
 - **`exercise-the-forger`** — JWT manipulation hands-on exercise
@@ -38,10 +38,15 @@ Plus:
 | `JWTDecoder` | Lecture 1 | Live decode of header/payload/signature with claim explanation |
 | `JWTForger` | Lecture 2 & Exercise | Modify claims, observe signature verification failure (the "Forger" exercise) |
 | `DecisionTracer` | Lecture 2 | Walk a request through the 10-point JWT validation checklist |
-| `MTLSVisualizer` | Lecture 3 | Visualize service-to-service mTLS handshake and certificate-based identity |
-| `HashingPlayground` | Lecture 4 | Compare bcrypt/Argon2 vs MD5/SHA-256; time-to-crack visualization |
-| `OWASPAttackSimulator` | Lecture 4 | Interactive SQLi, XSS, Broken Access Control payloads against a sandbox API |
-| `RBACPlayground` | Lecture 5 | Toggle roles/attributes and watch access decisions update; RBAC vs ABAC contrast |
+| `MTLSVisualizer` | **Lecture 3 (live)** | Visualize service-to-service mTLS handshake and certificate-based identity |
+| `HashingPlayground` | Lecture 4 (codebase only — trimmed from live deck) | Compare bcrypt/Argon2 vs MD5/SHA-256; time-to-crack visualization |
+| `SQLiSandbox` | Lecture 4 (codebase only — trimmed from live deck) | Fire SQL-injection payloads at a sandbox query; toggle the parameterized-query fix |
+| `XSSSandbox` | **Lecture 4 (live)** | Run an XSS payload in a sandbox; toggle output-encoding to neutralize it |
+| `CSRFSandbox` | **Lecture 5 (live)** | Forge a cross-site request; toggle SameSite / CSRF token to block it |
+| `RBACPlayground` | Lecture 5 (codebase only — trimmed from live deck) | Toggle roles/attributes and watch access decisions update; RBAC vs ABAC contrast |
+
+> Live decks were trimmed to one "hero" demo per lecture for the 45-minute slot; the
+> trimmed components still exist in `src/components/demos/` and the registry.
 
 ---
 

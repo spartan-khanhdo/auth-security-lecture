@@ -1,204 +1,136 @@
 # Lecture 5 — Security Fundamentals
 
-## Unit 1 — Goal
-**type:** prose
+> Structure follows source §4.1–4.5, condensed to **8 steps**. Each `##` block maps
+> 1:1 to a unit in `src/content/lectures/security-fundamentals.ts`. Most concept steps
+> are **two-column** units (prose left, diagram right) with a `section` kicker
+> (e.g. "§ 4.3.1 · SQL Injection").
+>
+> **Demos:** trimmed to a single "hero" demo (XSS Sandbox) for the live 45-minute slot.
+> HashingPlayground and SQLiSandbox were removed from the deck.
 
-## 5. Security Fundamentals
+## Step 1 — 4.1 Why Security Matters: Protect the CIA Triad
+**type:** two-column (prose + diagram) · **section:** § 4.1 · Why Security Matters
 
-> 🛡️ **Goal:** Reduce risk by protecting the **CIA triad** (Confidentiality, Integrity, Availability) across data, services, and users.
+**Left (prose):** Goal callout (protect CIA triad), the three properties (Confidentiality / Integrity / Availability), the attack chain stated inline (**Vulnerability → Exploit → Impact → CIA loss**), + info callout with the rule *"Security is not extra features — it's correctness under adversarial input."*
+
+**Right (diagram) — CIA triad:**
+
+```mermaid
+graph TD
+    CIA["🛡️ CIA Triad"]
+    CIA --> C["Confidentiality<br/>no leakage"]
+    CIA --> I["Integrity<br/>no tampering"]
+    CIA --> A["Availability<br/>stays up"]
+    style CIA fill:#1f2937,stroke:#f59e0b,color:#ffffff
+```
 
 ---
 
-## Unit 2 — Why Security Matters & CIA Triad
-**type:** prose
+## Step 2 — 4.2 Hashing vs Encryption (don't mix them)
+**type:** two-column (prose + diagram) · **section:** § 4.2 · Hashing vs Encryption
 
-### 5.1 Why security matters (real impact)
+**Left (prose):** one-way (verify) vs two-way (recover); hashing for passwords (bcrypt/Argon2 + salt); encryption for sensitive data (AES-256-GCM, keys in KMS/Vault); encrypt-vs-hash examples; + danger callout *"never MD5/SHA for passwords — billions/sec on a GPU."*
 
-In modern systems (APIs + microservices + third-party integrations), a single weakness can cascade.
-
-**CIA triad — quick mapping**
-
-- **Confidentiality:** prevent data leakage (PII, tokens, secrets)
-- **Integrity:** prevent unauthorized changes (balances, permissions, orders)
-- **Availability:** keep systems usable (DDoS, resource exhaustion)
-
-> 🎯 **Rule:** Security is not "extra features" — it's correctness under adversarial input.
-
----
-
-## Unit 3 — Vulnerability → Exploit → Impact Diagram
-**type:** diagram
+**Right (diagram) — one-way vs two-way:**
 
 ```mermaid
 graph LR
-    V[Vulnerability] --> E[Exploit]
-    E --> I[Impact]
-    I --> C[CIA loss]
+    subgraph H["Hashing · one-way"]
+        direction LR
+        P["password + salt"] --> D["digest"]
+        D -.->|"✗ cannot reverse"| P
+    end
+    subgraph E["Encryption · two-way"]
+        direction LR
+        PT["plaintext"] -->|"encrypt(key)"| CT["ciphertext"]
+        CT -->|"decrypt(key)"| PT
+    end
 ```
 
 ---
 
-## Unit 4 — Hashing vs Encryption
-**type:** prose
+## Step 3 — 4.3.1 SQL Injection: When Input Becomes Code
+**type:** two-column (prose + diagram) · **section:** § 4.3.1 · SQL Injection
 
-### 5.2 Hashing vs. encryption (don't mix them)
+**Left (prose):** how concatenation lets input become SQL; `' OR '1'='1` returns all, `'; DROP TABLE` deletes; fix checklist (parameterized queries, validate identifiers, least privilege DB user); + info callout with the OWASP source→sink pattern.
 
-> 🔑 **Hashing = one-way** (verify) • **Encryption = two-way** (protect + recover)
+**Right (diagram) — injection flow:**
 
-#### Hashing (one-way) — for passwords
-
-- Purpose: store something you can **verify** but never need to recover
-- Use: **bcrypt** / **Argon2** (slow by design → resists brute force)
-- Always add a unique **salt** (good libs do this)
-
-```text
-password → hash(password + salt) → store hash
-login → hash(input + same salt) → compare
+```mermaid
+graph TD
+    IN["input: ' OR '1'='1"] --> Q["WHERE email = '' OR '1'='1'"]
+    Q --> R["💥 returns every row"]
+    style R fill:#7f1d1d,stroke:#ef4444,color:#ffffff
 ```
 
-> ⚠️ Never use MD5/SHA-1/SHA-256 "plain hashing" for passwords. They are too fast → attackers can crack at scale.
+---
 
-#### Encryption (two-way) — for sensitive data
+## Step 4 — 4.3.2 Cross-Site Scripting (XSS)
+**type:** two-column (prose + diagram) · **section:** § 4.3.2 · Cross-Site Scripting
 
-- Purpose: store/transmit data that must be **recovered** later
-- Typical: **AES-256-GCM** (confidentiality + integrity)
-- Keys must live in **KMS/Vault**, not in code/config
+**Left (prose):** attacker JS runs in victim's browser; impact (steal tokens, act as user); fix checklist (output encoding, CSP, don't store tokens in `localStorage`).
 
-```text
-plaintext → encrypt(key) → ciphertext
-ciphertext → decrypt(key) → plaintext
+**Right (diagram) — attack flow:**
+
+```mermaid
+graph TD
+    A["Attacker plants<br/>script payload"] --> ST["Stored / reflected<br/>in the page"]
+    ST --> V["Victim's browser<br/>executes it"]
+    V --> T["💥 token stolen<br/>actions as user"]
+    style T fill:#7f1d1d,stroke:#ef4444,color:#ffffff
 ```
 
-**Common examples**
+---
 
-- Encrypt: PII fields, API tokens at rest, secrets in DB
-- Hash: passwords, (sometimes) refresh token hashes
+## Step 5 — XSS Sandbox (Demo)
+**type:** demo · **section:** § 4.3.2 · Cross-Site Scripting · **demo_key:** XSSSandbox
+
+Run a payload in a sandbox; toggle output-encoding on to watch the script render inert. *(Only live demo in this lecture.)*
 
 ---
 
-## Unit 5 — Hashing Playground (Demo)
-**type:** demo
-**demo_key:** HashingPlayground
+## Step 6 — 4.3.3 Broken Access Control
+**type:** two-column (prose + diagram) · **section:** § 4.3.3 · Broken Access Control
 
-Type a password and compare its representation under MD5, SHA-256, bcrypt, and Argon2 side-by-side. Watch the bcrypt cost factor change crack time from "1 second" to "centuries." Includes a salt visualization showing why two identical passwords produce different hashes.
+**Left (prose):** IDOR / missing checks; change `/api/orders/1234` → `/5678` and get another user's data; fix checklist (authz server-side every request, never trust client IDs/roles, test "change `id` in URL", default deny).
 
----
+**Right (diagram) — IDOR ownership check:**
 
-## Unit 6 — Top Vulnerabilities (OWASP Mindset)
-**type:** prose
-
-### 5.3 Top vulnerabilities you must recognize (OWASP mindset)
-
-> 📌 **Pattern:** Most attacks are just "untrusted input reaches a sensitive sink."
-
----
-
-## Unit 7 — SQL Injection
-**type:** prose
-
-#### 5.3.1 SQL Injection
-
-**How it happens:** user input is concatenated into SQL.
-
-```sql
--- Vulnerable idea (do NOT do this)
-SELECT * FROM users WHERE email = '" + input + "'
+```mermaid
+graph TD
+    U["User A logged in"] --> R2["GET /api/orders/5678"]
+    R2 --> Q{"Server checks<br/>ownership?"}
+    Q -->|"no"| LEAK["💥 returns User B's order"]
+    Q -->|"yes"| DENY["403 Forbidden"]
+    style LEAK fill:#7f1d1d,stroke:#ef4444,color:#ffffff
+    style DENY fill:#064e3b,stroke:#10b981,color:#ffffff
 ```
 
-**Fix checklist:**
+---
 
-- Parameterized queries / prepared statements
-- Strict validation on identifiers (table/column names)
-- Principle of least privilege for DB users (read vs write)
+## Step 7 — 4.4 Principles & In Our System
+**type:** two-column (prose + diagram) · **section:** § 4.4 · Putting It All Together
+
+**Left (prose):** the four core habits (never trust client input, least privilege, defense in depth, secure secret management); "in our system" mapping (hashed passwords, JWT validated on API, HTTPS everywhere, server-side authz); + key-takeaway callout *"Security = correctness under attack."*
+
+**Right (diagram) — defense in depth:**
+
+```mermaid
+graph TB
+    REQ["Incoming Request"] --> L1["Rate limiting"]
+    L1 --> L2["Authentication"]
+    L2 --> L3["Authorization"]
+    L3 --> L4["Input validation"]
+    L4 --> L5["Logging / audit"]
+    L5 --> APP["Protected Resource"]
+    style APP fill:#064e3b,stroke:#10b981,color:#ffffff
+```
 
 ---
 
-## Unit 8 — XSS (Cross-Site Scripting)
-**type:** prose
+## Step 8 — Checkpoint
+**type:** checkpoint (1 question)
 
-#### 5.3.2 XSS (Cross-Site Scripting)
-
-**What it is:** attacker-controlled JS runs in the victim's browser.
-
-**Typical impact:** steal tokens, perform actions as user.
-
-**Fix checklist:**
-
-- Output encoding/escaping (server and client)
-- Content Security Policy (CSP)
-- Avoid storing tokens in `localStorage`
-
----
-
-## Unit 9 — Broken Access Control
-**type:** prose
-
-#### 5.3.3 Broken Access Control
-
-**What it is:** users can access resources they shouldn't (IDOR, missing checks).
-
-**Fix checklist:**
-
-- Enforce authorization **server-side** on every request
-- Never trust roles/claims sent from client
-- Test with "change `id` in URL" scenarios
-
----
-
-## Unit 10 — OWASP Attack Simulator (Demo)
-**type:** demo
-**demo_key:** OWASPAttackSimulator
-
-A sandbox API with three vulnerable endpoints (SQLi, reflected XSS, IDOR). Toggle "fixed version" to see the same payload neutralized by parameterized queries, output encoding, and server-side authorization checks.
-
----
-
-## Unit 11 — Core Security Principles
-**type:** prose
-
-### 5.4 Core security principles (engineering habits)
-
-**1) Never trust client input**
-
-- Validate types, ranges, formats
-- Treat every string as potentially malicious
-
-**2) Least privilege**
-
-- Minimal scopes/roles per service, per endpoint
-- Separate credentials for read/write paths
-
-**3) Defense in depth**
-
-- Multiple layers: authn + authz + validation + logging + rate limiting
-
-**4) Secure secret management**
-
-- No secrets in code
-- Rotation + audit logs
-- Use KMS/Vault + short-lived credentials where possible
-
----
-
-## Unit 12 — "In Our System" Mapping & Key Takeaway
-**type:** prose
-
-### 5.5 "In our system" mapping (example)
-
-- Passwords: hashed (bcrypt/Argon2)
-- Auth: JWT validated on the API
-- Transport: HTTPS everywhere
-- Authorization: enforced on backend routes
-
-> ✅ **Outcome:** Only authenticated identities with the right permissions can access protected resources.
-
-### 5.6 Key takeaway
-
-Security = **correctness under attack**:
-
-- Strong authentication
-- Consistent authorization
-- Safe data handling (hash vs encrypt)
-- Secure defaults + layered defenses
+- **[Easy]** Why never store passwords in plain text? What algorithm, and why not MD5/SHA-256? → bcrypt/Argon2 are deliberately slow with per-user salts; MD5/SHA-256 crack at billions/sec.
 
 ---

@@ -1,12 +1,15 @@
 # Lecture 4 — Service-to-Service Authentication
 
-> Structure follows source §3.1–3.7, condensed to **10 steps**. Each `##` block maps
+> Structure follows source §3.1–3.7, condensed to **8 steps**. Each `##` block maps
 > 1:1 to a unit in `src/content/lectures/service-to-service.ts`. Speaker talk-track
 > lives in `lecture-4-service-to-service-speaker-notes.md`.
 >
 > Most prose steps are paired with their diagram in a **two-column** unit (text left,
 > diagram right) so a topic and its picture share one step. Every unit sets a `section`
 > kicker (e.g. "§ 3.3 · Client Credentials") rendered as a small per-step header.
+>
+> **Demos:** trimmed to a single "hero" demo (mTLS Handshake) so the lecture fits a
+> live 45-minute slot. JWTDecoder and DecisionTracer were removed from the deck.
 
 ## Step 1 — 3.1 The Problem: Who Is the Caller?
 **type:** two-column (prose + diagram) · **section:** § 3.1 · The Problem
@@ -66,18 +69,11 @@ graph TD
 ## Step 4 — 3.4 JWT Claims for M2M
 **type:** prose · **section:** § 3.4 · JWT Claims
 
-Claims that matter (`sub`, `iss`, `aud`, `exp`, `scope`/`scp`) + rule-of-thumb callout (authorization hints yes, secrets/PII no — Base64 is encoding, not encryption).
+Claims that matter (`sub`, `iss`, `aud`, `exp`, `scope`/`scp`) + rule-of-thumb callout (authorization hints yes, secrets/PII no — Base64 is encoding, not encryption). Closes by naming the four claim groups Service B reads on every request — identity (`sub`), trust (`iss`/`aud`), freshness (`exp`), permissions (`scope`).
 
 ---
 
-## Step 5 — Decode an M2M Token (Demo)
-**type:** demo · **section:** § 3.4 · JWT Claims · **demo_key:** JWTDecoder
-
-Decode a sample M2M token; inspect `sub`/`aud`/`exp`/`scope`; tamper to break the signature.
-
----
-
-## Step 6 — 3.5 Validation & Authorization
+## Step 5 — 3.5 Validation & Authorization
 **type:** two-column (prose + diagram) · **section:** § 3.5 · Validation & Authorization
 
 **Left (prose):** Validation ("is this token real and meant for me?") vs Authorization ("is this caller allowed?") — both must pass.
@@ -95,28 +91,21 @@ graph TD
 
 ---
 
-## Step 7 — Trace Service B's Decision (Demo)
-**type:** demo · **section:** § 3.5 · JWT Validation · **demo_key:** DecisionTracer
-
-Toggle each validation check and watch Service B accept/reject. First failure wins.
-
----
-
-## Step 8 — 3.6 Alternatives
+## Step 6 — 3.6 Alternatives
 **type:** prose · **section:** § 3.6 · Alternatives
 
 mTLS / service mesh / API keys / `private_key_jwt`, plus the mental model: OAuth = how to obtain a token; JWT = what it looks like; Service B's policy = what the caller can do.
 
 ---
 
-## Step 9 — mTLS Handshake (Demo)
+## Step 7 — mTLS Handshake (Demo)
 **type:** demo · **section:** § 3.6 · Alternatives · **demo_key:** MTLSVisualizer
 
-Watch the certificate exchange; toggle "expired cert" / "wrong CN" to see the handshake fail before any application data.
+Watch the certificate exchange; toggle "expired cert" / "wrong CN" to see the handshake fail before any application data. *(Only live demo in this lecture.)*
 
 ---
 
-## Step 10 — 3.7 Best Practices: Putting It All Together
+## Step 8 — 3.7 Best Practices: Putting It All Together
 **type:** two-column (prose + diagram) · **section:** § 3.7 · Best Practices
 
 **Left (prose):** the operational checklist (short-lived tokens, validate iss/aud/sig/exp, secrets in Vault/KMS, rotate, per-service identity, log token IDs only).

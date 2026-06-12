@@ -6,8 +6,14 @@ export const serviceToService: Lecture = {
   subtitle:
     "How one service proves who it is to another — client credentials, JWT validation, scopes, and mTLS — when there is no human in the loop.",
   tagline: "When services talk to each other, who vouches for them?",
-  estMinutes: 14,
-  topics: ["Client Credentials", "JWT Validation", "Scopes", "mTLS", "Secret Management"],
+  estMinutes: 11,
+  topics: [
+    "Client Credentials",
+    "JWT Claims & Validation",
+    "Scopes & Least Privilege",
+    "mTLS & Service Mesh",
+    "Token Best Practices",
+  ],
   color: "pink",
   iconKey: "server",
   comingSoon: false,
@@ -109,7 +115,7 @@ export const serviceToService: Lecture = {
       type: "prose",
       section: "§ 3.4 · JWT Claims",
       title: "What the Token Should Contain",
-      body: `JWT is popular for M2M because Service B validates it **locally** (stateless) — if you encode the right information.\n\n**Common claims for M2M:**\n\n- \`sub\` — the calling service identity (e.g., \`service-a\`)\n- \`iss\` — your Auth Server\n- \`aud\` — the API/service that should accept this token (e.g., \`service-b\`)\n- \`exp\` — short expiry (5–15 minutes)\n- \`scope\` or \`scp\` — the allowed permissions\n\nDecode a sample M2M token in the next step to see exactly which claims Service B reads.`,
+      body: `JWT is popular for M2M because Service B validates it **locally** (stateless) — if you encode the right information.\n\n**Common claims for M2M:**\n\n- \`sub\` — the calling service identity (e.g., \`service-a\`)\n- \`iss\` — your Auth Server\n- \`aud\` — the API/service that should accept this token (e.g., \`service-b\`)\n- \`exp\` — short expiry (5–15 minutes)\n- \`scope\` or \`scp\` — the allowed permissions\n\nThese are the exact claims Service B reads on every request — identity (\`sub\`), trust (\`iss\`/\`aud\`), freshness (\`exp\`), and permissions (\`scope\`).`,
       callouts: [
         {
           tone: "info",
@@ -118,16 +124,7 @@ export const serviceToService: Lecture = {
       ],
     },
 
-    // ═══════════════ Step 5 · 3.4 Demo: Decode an M2M Token ═══════════════
-    {
-      id: "service-to-service-step-5",
-      type: "demo",
-      section: "§ 3.4 · JWT Claims",
-      title: "Decode an M2M Token",
-      component: "JWTDecoder",
-    },
-
-    // ═══ Step 6 · 3.5 Validation & Authorization (prose + scope mapping) ═══
+    // ═══ Step 5 · 3.5 Validation & Authorization (prose + scope mapping) ═══
     {
       id: "service-to-service-step-6",
       type: "two-column",
@@ -152,16 +149,7 @@ export const serviceToService: Lecture = {
       },
     },
 
-    // ═══════════ Step 7 · 3.5 Demo: Trace Service B's Decision ═══════════
-    {
-      id: "service-to-service-step-7",
-      type: "demo",
-      section: "§ 3.5 · JWT Validation",
-      title: "Trace Service B's Decision",
-      component: "DecisionTracer",
-    },
-
-    // ═══════════════ Step 8 · 3.6 Alternatives (prose) ═══════════════
+    // ═══════════════ Step 6 · 3.6 Alternatives (prose) ═══════════════
     {
       id: "service-to-service-step-8",
       type: "prose",
