@@ -156,6 +156,8 @@ export interface TwoColumnUnit extends BaseUnit {
   left: LeafUnit;
   right: LeafUnit;
   ratio?: '1:1' | '2:3' | '3:2';
+  /** When 'column', renders left then right stacked in a single column at all breakpoints. */
+  direction?: 'row' | 'column';
 }
 
 export type Unit = ProseUnit | DiagramUnit | DemoUnit | CodeUnit | QuizUnit | MediaUnit | TwoColumnUnit | CheckpointUnit | SectionUnit | TakeawaysUnit;

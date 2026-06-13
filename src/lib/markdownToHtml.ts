@@ -74,11 +74,11 @@ export function markdownToHtml(md: string): string {
       continue;
     }
 
-    // Unordered list — collect consecutive `- ` lines
-    if (line.match(/^- /)) {
+    // Unordered list — collect consecutive `- ` lines (including indented sub-items)
+    if (line.match(/^\s*- /)) {
       const items: string[] = [];
-      while (i < lines.length && lines[i].match(/^- /)) {
-        items.push(`<li>${inlineFormat(lines[i].replace(/^- /, ''))}</li>`);
+      while (i < lines.length && lines[i].match(/^\s*- /)) {
+        items.push(`<li>${inlineFormat(lines[i].replace(/^\s*- /, ''))}</li>`);
         i++;
       }
       output.push(`<ul>${items.join('')}</ul>`);
@@ -96,7 +96,7 @@ export function markdownToHtml(md: string): string {
       i < lines.length &&
       lines[i].trim() !== '' &&
       !lines[i].match(/^#{1,3} /) &&
-      !lines[i].match(/^- /) &&
+      !lines[i].match(/^\s*- /) &&
       !lines[i].match(/^\d+\. /) &&
       !lines[i].startsWith('```') &&
       !lines[i].trimStart().startsWith('|')

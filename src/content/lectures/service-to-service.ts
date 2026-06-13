@@ -22,7 +22,6 @@ export const serviceToService: Lecture = {
     {
       id: "service-to-service-step-1",
       type: "two-column",
-      section: "§ 3.1 · The Problem",
       title: "Who Is the Caller?",
       ratio: "3:2",
       left: {
@@ -55,7 +54,6 @@ export const serviceToService: Lecture = {
     {
       id: "service-to-service-step-2",
       type: "two-column",
-      section: "§ 3.2 · Baseline Architecture",
       title: "Auth Server Issues the Tokens",
       ratio: "3:2",
       left: {
@@ -79,7 +77,6 @@ export const serviceToService: Lecture = {
     {
       id: "service-to-service-step-3",
       type: "two-column",
-      section: "§ 3.3 · Client Credentials",
       title: "How a Service Logs In as Itself",
       ratio: "3:2",
       left: {
@@ -113,7 +110,6 @@ export const serviceToService: Lecture = {
     {
       id: "service-to-service-step-4",
       type: "prose",
-      section: "§ 3.4 · JWT Claims",
       title: "What the Token Should Contain",
       body: `JWT is popular for M2M because Service B validates it **locally** (stateless) — if you encode the right information.\n\n**Common claims for M2M:**\n\n- \`sub\` — the calling service identity (e.g., \`service-a\`)\n- \`iss\` — your Auth Server\n- \`aud\` — the API/service that should accept this token (e.g., \`service-b\`)\n- \`exp\` — short expiry (5–15 minutes)\n- \`scope\` or \`scp\` — the allowed permissions\n\nThese are the exact claims Service B reads on every request — identity (\`sub\`), trust (\`iss\`/\`aud\`), freshness (\`exp\`), and permissions (\`scope\`).`,
       callouts: [
@@ -128,7 +124,6 @@ export const serviceToService: Lecture = {
     {
       id: "service-to-service-step-6",
       type: "two-column",
-      section: "§ 3.5 · Validation & Authorization",
       title: "How Service B Decides",
       ratio: "3:2",
       left: {
@@ -153,7 +148,6 @@ export const serviceToService: Lecture = {
     {
       id: "service-to-service-step-8",
       type: "prose",
-      section: "§ 3.6 · Alternatives",
       title: "Beyond Client Credentials",
       body: `Client credentials + JWT is the default, but not the only option:\n\n- **mTLS (mutual TLS)** — strong identity at the **transport layer**; both sides present certificates and the handshake fails if either is invalid or expired. Great for zero-trust / service mesh.\n- **Service mesh identity (Istio/Linkerd)** — automates cert rotation and policy enforcement via sidecars; application code stays **credential-free**.\n- **API keys** — simplest to implement, but weaker governance (rotation, scoping, audit) unless you build a lot around them.\n- **JWT assertion / \`private_key_jwt\`** — the client signs a JWT with its **private key** instead of sending a shared \`client_secret\`. Better for high-security clients.\n\n> **Mental model:** OAuth 2.0 tells you *how to obtain a token*; JWT tells you *what the token looks like*; Service B's policy tells you *what the caller can do*.`,
     },
@@ -162,7 +156,6 @@ export const serviceToService: Lecture = {
     {
       id: "service-to-service-step-9",
       type: "demo",
-      section: "§ 3.6 · Alternatives",
       title: "mTLS Handshake",
       component: "MTLSVisualizer",
     },
@@ -171,7 +164,6 @@ export const serviceToService: Lecture = {
     {
       id: "service-to-service-step-10",
       type: "two-column",
-      section: "§ 3.7 · Best Practices",
       title: "Putting It All Together",
       ratio: "2:3",
       left: {

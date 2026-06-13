@@ -30,13 +30,6 @@ export const oauthAuthn: Lecture = {
       },
     },
 
-    {
-      id: "oauth-authn-section-stateless",
-      type: "section",
-      title: "Stateless vs Stateful",
-      subtitle: "Where does the server store the proof that a user is logged in?",
-    },
-
     // ── Block 1: Stateless vs Stateful ──────────────────────────────────────
 
     {
@@ -61,13 +54,6 @@ export const oauthAuthn: Lecture = {
       icon: "Activity",
       iconColor: "var(--blue)",
       component: "SessionFlowLane",
-    },
-
-    {
-      id: "oauth-authn-section-passwords",
-      type: "section",
-      title: "Password Management",
-      subtitle: "How the backend should store and verify credentials.",
     },
 
     // ── Block 2: Password Management ────────────────────────────────────────
@@ -103,19 +89,12 @@ export const oauthAuthn: Lecture = {
       component: "HashingPlayground",
     },
 
-    {
-      id: "oauth-authn-section-jwt",
-      type: "section",
-      title: "JSON Web Token",
-      subtitle: "A compact, self-contained token format — no database call needed.",
-    },
-
     // ── Block 3: JWT ─────────────────────────────────────────────────────────
 
     {
       id: "oauth-authn-unit-10",
       type: "two-column",
-      ratio: "2:3",
+      direction: "column",
       left: {
         id: "oauth-authn-unit-10-prose",
         type: "prose",
@@ -137,6 +116,7 @@ export const oauthAuthn: Lecture = {
         src: "/media/lectures/jwt-structure.png",
         alt: "JWT structure diagram: Header (alg, typ), Payload (sub, name, iat), and Signature (HMAC-SHA256) — each Base64URL-encoded and joined by dots to form the final token",
         caption: "Header · Payload · Signature — joined by dots",
+        aspectRatio: "17/10",
       },
     },
 
@@ -156,13 +136,6 @@ export const oauthAuthn: Lecture = {
         title: "JWT Decoder",
         component: "JWTDecoder",
       },
-    },
-
-    {
-      id: "oauth-authn-section-token-flow",
-      type: "section",
-      title: "Self-Managed Token Flow",
-      subtitle: "Access tokens, refresh tokens, and the full lifecycle.",
     },
 
     // ── Block 4: Self-Managed Token Flow ────────────────────────────────────
@@ -212,13 +185,6 @@ export const oauthAuthn: Lecture = {
       caption: "Self-managed token flow: login with bcrypt verification → short-lived JWT in memory → long-lived refresh token in HttpOnly cookie → rotation on every use.",
     },
 
-    {
-      id: "oauth-authn-section-attacks",
-      type: "section",
-      title: "JWT Attacks",
-      subtitle: "Common vulnerabilities and how libraries get this wrong.",
-    },
-
     // ── Block 6: JWT Attacks ─────────────────────────────────────────────────
 
     {
@@ -228,13 +194,6 @@ export const oauthAuthn: Lecture = {
       icon: "AlertTriangle",
       iconColor: "var(--red)",
       component: "JWTForger",
-    },
-
-    {
-      id: "oauth-authn-section-revocation",
-      type: "section",
-      title: "Token Revocation",
-      subtitle: "The stateless trade-off — and three strategies to overcome it.",
     },
 
     // ── Block 6b: JWT Revocation ─────────────────────────────────────────────
@@ -272,23 +231,11 @@ export const oauthAuthn: Lecture = {
 
     {
       id: "oauth-authn-revocation-denylist-diagram",
-      type: "diagram",
+      type: "media",
+      kind: "image",
       title: "Redis Denylist — Request Flow",
-      mermaid: `sequenceDiagram
-    actor Attacker
-    participant API
-    participant Redis
-
-    Note over Attacker,Redis: User logs out — jti added to denylist
-    API->>Redis: SET jti:abc123 "1" EX 900
-    Redis-->>API: OK
-
-    Attacker->>API: GET /account (Bearer ...jti:abc123)
-    API->>Redis: GET jti:abc123
-    Redis-->>API: "1"
-    API-->>Attacker: 401 Token revoked ✗
-
-    Note over Attacker,Redis: After 900s — Redis auto-expires the entry`,
+      src: "/media/lectures/JWT_denylist.jpeg",
+      alt: "Redis denylist flow: on logout the jti is stored in Redis with a TTL matching the token's remaining lifetime; a replayed request hits Redis, finds the jti, and is rejected with 401",
       caption: "The denylist entry TTL matches the token's remaining lifetime, so Redis cleans itself up automatically.",
     },
 

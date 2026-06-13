@@ -32,14 +32,14 @@ export default function MediaRenderer({ unit, inline = false }: MediaRendererPro
       media = (
         <div
           className="relative w-full overflow-hidden rounded-lg"
-          style={{ minHeight: '200px', aspectRatio: undefined }}
+          style={{ minHeight: 'clamp(320px, 60vh, 700px)' }}
         >
           <Image
             src={unit.src}
             alt={alt}
             fill
             className="object-contain rounded-lg"
-            sizes="(max-width: 768px) 100vw, 800px"
+            sizes="(max-width: 768px) 100vw, 1024px"
           />
         </div>
       );
@@ -93,9 +93,6 @@ export default function MediaRenderer({ unit, inline = false }: MediaRendererPro
 
   const content = (
     <div className="space-y-2">
-      {unit.title && (
-        <p className="eyebrow">{unit.title}</p>
-      )}
       {media}
       {unit.caption && <Caption>{unit.caption}</Caption>}
     </div>

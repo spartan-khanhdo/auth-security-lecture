@@ -18,14 +18,16 @@ export default function TwoColumnRenderer({ unit }: TwoColumnRendererProps) {
   const ratio = unit.ratio ?? '1:1';
   const colsClass = RATIO_CLASS[ratio];
 
+  const isColumn = unit.direction === 'column';
+
   return (
     <div className="w-full space-y-4">
       {unit.section ? (
-        <StepHeader section={unit.section} title={unit.title} />
+        <StepHeader section={unit.section} />
       ) : (
         unit.title && <p className="eyebrow">{unit.title}</p>
       )}
-      <div className={`grid grid-cols-1 ${colsClass} gap-6 items-start`}>
+      <div className={isColumn ? 'flex flex-col gap-6' : `grid grid-cols-1 ${colsClass} gap-6 items-start`}>
         <div>
           <SubUnit unit={unit.left} />
         </div>

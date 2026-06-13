@@ -69,7 +69,7 @@ export default function UnitRenderer({ unit }: UnitRendererProps) {
 
   return (
     <div className="w-full space-y-5">
-      <StepHeader section={unit.section} title={unit.title} />
+      <StepHeader section={unit.section} />
       {body}
     </div>
   );

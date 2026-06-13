@@ -16,7 +16,6 @@ export const gaps: Lecture = {
     {
       id: "gaps-step-1",
       type: "two-column",
-      section: "§ 5.1 · OpenID Connect",
       title: "OAuth Authorizes. OIDC Identifies.",
       ratio: "3:2",
       left: {
@@ -46,7 +45,6 @@ export const gaps: Lecture = {
     {
       id: "gaps-step-2",
       type: "two-column",
-      section: "§ 5.1 · OpenID Connect",
       title: "One Difference, Zero Hardcoding",
       ratio: "3:2",
       left: {
@@ -71,7 +69,6 @@ export const gaps: Lecture = {
     {
       id: "gaps-step-3",
       type: "two-column",
-      section: "§ 5.2 · CSRF",
       title: "The Browser Sends Cookies for You",
       ratio: "3:2",
       left: {
@@ -101,7 +98,6 @@ export const gaps: Lecture = {
     {
       id: "gaps-step-4",
       type: "demo",
-      section: "§ 5.2 · CSRF",
       title: "CSRF Sandbox",
       component: "CSRFSandbox",
     },
@@ -110,7 +106,6 @@ export const gaps: Lecture = {
     {
       id: "gaps-step-5",
       type: "prose",
-      section: "§ 5.3 · RBAC vs ABAC",
       title: "Modeling Permissions",
       body: `> AuthZ says *what someone can do* — but how does your system decide that? That's where RBAC and ABAC come in.\n\n**RBAC (Role-Based Access Control)** — permissions tied to roles, roles assigned to users.\n\n\`\`\`\nadmin   → full access\neditor  → read + write\nviewer  → read only\n\`\`\`\n\nSimple, easy to reason about — most apps start here. **Limitation:** roles bloat fast as edge cases pile up.\n\n**ABAC (Attribute-Based Access Control)** — permissions evaluated from policies combining attributes (user, resource, environment).\n\n\`\`\`\nallow if user.dept == resource.dept AND action == 'read' AND hour < 18\n\`\`\`\n\nMore flexible, handles complex rules, but harder to debug and audit.\n\n**Rule of thumb:** start with RBAC; move to ABAC when roles alone can't express the policy cleanly — e.g. *"editors can edit only their own posts."*`,
     },
@@ -119,7 +114,6 @@ export const gaps: Lecture = {
     {
       id: "gaps-step-6",
       type: "diagram",
-      section: "§ 5.3 · RBAC vs ABAC",
       title: "Two Ways to Decide",
       mermaid: `graph TB
     subgraph RBAC["RBAC · role-based — who you are → what you can do"]

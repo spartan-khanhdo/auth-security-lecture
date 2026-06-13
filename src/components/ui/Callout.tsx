@@ -10,34 +10,10 @@ interface CalloutProps {
 }
 
 const toneStyles: Record<CalloutTone, { wrapper: string; icon: string }> = {
-  info: {
-    wrapper: [
-      'bg-[color-mix(in_srgb,var(--blue)_10%,var(--surface))]',
-      'border-[color-mix(in_srgb,var(--blue)_35%,var(--border-subtle))]',
-    ].join(' '),
-    icon: 'text-[var(--blue)]',
-  },
-  warn: {
-    wrapper: [
-      'bg-[color-mix(in_srgb,var(--amber)_10%,var(--surface))]',
-      'border-[color-mix(in_srgb,var(--amber)_40%,var(--border-subtle))]',
-    ].join(' '),
-    icon: 'text-[var(--amber)]',
-  },
-  danger: {
-    wrapper: [
-      'bg-[color-mix(in_srgb,var(--red)_10%,var(--surface))]',
-      'border-[color-mix(in_srgb,var(--red)_40%,var(--border-subtle))]',
-    ].join(' '),
-    icon: 'text-[var(--red)]',
-  },
-  success: {
-    wrapper: [
-      'bg-[color-mix(in_srgb,var(--green)_10%,var(--surface))]',
-      'border-[color-mix(in_srgb,var(--green)_35%,var(--border-subtle))]',
-    ].join(' '),
-    icon: 'text-[var(--green)]',
-  },
+  info:    { wrapper: 'bg-[color-mix(in_srgb,var(--blue)_14%,var(--surface))]',    icon: 'text-[var(--blue)]' },
+  warn:    { wrapper: 'bg-[color-mix(in_srgb,var(--amber)_14%,var(--surface))]',   icon: 'text-[var(--amber)]' },
+  danger:  { wrapper: 'bg-[color-mix(in_srgb,var(--red)_14%,var(--surface))]',     icon: 'text-[var(--red)]' },
+  success: { wrapper: 'bg-[color-mix(in_srgb,var(--green)_14%,var(--surface))]',   icon: 'text-[var(--green)]' },
 };
 
 const ToneIcon: Record<CalloutTone, React.ElementType> = {
@@ -62,7 +38,7 @@ export default function Callout({ tone, text, children }: CalloutProps) {
   return (
     <div
       className={cn(
-        'flex items-start gap-3 rounded-md border px-4 py-3 text-[var(--text)]',
+        'flex items-start gap-3 rounded-md px-4 py-3 text-[var(--text)]',
         styles.wrapper
       )}
     >

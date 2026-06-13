@@ -23,7 +23,6 @@ export const securityFundamentals: Lecture = {
     {
       id: "security-fundamentals-step-1",
       type: "two-column",
-      section: "§ 4.1 · Why Security Matters",
       title: "Protect the CIA Triad",
       ratio: "3:2",
       left: {
@@ -54,7 +53,6 @@ export const securityFundamentals: Lecture = {
     {
       id: "security-fundamentals-step-2",
       type: "two-column",
-      section: "§ 4.2 · Hashing vs Encryption",
       title: "One-Way vs Two-Way (don't mix them)",
       ratio: "3:2",
       left: {
@@ -90,7 +88,6 @@ export const securityFundamentals: Lecture = {
     {
       id: "security-fundamentals-step-4",
       type: "two-column",
-      section: "§ 4.3.1 · SQL Injection",
       title: "When Input Becomes Code",
       ratio: "3:2",
       left: {
@@ -119,7 +116,6 @@ export const securityFundamentals: Lecture = {
     {
       id: "security-fundamentals-step-6",
       type: "two-column",
-      section: "§ 4.3.2 · Cross-Site Scripting",
       title: "Attacker JS Runs in the Victim's Browser",
       ratio: "3:2",
       left: {
@@ -143,7 +139,6 @@ export const securityFundamentals: Lecture = {
     {
       id: "security-fundamentals-step-7",
       type: "demo",
-      section: "§ 4.3.2 · Cross-Site Scripting",
       title: "XSS Sandbox",
       component: "XSSSandbox",
     },
@@ -152,7 +147,6 @@ export const securityFundamentals: Lecture = {
     {
       id: "security-fundamentals-step-8",
       type: "two-column",
-      section: "§ 4.3.3 · Broken Access Control",
       title: "Change the ID, Get Someone Else's Data",
       ratio: "2:3",
       left: {
@@ -178,7 +172,6 @@ export const securityFundamentals: Lecture = {
     {
       id: "security-fundamentals-step-9",
       type: "two-column",
-      section: "§ 4.4 · Putting It All Together",
       title: "Principles & In Our System",
       ratio: "2:3",
       left: {

@@ -35,18 +35,6 @@ export default function CheckpointRenderer({ unit }: CheckpointRendererProps) {
     <div className="max-w-3xl mx-auto w-full space-y-6 pb-8">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div>
-        <h2
-          style={{
-            fontSize: "clamp(20px, 2.4vw, 26px)",
-            fontFamily: "var(--font-display)",
-            fontWeight: 600,
-            margin: "6px 0 0",
-            color: "var(--text)",
-          }}
-        >
-          {unit.title ?? "Quiz"}
-        </h2>
-
         {/* Progress summary — visible once at least one answer is given */}
         {answered > 0 && (
           <div
