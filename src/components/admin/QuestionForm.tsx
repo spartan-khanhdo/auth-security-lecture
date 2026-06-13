@@ -12,7 +12,7 @@ interface QuestionFormProps {
 
 const LECTURE_OPTIONS: { value: LectureSlug; label: string }[] = [
   { value: "oauth-authn", label: "The Foundation: Stateless, Passwords & JWT" },
-  { value: "jwt-best-practices", label: "OAuth: Delegated Authorization" },
+  { value: "oauth", label: "OAuth: Delegated Authorization" },
   { value: "sessions-mfa-modern-authn", label: "Sessions, MFA & Modern AuthN" },
   { value: "service-to-service", label: "Service-to-Service Auth" },
   { value: "security-fundamentals", label: "Security Fundamentals" },

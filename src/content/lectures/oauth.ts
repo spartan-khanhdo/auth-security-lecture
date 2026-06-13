@@ -1,7 +1,7 @@
 import type { Lecture } from "@/content/types";
 
-export const jwtBestPractices: Lecture = {
-  slug: "jwt-best-practices",
+export const oauthLecture: Lecture = {
+  slug: "oauth",
   title: "OAuth: Delegated Authorization",
   subtitle:
     "In Lecture 1 we built auth ourselves. This lecture explains why that boundary forced the creation of OAuth, how OAuth 2.0 works, and the token lifecycle best practices that go with it.",
@@ -108,9 +108,15 @@ export const jwtBestPractices: Lecture = {
 
     {
       id: "jwt-bp-client-id-secret",
-      type: "prose",
+      type: "takeaways",
       title: "Client ID vs. Client Secret",
-      body: `Every app registered with an OAuth authorization server gets two identifiers:\n\n- **\`client_id\`** — A **public** identifier for your app. Safe to include in URLs, frontend code, and mobile app bundles. The auth server uses it to look up your registered redirect URIs and display your app name on the consent screen.\n- **\`client_secret\`** — A **private password** for your app. Proves the app really is who it claims to be during the token exchange. **Must never appear in frontend JavaScript, mobile app binaries, or public source code.**\n\n|  | **client_id** | **client_secret** |\n|---|---|---|\n| **Visibility** | Public — safe in URLs and frontend JS | Private — server-side only, never in client code |\n| **Purpose** | Identifies *which app* is requesting access | Authenticates *that the app is legitimate* |\n| **Used in auth redirect** | ✅ Always (\`?client_id=...\`) | ❌ Never in the URL redirect |\n| **Used in token exchange** | ✅ Required | ✅ Confidential clients (backends) only |\n| **Public clients (SPA/mobile)** | ✅ Used | ❌ Cannot store securely → use PKCE instead |`,
+      icon: "Key",
+      iconColor: "var(--primary-2)",
+      items: [
+        "client_id is public — safe in redirect URLs, frontend code, and mobile app bundles.",
+        "client_secret is private — server-side only, never in frontend JS, mobile binaries, or public source code.",
+        "Public clients (SPA, mobile) cannot store a client_secret securely — use PKCE instead.",
+      ],
     },
 
     // ── Unit 8: PKCE ─────────────────────────────────────────────────────────
@@ -229,32 +235,30 @@ def exchange_code_for_token(request):
 
     {
       id: "jwt-best-practices-unit-1",
-      type: "prose",
+      type: "takeaways",
       title: "Refresh Token Rotation & Reuse Detection",
-      body: `Every time a refresh token is used, issue a **new one and immediately invalidate the old**. If a previously-used token is presented → the entire token family is revoked.\n\n\`\`\`\nLogin          → issues AT₁ + RT₁\nAT₁ expires   → client sends RT₁ → server issues AT₂ + RT₂, invalidates RT₁\nAttacker uses stolen RT₁ → server detects reuse → revokes entire family\nBoth user and attacker must re-authenticate\n\`\`\`\n\nTwo FE implementation strategies: **401 handler** (catch expired responses and refresh) or **silent refresh** (proactively refresh at ~75% of the access token's lifetime before expiry).\n\n> 💡 Short-lived access tokens paired with long-lived refresh tokens form the standard JWT lifecycle. The access token is stateless and fast to validate; the refresh token is stateful and enables revocation.`,
+      icon: "RefreshCw",
+      iconColor: "var(--green)",
+      items: [
+        "On every refresh, issue a new refresh token and immediately invalidate the old one.",
+        "If a previously-used refresh token is presented, revoke the entire token family — both user and attacker must re-authenticate.",
+        "Proactively refresh at ~75% of the access token's lifetime to avoid user-visible 401 errors (silent refresh pattern).",
+      ],
     },
 
     // ── Unit 15: Token Storage ────────────────────────────────────────────────
 
     {
       id: "jwt-best-practices-unit-2",
-      type: "prose",
-      title: "Token Storage — Deep Dive",
-      body: `**The recommended defense-in-depth pattern:**\n\n- Store the **access token in JavaScript memory only**. Protected from CSRF because it must be explicitly attached via \`Authorization\` header. Lost on page refresh — client silently fetches a new one via the refresh cookie.\n- Store the **refresh token in an \`HttpOnly; Secure; SameSite=Strict\` cookie**. JavaScript cannot read it, neutralizing XSS-based theft.\n\n**Full comparison:**\n\n| Storage | XSS Risk | CSRF Risk | Survives Refresh | Verdict |\n|---|---|---|---|---|\n| **\`localStorage\`** | ❌ High | ✅ Safe | ✅ Yes | ❌ Never use for tokens |\n| **\`sessionStorage\`** | ❌ High | ✅ Safe | ❌ No | ❌ No meaningful security advantage over localStorage |\n| **JS Memory** | ✅ Safe | ✅ Safe | ❌ No | ✅ Best for access tokens in SPAs |\n| **HttpOnly Cookie** | ✅ Safe | ⚠️ Needs SameSite + CSRF token | ✅ Yes | ✅ Best for refresh tokens |\n\n> ⚠️ \`sessionStorage\` is NOT safer than \`localStorage\` for tokens. Both are accessible by any JavaScript running on the page.\n\n**Cookie attributes that matter:**\n\`\`\`\nSet-Cookie: refresh_token=eyJ...\n  HttpOnly        ← JS cannot read — blocks XSS token theft\n  Secure          ← HTTPS only\n  SameSite=Strict ← blocks CSRF\n  Path=/auth      ← scoped to auth endpoints only\n  Max-Age=604800  ← 7 days\n\`\`\``,
-    },
-
-    // ── Unit 16: Revocation Strategies ───────────────────────────────────────
-
-    {
-      id: "jwt-bp-revocation",
-      type: "prose",
-      title: "Revocation Strategies",
-      body: `The core tension: **JWTs are stateless by design, but real apps need to revoke access immediately** — on logout, password change, or account compromise.\n\n**Strategy 1 — Short TTL (pseudo-revocation)**\nWith 5–15 min access tokens, revoking only the refresh token limits the exposure window. Maintains pure statelessness but accepts a brief vulnerability window. Acceptable for most apps.\n\n**Strategy 2 — Redis Denylist (production standard)**\nStore revoked \`jti\` values in Redis with TTL = token's remaining lifetime — Redis auto-expires them, no cleanup needed. Overhead: ~1–2ms per request. For "log out everywhere": store a \`revoked_at\` timestamp per user and reject any token whose \`iat\` is earlier than that timestamp.\n\n**Strategy 3 — Token Versioning**\nStore a \`jwt_version\` integer per user in DB. Embed it as a \`ver\` claim in every JWT. On a security event, increment the version — all previous tokens instantly invalid. Tradeoff: requires a DB/cache lookup per request.\n\n**Always trigger revocation on:**\n- Password change or reset\n- Account compromise detected\n- Admin deactivation\n- MFA enrollment changes\n- Role or permission changes\n- Explicit "log out everywhere"`,
-      callouts: [
-        {
-          tone: "warn",
-          text: "Client-side token deletion alone is NOT revocation. A stolen token can still be used even after the client deletes it locally.",
-        },
+      type: "takeaways",
+      title: "Token Storage Rules",
+      icon: "Database",
+      iconColor: "var(--amber)",
+      items: [
+        "Store access tokens in JavaScript memory only — lost on page refresh but safe from XSS. The client silently re-fetches via the refresh cookie.",
+        "Store refresh tokens in an HttpOnly; Secure; SameSite=Strict cookie — JavaScript cannot read it, neutralizing XSS-based theft.",
+        "Never use localStorage or sessionStorage for tokens — both are readable by any JS on the page.",
+        "sessionStorage is NOT safer than localStorage. The distinction does not matter for XSS attackers.",
       ],
     },
 
@@ -271,9 +275,22 @@ def exchange_code_for_token(request):
 
     {
       id: "jwt-bp-security-checklist",
-      type: "prose",
+      type: "takeaways",
       title: "Security Checklist",
-      body: `- ✅ Use PKCE for all Authorization Code flows (all public clients)\n- ✅ Use RS256 or ES256 over HS256 in multi-service environments\n- ✅ Enable refresh token rotation with reuse detection\n- ✅ Store access token in JS memory; refresh token in HttpOnly cookie\n- ✅ Never use \`localStorage\` or \`sessionStorage\` for tokens\n- ✅ Set \`HttpOnly; Secure; SameSite=Strict\` on all auth cookies\n- ✅ Never put sensitive data in JWT payload (Base64 is not encryption)\n- ✅ Rotate signing keys every 90 days via JWKS\n- ✅ Maintain Redis denylist for immediate revocation on logout or compromise\n- ✅ Never send JWTs in URL query parameters`,
+      icon: "Shield",
+      iconColor: "var(--green)",
+      items: [
+        "Use PKCE for all Authorization Code flows — required for every public client (SPA, mobile).",
+        "Use RS256 or ES256 over HS256 in multi-service environments.",
+        "Enable refresh token rotation with reuse detection.",
+        "Store access token in JS memory; refresh token in HttpOnly cookie.",
+        "Never use localStorage or sessionStorage for tokens.",
+        "Set HttpOnly; Secure; SameSite=Strict on all auth cookies.",
+        "Never put sensitive data in JWT payload — Base64 is encoding, not encryption.",
+        "Rotate signing keys every 90 days and serve public keys via JWKS.",
+        "Maintain a Redis denylist for immediate revocation on logout or compromise.",
+        "Never send JWTs in URL query parameters — they appear in server logs and browser history.",
+      ],
     },
 
     // ── Unit 19: Micronaut Config ─────────────────────────────────────────────
@@ -331,6 +348,54 @@ def exchange_code_for_token(request):
       type: "checkpoint",
       title: "Checkpoint",
       questions: [
+    {
+        id: "jwt-bp-quiz-mobile-secret",
+        type: "quiz",
+        difficulty: "medium",
+        title: "Mobile App and client_secret",
+        question: "A native mobile app needs to use OAuth 2.0. Why can't it safely store a client_secret?",
+        choices: [
+          { id: "a", label: "It can — Google issues a unique secret per device." },
+          { id: "b", label: "It cannot — the app binary is distributed to users and can be reverse-engineered, exposing any embedded secret." },
+          { id: "c", label: "It uses the device's TPM as the secret store." },
+          { id: "d", label: "It uses SMS-based verification instead of a secret." },
+        ],
+        correctChoiceId: "b",
+        explanation: "Native app binaries are distributed to end users who can decompile or inspect them. Any secret embedded in the binary is effectively public. This is why public clients (mobile apps, SPAs) must use PKCE instead of a client_secret — PKCE provides proof-of-possession without requiring a static secret.",
+        points: 2,
+      },
+      {
+        id: "jwt-bp-quiz-client-id-secret",
+        type: "quiz",
+        difficulty: "easy",
+        title: "client_id vs client_secret",
+        question: "Which of the following correctly describes the difference between client_id and client_secret in OAuth 2.0?",
+        choices: [
+          { id: "a", label: "Both are public identifiers." },
+          { id: "b", label: "Both are private and must stay server-side." },
+          { id: "c", label: "`client_id` is a public identifier; `client_secret` is a private credential that must never leave the server." },
+          { id: "d", label: "`client_id` is private; `client_secret` is public." },
+        ],
+        correctChoiceId: "c",
+        explanation: "`client_id` identifies the application and is safe to expose (it appears in redirect URLs). `client_secret` is the application's password — it authenticates the app to the authorization server during the token exchange and must only ever exist server-side. Leaking it allows an attacker to impersonate your application.",
+        points: 1,
+      },
+      {
+        id: "jwt-bp-quiz-pkce-walkthrough",
+        type: "quiz",
+        difficulty: "hard",
+        title: "Authorization Code + PKCE Walkthrough",
+        question: "In the Authorization Code + PKCE flow, when does the authorization server verify the code_verifier?",
+        choices: [
+          { id: "a", label: "When the user first clicks 'Login' — before any redirect." },
+          { id: "b", label: "When the client sends the authorization request with code_challenge." },
+          { id: "c", label: "At the token endpoint, when the client exchanges the authorization code for tokens." },
+          { id: "d", label: "After the access token is issued, as a background integrity check." },
+        ],
+        correctChoiceId: "c",
+        explanation: "The code_verifier is sent to the token endpoint alongside the authorization code. The server computes SHA-256(code_verifier) and compares it to the code_challenge it stored when the authorization request arrived. If they match, the code exchange succeeds. This proves the entity requesting the token is the same one that started the flow — defeating authorization code interception attacks.",
+        points: 3,
+      },
     {
       id: "jwt-best-practices-unit-7",
       type: "quiz",

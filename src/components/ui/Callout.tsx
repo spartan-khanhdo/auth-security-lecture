@@ -21,19 +21,27 @@ const ToneIcon: Record<CalloutTone, React.ElementType> = {
   danger: XCircle,
 };
 
+/** Parse inline markdown bold, italic, and code into HTML. */
+function inlineFormat(raw: string): string {
+  return raw
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+}
+
 export default function Callout({ tone, text, children }: CalloutProps) {
   const Icon = ToneIcon[tone];
 
   return (
     <div
       className={cn(
-        'flex items-start gap-3 rounded-md border px-4 py-3 text-sm',
+        'flex items-start gap-3 rounded-md border px-4 py-3',
         toneStyles[tone]
       )}
     >
       <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
       <div className="flex-1">
-        {text}
+        <span dangerouslySetInnerHTML={{ __html: inlineFormat(text) }} />
         {children}
       </div>
     </div>

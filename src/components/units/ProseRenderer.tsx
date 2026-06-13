@@ -1,20 +1,75 @@
-import type { ProseUnit } from '@/content/types';
+import type { ProseUnit, CodeUnit } from '@/content/types';
 import { markdownToHtml } from '@/lib/markdownToHtml';
 import Callout from '@/components/ui/Callout';
+import CodeRenderer from './CodeRenderer';
+
+type Segment =
+  | { kind: 'prose'; text: string }
+  | { kind: 'code'; language: string; code: string; title?: string };
+
+const VALID_LANGS = new Set(['ts', 'js', 'py', 'sql', 'yaml', 'java', 'bash', 'json']);
+
+function parseSegments(body: string): Segment[] {
+  const segments: Segment[] = [];
+  const lines = body.split('\n');
+  let i = 0;
+  let proseLines: string[] = [];
+
+  while (i < lines.length) {
+    const fence = lines[i].match(/^```(\S*)\s*(?:#\s*(.+))?$/);
+    if (fence) {
+      if (proseLines.length > 0) {
+        segments.push({ kind: 'prose', text: proseLines.join('\n') });
+        proseLines = [];
+      }
+      const lang = fence[1] || 'bash';
+      const title = fence[2];
+      const codeLines: string[] = [];
+      i++;
+      while (i < lines.length && !lines[i].startsWith('```')) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      i++; // skip closing ```
+      segments.push({ kind: 'code', language: lang, code: codeLines.join('\n'), title });
+    } else {
+      proseLines.push(lines[i]);
+      i++;
+    }
+  }
+  if (proseLines.length > 0) segments.push({ kind: 'prose', text: proseLines.join('\n') });
+  return segments;
+}
 
 interface ProseRendererProps {
   unit: ProseUnit;
 }
 
 export default function ProseRenderer({ unit }: ProseRendererProps) {
-  const html = markdownToHtml(unit.body);
+  const segments = parseSegments(unit.body);
 
   return (
     <div className="max-w-5xl mx-auto w-full space-y-4">
-      <div
-        className="prose dark:prose-invert max-w-none"
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
+      {segments.map((seg, idx) =>
+        seg.kind === 'prose' ? (
+          <div
+            key={idx}
+            className="prose dark:prose-invert max-w-none"
+            dangerouslySetInnerHTML={{ __html: markdownToHtml(seg.text) }}
+          />
+        ) : (
+          <CodeRenderer
+            key={idx}
+            unit={{
+              id: `inline-code-${idx}`,
+              type: 'code',
+              title: seg.title,
+              language: (VALID_LANGS.has(seg.language) ? seg.language : 'bash') as CodeUnit['language'],
+              code: seg.code,
+            }}
+          />
+        )
+      )}
       {(unit.callouts ?? []).map((callout, idx) => (
         <Callout key={idx} tone={callout.tone} text={callout.text} />
       ))}

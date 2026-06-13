@@ -7,6 +7,8 @@ import QuizRenderer from './QuizRenderer';
 import MediaRenderer from './MediaRenderer';
 import TwoColumnRenderer from './TwoColumnRenderer';
 import CheckpointRenderer from './CheckpointRenderer';
+import SectionRenderer from './SectionRenderer';
+import TakeawaysRenderer from './TakeawaysRenderer';
 import StepHeader from './StepHeader';
 
 interface UnitRendererProps {
@@ -38,6 +40,12 @@ function renderBody(unit: Unit) {
 
     case 'checkpoint':
       return <CheckpointRenderer unit={unit} />;
+
+    case 'section':
+      return <SectionRenderer unit={unit} />;
+
+    case 'takeaways':
+      return <TakeawaysRenderer unit={unit} />;
 
     default: {
       const _exhaustive: never = unit;

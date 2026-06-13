@@ -1724,14 +1724,26 @@ body::before {
 
 .prose a {
   color: var(--primary-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--primary-2) 40%, transparent);
+}
+.prose a:hover {
+  text-decoration-color: var(--primary-2);
 }
 
 .prose code {
-  color: var(--primary-2);
-  background: var(--surface-2);
+  color: var(--amber);
+  background: var(--surface-3);
   padding: 2px 6px;
   border-radius: 5px;
   font-size: .88em;
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+.prose code::before,
+.prose code::after {
+  content: none;
 }
 
 .prose pre {

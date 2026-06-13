@@ -6,8 +6,8 @@ export const oauthAuthn: Lecture = {
   subtitle:
     "Build from the simplest possible auth system up to the full JWT lifecycle — then see how OAuth delegates access without sharing credentials.",
   tagline: "Why the patterns exist: from password hashing to JWT attacks to OAuth PKCE.",
-  estMinutes: 22,
-  topics: ["Stateless vs Stateful", "Password Hashing", "JWT", "OAuth 2.0", "PKCE", "JWT Attacks"],
+  estMinutes: 15,
+  topics: ["Stateless vs Stateful", "Password Hashing", "JWT", "JWT Revocation", "JWT Attacks"],
   color: "teal",
   iconKey: "swap",
   comingSoon: false,
@@ -30,12 +30,21 @@ export const oauthAuthn: Lecture = {
       },
     },
 
+    {
+      id: "oauth-authn-section-stateless",
+      type: "section",
+      title: "Stateless vs Stateful",
+      subtitle: "Where does the server store the proof that a user is logged in?",
+    },
+
     // ── Block 1: Stateless vs Stateful ──────────────────────────────────────
 
     {
       id: "oauth-authn-stateless-intro",
       type: "prose",
       title: "Stateless vs Stateful",
+      icon: "ArrowLeftRight",
+      iconColor: "var(--blue)",
       body: `Every auth system makes a fundamental choice: **where does the server store the proof that a user is logged in?**\n\n**Stateful (Session-Based):**\n- Server creates a session record and stores it in a database or Redis\n- Client receives only a session ID (opaque reference) in a cookie\n- Every request: server looks up the session ID → finds the user\n- The *server* holds the state — the client is just a key\n\n**Stateless (Token-Based):**\n- Server issues a signed token containing user claims\n- Client stores the token and sends it on every request\n- Every request: server verifies the signature — **no database lookup needed**\n- The *token* carries the state — the server is just a verifier\n\n| | Stateful (Session) | Stateless (JWT) |\n|---|---|---|\n| **State lives** | Server (DB / Redis) | Client (token) |\n| **Revocation** | Instant — delete the session | Requires denylist or wait for TTL |\n| **Horizontal scaling** | Needs shared session store | Works out of the box |\n| **Token size** | Small (session ID only) | Larger (all claims inline) |\n| **Best for** | Server-rendered apps, banking | SPAs, microservices, APIs |`,
       callouts: [
         {
@@ -49,7 +58,16 @@ export const oauthAuthn: Lecture = {
       id: "oauth-authn-stateless-diagram",
       type: "demo",
       title: "Stateful vs Stateless — Flow",
+      icon: "Activity",
+      iconColor: "var(--blue)",
       component: "SessionFlowLane",
+    },
+
+    {
+      id: "oauth-authn-section-passwords",
+      type: "section",
+      title: "Password Management",
+      subtitle: "How the backend should store and verify credentials.",
     },
 
     // ── Block 2: Password Management ────────────────────────────────────────
@@ -58,19 +76,21 @@ export const oauthAuthn: Lecture = {
       id: "oauth-authn-password-mgmt",
       type: "demo",
       title: "Password Management on the Backend",
+      icon: "Lock",
+      iconColor: "var(--amber)",
       component: "PasswordProgression",
     },
 
     {
       id: "oauth-authn-password-rules",
-      type: "prose",
-      title: "Three Rules",
-      body: `**Three rules to tattoo on your memory:**\n\n1. Never store plaintext passwords — not even temporarily\n2. Never use a fast hash (SHA-256, MD5) for passwords — only use a slow, purpose-built one\n3. Never compare passwords with \`==\` — use the library's verify function`,
-      callouts: [
-        {
-          tone: "info",
-          text: "For new systems: Argon2id > bcrypt > scrypt. For existing bcrypt deployments, stay on bcrypt — upgrading costs more than it saves unless you're starting fresh.",
-        },
+      type: "takeaways",
+      title: "Three rules to tattoo on your memory.",
+      icon: "BookMarked",
+      iconColor: "var(--amber)",
+      items: [
+        "Never store plaintext passwords — not even temporarily.",
+        "Never use a fast hash (SHA-256, MD5) for passwords — only use a slow, purpose-built one (Argon2id, bcrypt, scrypt).",
+        "Never compare passwords with == — use the library's constant-time verify function.",
       ],
     },
 
@@ -78,7 +98,16 @@ export const oauthAuthn: Lecture = {
       id: "oauth-authn-hashing-demo",
       type: "demo",
       title: "Hashing Playground",
+      icon: "Hash",
+      iconColor: "var(--amber)",
       component: "HashingPlayground",
+    },
+
+    {
+      id: "oauth-authn-section-jwt",
+      type: "section",
+      title: "JSON Web Token",
+      subtitle: "A compact, self-contained token format — no database call needed.",
     },
 
     // ── Block 3: JWT ─────────────────────────────────────────────────────────
@@ -87,7 +116,15 @@ export const oauthAuthn: Lecture = {
       id: "oauth-authn-unit-10",
       type: "prose",
       title: "JWT: A Separate Standard",
-      body: `> 💡 **JWT and OAuth 2.0 are separate inventions — don't conflate them.**\n>\n> OAuth 2.0 (RFC 6749) was published in **2012** as an authorization/delegation framework. JWT (RFC 7519) was a completely independent standard published **3 years later in 2015** as a compact token format. OAuth 2.0 does **not** require JWT — you can use plain opaque random strings as tokens inside OAuth. JWT also works entirely without OAuth: as session tokens, API keys, or inter-service credentials. JWT just became the most popular token format *within* OAuth 2.0 ecosystems because it enables stateless, signature-verified claims without a database call.\n\nJWT (RFC 7519, 2015) is a compact, self-contained token format. It carries all the claims a service needs — any server with the public key can verify it **without a database call**.\n\n**Structure:** Three Base64URL-encoded parts separated by dots:\n\n\`\`\`\neyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9          ← Header\n.eyJzdWIiOiJ1c2VyXzEyMyIsInJvbGVzIjpbImFkbWluIl19  ← Payload\n.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c        ← Signature\n\`\`\`\n\n**Header:**\n\`\`\`json\n{ "alg": "RS256", "typ": "JWT" }\n\`\`\`\n\n**Payload (claims):**\n\`\`\`json\n{\n  "sub": "user_uuid_123",\n  "iss": "https://auth.example.com",\n  "aud": "https://api.example.com",\n  "exp": 1700000900,\n  "iat": 1700000000,\n  "jti": "abc-unique-token-id",\n  "roles": ["admin"]\n}\n\`\`\``,
+      icon: "Key",
+      iconColor: "var(--primary-2)",
+      body: `JWT (RFC 7519, 2015) is a compact, self-contained token format. It carries all the claims a service needs — any server with the public key can verify it **without a database call**.\n\nA JWT is three Base64URL-encoded parts joined by dots: **header**, **payload**, and **signature**.\n\n\`\`\`bash\neyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9           # Header\n.eyJzdWIiOiJ1c2VyXzEyMyIsInJvbGVzIjpbImFkbWluIl19   # Payload\n.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c         # Signature\n\`\`\`\n\n**Header** — declares algorithm and token type:\n\n\`\`\`json\n{ "alg": "RS256", "typ": "JWT" }\n\`\`\`\n\n**Payload** — the claims your services rely on:\n\n\`\`\`json\n{\n  "sub": "user_uuid_123",\n  "iss": "https://auth.example.com",\n  "aud": "https://api.example.com",\n  "exp": 1700000900,\n  "iat": 1700000000,\n  "jti": "abc-unique-token-id",\n  "roles": ["admin"]\n}\n\`\`\`\n\n**Signature** — tamper-proof seal, produced with the auth server's private key:\n\n\`\`\`bash\nRSA_SHA256(\n  base64url(header) + "." + base64url(payload),\n  privateKey\n)\n\`\`\`\n\nThe signature proves the token was issued by a trusted party and has not been tampered with. Only the auth server that holds the **private key** can produce it. Any service that has the **public key** can verify it.`,
+      callouts: [
+        {
+          tone: "warn",
+          text: "**Can you decode a JWT without the secret? Yes — but you cannot verify it.** Header and payload are just Base64URL-encoded, not encrypted. Anyone who holds the token string can decode and read the claims. The signature only prevents *forgery* — it does not hide the data. Never put secrets, passwords, or PII in a JWT payload.",
+        },
+      ],
     },
 
     {
@@ -108,12 +145,21 @@ export const oauthAuthn: Lecture = {
       },
     },
 
+    {
+      id: "oauth-authn-section-token-flow",
+      type: "section",
+      title: "Self-Managed Token Flow",
+      subtitle: "Access tokens, refresh tokens, and the full lifecycle.",
+    },
+
     // ── Block 4: Self-Managed Token Flow ────────────────────────────────────
 
     {
       id: "oauth-authn-self-managed-flow",
       type: "prose",
       title: "Self-Managed Access + Refresh Token Flow",
+      icon: "RefreshCw",
+      iconColor: "var(--green)",
       body: `Before OAuth enters the picture, many applications issue and manage their own tokens. Understanding this flow is foundational — OAuth builds on the same lifecycle.\n\n**The pattern:**\n\n1. User submits credentials (\`POST /login\`)\n2. Server verifies password with \`bcrypt.verify\`\n3. Server mints two tokens:\n   - **Access token** — a short-lived JWT (15 min), signed with the server's private key, returned in the response body\n   - **Refresh token** — a long-lived opaque random string (7–30 days), stored as a hash in DB, sent as an \`HttpOnly\` cookie\n4. Client stores the access token **in JS memory only** — never in \`localStorage\`\n5. Every API call: \`Authorization: Bearer <access_token>\`\n6. When the access token expires: the refresh cookie is automatically sent → server issues a new AT + new RT (rotation)\n\n**Common mistakes junior engineers make here:**\n\n| Mistake | Risk |\n|---|---|\n| Storing access token in \`localStorage\` | One XSS = full account takeover |\n| Access token TTL of 24h+ | Stolen token valid for a full day |\n| Not rotating the refresh token on use | Stolen refresh token = permanent access |\n| Storing refresh token plaintext in DB | DB breach = all refresh tokens compromised |\n| Returning refresh token in response body instead of \`HttpOnly\` cookie | JS can read it — XSS can steal it |`,
     },
 
@@ -153,95 +199,200 @@ export const oauthAuthn: Lecture = {
       caption: "Self-managed token flow: login with bcrypt verification → short-lived JWT in memory → long-lived refresh token in HttpOnly cookie → rotation on every use.",
     },
 
-    // ── Block 5: OAuth ───────────────────────────────────────────────────────
-
     {
-      id: "oauth-authn-unit-1",
-      type: "prose",
-      title: "OAuth 1.0: The Password Anti-Pattern",
-      body: `Before OAuth existed, the only way a third-party app could act on your behalf was to ask for your **actual username and password**.\n\n**Real-world example:** Twitter's "Find Friends" feature literally asked you to type your Gmail password into Twitter's form. Once you did:\n\n- A Twitter data breach meant **your Gmail password was compromised too**\n- Twitter had **unlimited access** — it could read, send, and delete emails freely\n- **No revocation** — to cut off Twitter's access you had to change your Gmail password everywhere\n- **No scope** — impossible to say "read contacts only," the app got everything\n\nOAuth 1.0 (RFC 5849, 2010) introduced **delegated authorization** — letting third-party apps act on a user's behalf **without ever seeing their password**.\n\n**3-Legged Flow:**\n1. App requests a temporary **Request Token** from the provider\n2. User is redirected to the provider, logs in, and grants access\n3. App exchanges the token + verifier for a permanent **Access Token**\n4. Every API call is **cryptographically signed** with HMAC-SHA1\n\nEvery API call required: \`HMAC-SHA1(method + URL + params, consumer_secret + token_secret)\`. Exact parameter ordering was required — one wrong encoding broke the signature entirely.`,
-    },
-
-    {
-      id: "oauth-authn-unit-2",
-      type: "prose",
-      title: "OAuth 2.0: Why OAuth 1.0 Was Replaced",
-      body: `OAuth 1.0 solved the password anti-pattern but created its own set of pain points:\n\n- **Signature complexity** — Every request required computing HMAC-SHA1 over exact parameter ordering. One wrong encoding or missing parameter broke the signature. Libraries implemented it inconsistently, causing constant interoperability failures.\n- **Mobile-unfriendly** — The 3-legged flow required browser redirects. Native mobile apps had no clean way to receive the OAuth callback.\n- **Token secret on the client** — The \`token_secret\` had to be stored client-side, replacing the password problem with a different secret management problem.\n- **No scopes** — OAuth 1.0 was all-or-nothing. You couldn't express "read contacts only" — apps got full access or none.\n\nOAuth 2.0 (RFC 6749, 2012) dropped signatures entirely, relying on **HTTPS for transport security**. It introduced multiple **grant types** for different use cases instead of one-size-fits-all.\n\n| Grant Type | Use Case | Key Characteristic |\n|---|---|---|\n| **Authorization Code + PKCE** | Web apps, SPAs, mobile | Redirect flow + code exchange; PKCE prevents interception |\n| **Client Credentials** | Backend service-to-service (M2M) | No user involved; app authenticates with \`client_id\` + \`client_secret\` |\n| **Device Code** | Smart TVs, CLIs | Device shows code → user authorizes on phone → device polls for token |`,
-      callouts: [
-        {
-          tone: "warn",
-          text: "Why it was replaced: Signature computation was complex and error-prone. Parameter order mattered exactly. No mobile-friendly flows. Libraries implemented it inconsistently.",
-        },
-      ],
-    },
-
-    {
-      id: "oauth-authn-unit-3",
-      type: "prose",
-      title: "Client ID vs. Client Secret",
-      body: `Every app registered with an OAuth authorization server gets two identifiers:\n\n- **\`client_id\`** — A **public** identifier for your app, like a username. Safe to include in URLs, frontend code, and mobile app bundles. The auth server uses it to look up your registered redirect URIs and display your app name on the user consent screen.\n- **\`client_secret\`** — A **private password** for your app. Proves the app really is who it claims to be during the token exchange. **Must never appear in frontend JavaScript, mobile app binaries, or public source code** — anyone can decompile an APK or read browser DevTools.\n\n|  | **client_id** | **client_secret** |\n|---|---|---|\n| **Visibility** | Public — safe in URLs and frontend JS | Private — server-side only, never in client code |\n| **Purpose** | Identifies *which app* is requesting access | Authenticates *that the app is legitimate* |\n| **Used in auth redirect** | ✅ Always (\`?client_id=...\`) | ❌ Never in the URL redirect |\n| **Used in token exchange** | ✅ Required | ✅ Confidential clients (backends) only |\n| **Public clients (SPA/mobile)** | ✅ Used | ❌ Cannot store securely → use PKCE instead |`,
-    },
-
-    {
-      id: "oauth-authn-unit-4",
-      type: "prose",
-      title: "PKCE — The Authorization Code Interception Attack",
-      body: `The Authorization Code flow was originally designed for **confidential clients** (backends that can safely store \`client_secret\`). But SPAs and mobile apps are **public clients** — their code runs in the user's hands. A \`client_secret\` bundled in an app binary can be extracted by anyone.\n\n> ⚠️ **The attack (on mobile, without PKCE):**\n> 1. Your app registers \`myapp://callback\` as its redirect URI\n> 2. A *malicious app* also registers \`myapp://callback\` — custom URL schemes are not exclusive on Android/iOS\n> 3. User logs in via browser → Google redirects with \`?code=AUTH_CODE\`\n> 4. The OS asks which app handles \`myapp://\` — the malicious app wins\n> 5. Malicious app has the auth code — and since public clients often skip \`client_secret\`, it exchanges \`code\` for tokens\n> 6. **Result: attacker owns the user's session**\n\n**PKCE (Proof Key for Code Exchange, RFC 7636)** binds the token exchange to the exact device that started the flow using a one-time cryptographic proof.\n\n**Why it works:** The \`code_verifier\` never travels over the network until the legitimate exchange. Even if an attacker captures the \`AUTH_CODE\`, they cannot complete the exchange without the verifier that only the real client generated. No shared secret needed — PKCE works for all public clients.`,
-    },
-
-    {
-      id: "oauth-authn-unit-5",
-      type: "diagram",
-      title: "Authorization Code + PKCE Flow",
-      mermaid: `sequenceDiagram
-    actor User
-    participant App as Client SPA or Mobile
-    participant AS as Authorization Server
-    participant RS as Resource Server
-
-    App->>App: Generate code_verifier + code_challenge SHA-256
-    App->>User: Redirect to /authorize?code_challenge=...
-    User->>AS: Authenticate and Consent
-    AS-->>App: Redirect to /callback?code=AUTH_CODE
-    App->>AS: POST /token code + code_verifier
-    AS->>AS: Verify SHA-256(code_verifier) == code_challenge
-    AS-->>App: access_token 15min + refresh_token 7-30d
-    App->>RS: GET /api Bearer access_token
-    RS-->>App: Protected Resource
-    Note over App,AS: On expiry - silent refresh
-    App->>AS: POST /token with refresh_token cookie
-    AS-->>App: New access_token + New refresh_token`,
-      caption: "Authorization Code + PKCE: the standard flow for public clients (SPAs and mobile apps).",
-    },
-
-    {
-      id: "oauth-authn-unit-6",
-      type: "demo",
-      title: "PKCE Simulator",
-      component: "PKCESimulator",
+      id: "oauth-authn-section-attacks",
+      type: "section",
+      title: "JWT Attacks",
+      subtitle: "Common vulnerabilities and how libraries get this wrong.",
     },
 
     // ── Block 6: JWT Attacks ─────────────────────────────────────────────────
 
     {
-      id: "oauth-authn-jwt-attacks",
-      type: "prose",
-      title: "JWT Attacks — Key Awareness",
-      body: `| Attack | What happens | Mitigation |\n|---|---|---|\n| **\`alg:none\`** | Attacker strips the signature — some libraries accept unsigned token with any payload | Whitelist allowed algorithms server-side; never trust the token's own \`alg\` header |\n| **Algorithm Confusion** | RS256 server gets HS256 token; vulnerable library uses the RSA public key as HMAC secret — forged signature validates | Fix the expected algorithm server-side; never let the token header drive key selection |\n| **\`kid\` Injection** | Attacker manipulates the Key ID header to control which key is loaded (path traversal, SQL injection) | Validate \`kid\` against a strict allowlist; never interpolate it into file paths or queries |\n| **Token Replay** | Stolen valid JWT reused — leaked via logs, browser history, XSS, or network | Short TTLs + \`jti\` denylist + never put tokens in URLs |`,
-    },
-
-    {
       id: "oauth-authn-jwt-forger",
       type: "demo",
       title: "JWT Forger",
+      icon: "AlertTriangle",
+      iconColor: "var(--red)",
       component: "JWTForger",
     },
 
     {
-      id: "oauth-authn-jwt-checklist",
+      id: "oauth-authn-section-revocation",
+      type: "section",
+      title: "Token Revocation",
+      subtitle: "The stateless trade-off — and three strategies to overcome it.",
+    },
+
+    // ── Block 6b: JWT Revocation ─────────────────────────────────────────────
+
+    {
+      id: "oauth-authn-revocation-intro",
       type: "prose",
-      title: "JWT Validation Checklist",
-      body: `Every incoming request must pass **all** of these checks:\n\n1. ✅ **Structural** — exactly three Base64URL parts separated by periods\n2. ✅ **Algorithm** — \`alg\` header matches server-side whitelist (never trust the header alone)\n3. ✅ **Signature** — cryptographic verification using key identified by \`kid\`\n4. ✅ **Expiration** — \`exp > now\` (allow ≤60 seconds clock skew tolerance)\n5. ✅ **Not Before** — \`nbf ≤ now\` if present\n6. ✅ **Issuer** — \`iss\` matches expected value exactly\n7. ✅ **Audience** — \`aud\` contains this service's identifier\n8. ✅ **Subject** — \`sub\` is present and non-empty\n9. ✅ **Type** — \`typ\` header is \`"at+jwt"\` for access tokens (prevents cross-JWT confusion attacks)\n10. ✅ **Revocation** — \`jti\` not in denylist (if revocation is implemented)`,
+      title: "Revocation: The Stateless Trade-off",
+      icon: "ShieldOff",
+      iconColor: "var(--orange)",
+      body: `The core tension: **JWTs are stateless by design, but real apps need to revoke access immediately** — on logout, password change, or account compromise.\n\nBecause a JWT is self-contained and cryptographically verified, any server with the public key will accept it until \`exp\` — regardless of what happened after it was issued. There are three production strategies that trade varying amounts of statelessness for revocation control.`,
+      callouts: [
+        {
+          tone: "warn",
+          text: "Client-side token deletion alone is NOT revocation. A stolen token remains valid on every server until `exp` — or until the server is explicitly told to reject it.",
+        },
+      ],
+    },
+
+    // Strategy 1 — Short TTL
+    {
+      id: "oauth-authn-revocation-ttl",
+      type: "two-column",
+      ratio: "1:1",
+      left: {
+        id: "oauth-authn-revocation-ttl-prose",
+        type: "prose",
+        title: "Strategy 1 — Short TTL",
+        body: `Keep access tokens short-lived (5–15 min). On logout, revoke only the **refresh token** in the database. The access token keeps working until it expires — but the window is small.\n\n**How it works:**\n- User logs out → refresh token deleted from DB\n- Attacker replays the stolen access token → still accepted for up to 15 min\n- After \`exp\` → rejected everywhere\n\n**Trade-offs:**\n\n| | |\n|---|---|\n| ✅ Fully stateless | No extra lookup per request |\n| ✅ Zero infrastructure | No Redis needed |\n| ⚠️ Exposure window | Stolen AT valid up to TTL |\n\n**Best for:** Most apps. Acceptable when a 15-minute exposure window is tolerable.`,
+      },
+      right: {
+        id: "oauth-authn-revocation-ttl-demo",
+        type: "demo",
+        title: "Token Lifetime Visualizer",
+        component: "TokenLifetimeVisualizer",
+      },
+    },
+
+    // Strategy 2 — Redis Denylist
+    {
+      id: "oauth-authn-revocation-denylist-prose",
+      type: "prose",
+      title: "Strategy 2 — Redis Denylist",
+      body: `Store revoked \`jti\` values in Redis with TTL equal to the token's remaining lifetime. Redis auto-expires the entry — no cleanup job needed. Every request incurs a single ~1–2ms Redis lookup.\n\n**For "log out everywhere":** store a per-user \`revoked_at\` Unix timestamp. Reject any token whose \`iat < revoked_at\`.\n\n**Trade-offs:**\n\n| | |\n|---|---|\n| ✅ Per-token precision | Revoke a single device session |\n| ✅ Instant effect | No exposure window |\n| ⚠️ Redis dependency | Adds infrastructure + ~1–2ms overhead |\n| ⚠️ Partial statefulness | You're maintaining a denylist |\n\n**Best for:** Banking, healthcare, any app where instant revocation is non-negotiable.`,
+    },
+
+    {
+      id: "oauth-authn-revocation-denylist-diagram",
+      type: "diagram",
+      title: "Redis Denylist — Request Flow",
+      mermaid: `sequenceDiagram
+    actor Attacker
+    participant API
+    participant Redis
+
+    Note over Attacker,Redis: User logs out — jti added to denylist
+    API->>Redis: SET jti:abc123 "1" EX 900
+    Redis-->>API: OK
+
+    Attacker->>API: GET /account (Bearer ...jti:abc123)
+    API->>Redis: GET jti:abc123
+    Redis-->>API: "1"
+    API-->>Attacker: 401 Token revoked ✗
+
+    Note over Attacker,Redis: After 900s — Redis auto-expires the entry`,
+      caption: "The denylist entry TTL matches the token's remaining lifetime, so Redis cleans itself up automatically.",
+    },
+
+    {
+      id: "oauth-authn-revocation-denylist-code",
+      type: "code",
+      title: "Redis Denylist — TypeScript Implementation",
+      language: "ts",
+      code: `// On logout — store jti in Redis until the token would have expired anyway
+async function revokeToken(jti: string, exp: number): Promise<void> {
+  const ttl = exp - Math.floor(Date.now() / 1000); // remaining seconds
+  if (ttl > 0) {
+    await redis.set(\`jti:\${jti}\`, "1", { EX: ttl }); // auto-expires
+  }
+}
+
+// On every request — check denylist before trusting the token
+async function validateToken(token: string): Promise<Claims> {
+  const claims = jwt.verify(token, PUBLIC_KEY) as Claims; // throws if invalid sig/exp
+
+  const revoked = await redis.get(\`jti:\${claims.jti}\`);
+  if (revoked) throw new UnauthorizedException("Token revoked");
+
+  return claims;
+}`,
+      annotations: [
+        { line: 3, note: "TTL = remaining lifetime so the Redis key expires the moment the JWT would have anyway — no orphaned keys." },
+        { line: 11, note: "Signature and expiry are verified first (cheap, CPU-only), Redis is queried only for structurally valid tokens." },
+      ],
+    },
+
+    // Strategy 3 — Token Versioning
+    {
+      id: "oauth-authn-revocation-versioning-prose",
+      type: "prose",
+      title: "Strategy 3 — Token Versioning",
+      body: `Store a \`jwt_version\` integer per user in the DB (or Redis). Embed it as a \`ver\` claim in every JWT at mint time. On a security event, increment the user's version — every previously issued token becomes invalid instantly because its \`ver\` no longer matches.\n\n**Trade-offs:**\n\n| | |\n|---|---|\n| ✅ All-or-nothing invalidation | One DB write revokes every session |\n| ✅ No token tracking | No denylist to maintain |\n| ⚠️ DB/cache lookup per request | Every request reads \`jwt_version\` |\n| ⚠️ All-or-nothing | Cannot revoke a single device |\n\n**Best for:** Security events — password reset, account compromise, MFA changes. Often combined with Strategy 2 for per-device revocation.`,
+    },
+
+    {
+      id: "oauth-authn-revocation-versioning-diagram",
+      type: "diagram",
+      title: "Token Versioning — Version Mismatch Rejection",
+      mermaid: `sequenceDiagram
+    participant Client
+    participant API
+    participant DB
+
+    Note over DB: users.jwt_version = 3
+
+    Client->>API: GET /data (JWT ver:3)
+    API->>DB: SELECT jwt_version WHERE id = user_123
+    DB-->>API: 3
+    API->>API: ver 3 == db 3 ✓
+    API-->>Client: 200 OK
+
+    Note over DB: Password reset — version bumped
+    DB->>DB: UPDATE users SET jwt_version = 4
+
+    Client->>API: GET /data (old JWT, ver:3)
+    API->>DB: SELECT jwt_version WHERE id = user_123
+    DB-->>API: 4
+    API->>API: ver 3 ≠ db 4 ✗
+    API-->>Client: 401 Unauthorized`,
+      caption: "A single DB write increments the version and immediately invalidates every token the user has ever been issued.",
+    },
+
+    {
+      id: "oauth-authn-revocation-versioning-code",
+      type: "code",
+      title: "Token Versioning — TypeScript Implementation",
+      language: "ts",
+      code: `// JWT payload includes: { sub, exp, ver: 3, iat, jti, ... }
+
+async function validateToken(token: string): Promise<Claims> {
+  const claims = jwt.verify(token, PUBLIC_KEY) as Claims;
+
+  // One DB (or Redis cache) read per request
+  const { jwtVersion } = await db.users.findOne(claims.sub, ["jwt_version"]);
+  if (claims.ver !== jwtVersion) {
+    throw new UnauthorizedException("Session invalidated — please log in again");
+  }
+
+  return claims;
+}
+
+// Revoke ALL sessions for this user instantly — one write, zero token tracking
+async function invalidateAllSessions(userId: string): Promise<void> {
+  await db.users.update(userId, {
+    jwt_version: db.raw("jwt_version + 1"),
+  });
+}`,
+      annotations: [
+        { line: 7, note: "Cache jwt_version in Redis per user_id to avoid a DB hit on every request — invalidate the cache entry when you bump the version." },
+        { line: 15, note: "Incrementing is atomic and safe under concurrent requests — no race condition between two simultaneous password resets." },
+      ],
+    },
+
+    // Revocation triggers
+    {
+      id: "oauth-authn-revocation-triggers",
+      type: "prose",
+      title: "When to Trigger Revocation",
+      icon: "Zap",
+      iconColor: "var(--orange)",
+      body: `Any of these events must immediately invalidate the affected tokens:\n\n- **Password change or reset** — version bump (Strategy 3) invalidates all sessions\n- **Account compromise detected** — version bump + alert\n- **Admin deactivation** — denylist active AT + delete refresh token\n- **MFA enrollment or removal** — version bump (trust level changed)\n- **Role or permission change** — version bump (stale claims in existing tokens)\n- **Explicit "log out everywhere"** — version bump + delete all refresh tokens from DB\n- **Single-device logout** — denylist that device's AT \`jti\` (Strategy 2) + delete its refresh token\n\n**Production pattern:** combine all three strategies. Short TTL as the baseline, Redis denylist for per-device logout, token versioning for security events.`,
     },
 
     {
@@ -249,6 +400,23 @@ export const oauthAuthn: Lecture = {
       type: "demo",
       title: "Decision Tracer",
       component: "DecisionTracer",
+    },
+
+    // ── Recap ────────────────────────────────────────────────────────────────
+
+    {
+      id: "oauth-authn-recap",
+      type: "takeaways",
+      title: "Key Takeaways",
+      icon: "CheckCircle2",
+      iconColor: "var(--green)",
+      items: [
+        "AuthN = identity (401 on failure). AuthZ = permission (403 on failure). AuthN always runs first.",
+        "JWT is stateless and verifiable by any service holding the public key — but the payload is encoded, not encrypted.",
+        "Never store passwords in plaintext or with fast hashes. Use Argon2id, bcrypt, or scrypt.",
+        "Short-lived access tokens + stateful refresh tokens = the right hybrid for most production systems.",
+        "Revocation requires server-side action — client-side token deletion alone is not enough.",
+      ],
     },
 
     // ── Block 7: Checkpoint ──────────────────────────────────────────────────
@@ -377,52 +545,6 @@ export const oauthAuthn: Lecture = {
     },
 
     {
-      id: "oauth-authn-unit-8",
-      type: "quiz",
-      difficulty: "medium",
-      title: "Mobile App and client_secret",
-      question:
-        'A mobile app wants to use "Login with Google." Why can\'t it use a `client_secret`? What does it use instead, and how does that prevent the Authorization Code Interception attack?',
-      choices: [
-        { id: "a", label: "It can — Google issues a unique secret per device." },
-        {
-          id: "b",
-          label:
-            "It can't safely store a secret (binary can be decompiled); it uses PKCE — a per-request `code_verifier` / `code_challenge` pair that binds the token exchange to the originating client.",
-        },
-        { id: "c", label: "It uses the device's TPM as the secret store." },
-        { id: "d", label: "It uses SMS-based verification instead of a secret." },
-      ],
-      correctChoiceId: "b",
-      explanation:
-        "Public clients (mobile/SPA) can't keep a secret. PKCE works because the `code_verifier` never leaves the client until the legitimate exchange — even if a malicious app captures the auth code via the OS scheme hijack, it cannot complete the exchange without the verifier.",
-      points: 1,
-    },
-
-    {
-      id: "oauth-authn-unit-9",
-      type: "quiz",
-      difficulty: "medium",
-      title: "client_id vs client_secret",
-      question:
-        "What is `client_id` and what is `client_secret`? Which one is safe to put in your frontend code, and which must never appear there?",
-      choices: [
-        { id: "a", label: "Both are public identifiers." },
-        { id: "b", label: "Both are private and must stay server-side." },
-        {
-          id: "c",
-          label:
-            "`client_id` is a public app identifier (safe in URLs/JS bundles); `client_secret` is a private password (server-only — never in frontend code, mobile binaries, or public repos).",
-        },
-        { id: "d", label: "`client_id` is private; `client_secret` is public." },
-      ],
-      correctChoiceId: "c",
-      explanation:
-        "`client_id` identifies which app is requesting access (used in redirect URLs). `client_secret` proves the app is legitimate during the `/token` exchange — its presence in frontend JS or a decompiled mobile binary completely defeats its purpose.",
-      points: 1,
-    },
-
-    {
       id: "oauth-authn-unit-10-quiz",
       type: "quiz",
       difficulty: "hard",
@@ -445,37 +567,6 @@ export const oauthAuthn: Lecture = {
       points: 1,
     },
 
-    {
-      id: "oauth-authn-unit-11-quiz",
-      type: "quiz",
-      difficulty: "hard",
-      title: "Authorization Code + PKCE Walkthrough",
-      question:
-        "Walk through the Authorization Code + PKCE flow step by step. Name each participant (User, App, Auth Server, Resource Server) and what exactly they do at each step.",
-      choices: [
-        {
-          id: "a",
-          label: "App sends username/password directly to Resource Server; gets token back.",
-        },
-        {
-          id: "b",
-          label:
-            "(1) App generates `code_verifier` + `code_challenge`(SHA-256); (2) App redirects User to AS `/authorize?code_challenge=...`; (3) User authenticates + consents at AS; (4) AS redirects back to App with `?code=AUTH_CODE`; (5) App POSTs `/token` with `code` + `code_verifier`; (6) AS verifies `SHA-256(code_verifier) == code_challenge`; (7) AS returns access_token (15min) + refresh_token (7–30d); (8) App calls RS with `Authorization: Bearer access_token`; (9) RS returns protected resource.",
-        },
-        {
-          id: "c",
-          label: "App requests token from RS directly using client_secret.",
-        },
-        {
-          id: "d",
-          label: "AS issues both an ID token and a refresh token before the user logs in.",
-        },
-      ],
-      correctChoiceId: "b",
-      explanation:
-        "Participants: User (consents), App (public client, generates and holds verifier), Auth Server (validates user, binds code-to-verifier, issues tokens), Resource Server (verifies JWT signature/claims, serves data).",
-      points: 1,
-    },
       ], // end questions
     },  // end checkpoint
   ],

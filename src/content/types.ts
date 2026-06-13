@@ -1,9 +1,13 @@
-export type UnitType = 'prose' | 'diagram' | 'demo' | 'code' | 'quiz' | 'media' | 'two-column' | 'checkpoint';
+export type UnitType = 'prose' | 'diagram' | 'demo' | 'code' | 'quiz' | 'media' | 'two-column' | 'checkpoint' | 'section' | 'takeaways';
 
 export interface BaseUnit {
   id: string;
   type: UnitType;
   title?: string;
+  /** Lucide icon key, e.g. 'Key', 'Lock', 'Shield'. Rendered in the slide title. */
+  icon?: string;
+  /** CSS color or var() token for the icon, e.g. 'var(--amber)'. Defaults to var(--primary-2). */
+  iconColor?: string;
   /**
    * Small kicker/eyebrow shown above the title on the slide so the learner
    * always knows which topic this step belongs to (e.g. "§ 3.3 · Client
@@ -28,23 +32,23 @@ export interface DiagramUnit extends BaseUnit {
 export interface DemoUnit extends BaseUnit {
   type: 'demo';
   component:
-    | 'AuthNAuthZAnimator'
-    | 'SessionFlowLane'
-    | 'PasswordProgression'
-    | 'JWTDecoder'
-    | 'JWTForger'
-    | 'PKCEGenerator'
-    | 'OAuthFlowPlayer'
-    | 'PKCESimulator'
-    | 'RBACPlayground'
-    | 'CSRFSandbox'
-    | 'HashingPlayground'
-    | 'SQLiSandbox'
-    | 'XSSSandbox'
-    | 'DecisionTracer'
-    | 'TokenLifetimeVisualizer'
-    | 'StorageAttackMatrix'
-    | 'MTLSVisualizer';
+  | 'AuthNAuthZAnimator'
+  | 'SessionFlowLane'
+  | 'PasswordProgression'
+  | 'JWTDecoder'
+  | 'JWTForger'
+  | 'PKCEGenerator'
+  | 'OAuthFlowPlayer'
+  | 'PKCESimulator'
+  | 'RBACPlayground'
+  | 'CSRFSandbox'
+  | 'HashingPlayground'
+  | 'SQLiSandbox'
+  | 'XSSSandbox'
+  | 'DecisionTracer'
+  | 'TokenLifetimeVisualizer'
+  | 'StorageAttackMatrix'
+  | 'MTLSVisualizer';
   props?: Record<string, unknown>;
 }
 
@@ -102,6 +106,17 @@ export interface CheckpointUnit extends BaseUnit {
   questions: QuizUnit[];
 }
 
+export interface SectionUnit extends BaseUnit {
+  type: 'section';
+  // title is inherited from BaseUnit — required for section slides
+  subtitle?: string;
+}
+
+export interface TakeawaysUnit extends BaseUnit {
+  type: 'takeaways';
+  items: string[];
+}
+
 /** Leaf unit types that can appear inside a TwoColumnUnit (no recursive nesting). */
 export type LeafUnit = ProseUnit | DiagramUnit | DemoUnit | CodeUnit | QuizUnit | MediaUnit;
 
@@ -123,11 +138,11 @@ export interface TwoColumnUnit extends BaseUnit {
   ratio?: '1:1' | '2:3' | '3:2';
 }
 
-export type Unit = ProseUnit | DiagramUnit | DemoUnit | CodeUnit | QuizUnit | MediaUnit | TwoColumnUnit | CheckpointUnit;
+export type Unit = ProseUnit | DiagramUnit | DemoUnit | CodeUnit | QuizUnit | MediaUnit | TwoColumnUnit | CheckpointUnit | SectionUnit | TakeawaysUnit;
 
 export type LectureSlug =
   | 'oauth-authn'
-  | 'jwt-best-practices'
+  | 'oauth'
   | 'sessions-mfa-modern-authn'
   | 'service-to-service'
   | 'security-fundamentals'

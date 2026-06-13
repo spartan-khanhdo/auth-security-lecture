@@ -11,6 +11,7 @@ import PlayerControls from "@/components/player/PlayerControls";
 import LectureSidebar from "@/components/player/LectureSidebar";
 import UnitCover from "@/components/player/UnitCover";
 import UnitStage from "@/components/player/UnitStage";
+import SlideTitle from "@/components/player/SlideTitle";
 
 interface ILecturePlayerProps {
   lecture: Lecture;
@@ -231,7 +232,16 @@ export default function LecturePlayer({ lecture }: ILecturePlayerProps) {
           {isCover ? (
             <UnitCover lecture={lecture} />
           ) : currentUnit ? (
-            <UnitRenderer unit={currentUnit} />
+            <div className="flex flex-col gap-6 w-full h-full">
+              {currentUnit.title && currentUnit.type !== 'section' && (
+                <SlideTitle
+                  title={currentUnit.title}
+                  icon={currentUnit.icon}
+                  iconColor={currentUnit.iconColor}
+                />
+              )}
+              <UnitRenderer unit={currentUnit} />
+            </div>
           ) : null}
         </UnitStage>
 

@@ -112,9 +112,11 @@ export function markdownToHtml(md: string): string {
   return output.join('\n');
 }
 
-/** Apply bold, italic, and inline code formatting to a single line of text. */
+/** Apply bold, italic, inline code, and link formatting to a single line of text. */
 function inlineFormat(text: string): string {
   return text
+    // Links before bold/italic so URLs with * or ` don't get mangled
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
     // Bold before italic so **text** doesn't get partially matched
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
