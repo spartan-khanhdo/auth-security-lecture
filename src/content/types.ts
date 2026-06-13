@@ -16,11 +16,31 @@ export interface BaseUnit {
   section?: string;
 }
 
+/** A column within a ComparePair block. */
+export interface ProseCompareColumn {
+  title: string;
+  bullets: string[];
+  tone?: 'good' | 'bad' | 'neutral';
+}
+
+/**
+ * Rich inline block that can appear inside a ProseUnit.
+ * Each variant maps to a block component in src/components/units/blocks/.
+ */
+export type ProseBlock =
+  | { type: 'keypoint'; label: string; title: string; body: string; accent?: 'primary' | 'blue' | 'amber' | 'red' | 'green' }
+  | { type: 'compare'; left: ProseCompareColumn; right: ProseCompareColumn }
+  | { type: 'mistake'; mistake: string; risk: string };
+
 export interface ProseUnit extends BaseUnit {
   type: 'prose';
   body: string;
-  callouts?: Array<{ tone: 'info' | 'warn' | 'danger'; text: string }>;
+  callouts?: Array<{ tone: 'info' | 'warn' | 'danger' | 'success'; text: string }>;
   learnMore?: Array<{ label: string; url: string }>;
+  /** Optional key takeaway displayed after the body segments. */
+  takeaway?: string;
+  /** Optional rich blocks rendered after the takeaway. */
+  blocks?: ProseBlock[];
 }
 
 export interface DiagramUnit extends BaseUnit {
@@ -54,7 +74,7 @@ export interface DemoUnit extends BaseUnit {
 
 export interface CodeUnit extends BaseUnit {
   type: 'code';
-  language: 'ts' | 'js' | 'py' | 'sql' | 'yaml' | 'java' | 'bash' | 'json';
+  language: 'ts' | 'js' | 'py' | 'sql' | 'yaml' | 'java' | 'kotlin' | 'bash' | 'json';
   code: string;
   annotations?: Array<{ line: number; note: string }>;
 }

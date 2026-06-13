@@ -8,6 +8,7 @@ import pyLang from 'react-syntax-highlighter/dist/esm/languages/prism/python';
 import sqlLang from 'react-syntax-highlighter/dist/esm/languages/prism/sql';
 import yamlLang from 'react-syntax-highlighter/dist/esm/languages/prism/yaml';
 import javaLang from 'react-syntax-highlighter/dist/esm/languages/prism/java';
+import kotlinLang from 'react-syntax-highlighter/dist/esm/languages/prism/kotlin';
 import bashLang from 'react-syntax-highlighter/dist/esm/languages/prism/bash';
 import jsonLang from 'react-syntax-highlighter/dist/esm/languages/prism/json';
 import type { CodeUnit } from '@/content/types';
@@ -19,6 +20,7 @@ SyntaxHighlighter.registerLanguage('python', pyLang);
 SyntaxHighlighter.registerLanguage('sql', sqlLang);
 SyntaxHighlighter.registerLanguage('yaml', yamlLang);
 SyntaxHighlighter.registerLanguage('java', javaLang);
+SyntaxHighlighter.registerLanguage('kotlin', kotlinLang);
 SyntaxHighlighter.registerLanguage('bash', bashLang);
 SyntaxHighlighter.registerLanguage('json', jsonLang);
 
@@ -30,6 +32,7 @@ const LANG_MAP: Record<CodeUnit['language'], string> = {
   sql: 'sql',
   yaml: 'yaml',
   java: 'java',
+  kotlin: 'kotlin',
   bash: 'bash',
   json: 'json',
 };

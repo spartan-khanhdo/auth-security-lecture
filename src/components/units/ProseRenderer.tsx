@@ -1,7 +1,8 @@
-import type { ProseUnit, CodeUnit } from '@/content/types';
+import type { ProseUnit, ProseBlock, CodeUnit } from '@/content/types';
 import { markdownToHtml } from '@/lib/markdownToHtml';
 import Callout from '@/components/ui/Callout';
 import CodeRenderer from './CodeRenderer';
+import { KeyPoint, ComparePair, MistakeRow, KeyTakeaway } from './blocks';
 
 type Segment =
   | { kind: 'prose'; text: string }
@@ -41,6 +42,27 @@ function parseSegments(body: string): Segment[] {
   return segments;
 }
 
+function renderBlock(block: ProseBlock, idx: number) {
+  if (block.type === 'keypoint') {
+    return (
+      <KeyPoint
+        key={idx}
+        label={block.label}
+        title={block.title}
+        body={block.body}
+        accent={block.accent}
+      />
+    );
+  }
+  if (block.type === 'compare') {
+    return <ComparePair key={idx} left={block.left} right={block.right} />;
+  }
+  if (block.type === 'mistake') {
+    return <MistakeRow key={idx} mistake={block.mistake} risk={block.risk} />;
+  }
+  return null;
+}
+
 interface ProseRendererProps {
   unit: ProseUnit;
 }
@@ -49,7 +71,7 @@ export default function ProseRenderer({ unit }: ProseRendererProps) {
   const segments = parseSegments(unit.body);
 
   return (
-    <div className="max-w-5xl mx-auto w-full space-y-4">
+    <div className="max-w-5xl mx-auto w-full space-y-6 md:space-y-7">
       {segments.map((seg, idx) =>
         seg.kind === 'prose' ? (
           <div
@@ -73,41 +95,36 @@ export default function ProseRenderer({ unit }: ProseRendererProps) {
       {(unit.callouts ?? []).map((callout, idx) => (
         <Callout key={idx} tone={callout.tone} text={callout.text} />
       ))}
+      {unit.takeaway && <KeyTakeaway text={unit.takeaway} />}
+      {unit.blocks && unit.blocks.length > 0 && (
+        <div className="space-y-4">
+          {unit.blocks.map((block, idx) => renderBlock(block, idx))}
+        </div>
+      )}
       {unit.learnMore && unit.learnMore.length > 0 && (
-        <div className="mt-2 pt-4 border-t border-[var(--border-subtle)]">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text-faint)] mb-2">
+        <div className="mt-6 pt-4 border-t border-[var(--border-subtle)]">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text-faint)] mb-3">
             Learn More
           </p>
-          <ul className="space-y-1">
+          <div className="flex flex-wrap gap-2">
             {unit.learnMore.map((link) => (
-              <li key={link.url}>
-                <a
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-[var(--primary-2)] hover:underline inline-flex items-center gap-1"
-                >
-                  {link.label}
-                  <span className="sr-only">(opens in new tab)</span>
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                    <polyline points="15 3 21 3 21 9" />
-                    <line x1="10" y1="14" x2="21" y2="3" />
-                  </svg>
-                </a>
-              </li>
+              <a
+                key={link.url}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                           text-xs font-medium
+                           bg-[var(--surface-2)] hover:bg-[var(--surface-3)]
+                           border border-[var(--border-subtle)]
+                           text-[var(--text-dim)] hover:text-[var(--text-strong)]
+                           transition-colors"
+              >
+                {link.label}
+                <span className="sr-only">(opens in new tab)</span>
+              </a>
             ))}
-          </ul>
+          </div>
         </div>
       )}
     </div>

@@ -8,15 +8,8 @@ interface MermaidDiagramProps {
   mermaid: string;
 }
 
-mermaid.initialize({
-  startOnLoad: false,
-  // 'dark' produces a dark-background SVG that is visible on the player's
-  // near-black canvas. 'default' renders a white-background SVG which is
-  // invisible against the dark stage.
-  theme: 'dark',
-  // 'strict' can silently reject valid diagrams and prevents click bindings.
-  securityLevel: 'loose',
-});
+// Initialized per-render inside useEffect so CSS variable values are resolved
+// against the live document (supports light/dark mode switching).
 
 /** Module-level counter so every call to mermaid.render() gets a unique element
  *  ID. Mermaid v10/v11 maintains internal state per render ID; reusing the same
@@ -32,6 +25,38 @@ export default function MermaidDiagram({ id, mermaid: source }: MermaidDiagramPr
     if (!containerRef.current) return;
 
     setParseError(null);
+
+    // Re-initialize with resolved CSS variable values so the diagram palette
+    // always matches the current light/dark theme.
+    const s = getComputedStyle(document.documentElement);
+    const get = (v: string) => s.getPropertyValue(v).trim();
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: 'loose',
+      theme: 'base',
+      themeVariables: {
+        background:             get('--bg'),
+        mainBkg:                get('--mermaid-node-bg'),
+        primaryColor:           get('--mermaid-node-bg'),
+        primaryBorderColor:     get('--mermaid-node-border'),
+        primaryTextColor:       get('--mermaid-node-text'),
+        secondaryColor:         get('--mermaid-cluster-bg'),
+        tertiaryColor:          get('--mermaid-cluster-bg'),
+        lineColor:              get('--mermaid-line'),
+        edgeLabelBackground:    get('--mermaid-edge-label-bg'),
+        titleColor:             get('--mermaid-title'),
+        actorBkg:               get('--mermaid-actor-bg'),
+        actorBorder:            get('--mermaid-actor-border'),
+        actorTextColor:         get('--mermaid-actor-text'),
+        signalColor:            get('--mermaid-signal'),
+        signalTextColor:        get('--mermaid-signal'),
+        noteBkgColor:           get('--mermaid-note-bg'),
+        noteBorderColor:        get('--mermaid-note-border'),
+        noteTextColor:          get('--mermaid-note-text'),
+        activationBkgColor:     get('--mermaid-activation-bg'),
+        activationBorderColor:  get('--mermaid-node-border'),
+      },
+    });
 
     // Unique ID per render call — avoids internal mermaid state collisions when
     // the same component is re-mounted (React StrictMode, step re-navigation).

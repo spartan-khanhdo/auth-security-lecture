@@ -114,17 +114,30 @@ export const oauthAuthn: Lecture = {
 
     {
       id: "oauth-authn-unit-10",
-      type: "prose",
-      title: "JWT: A Separate Standard",
-      icon: "Key",
-      iconColor: "var(--primary-2)",
-      body: `JWT (RFC 7519, 2015) is a compact, self-contained token format. It carries all the claims a service needs — any server with the public key can verify it **without a database call**.\n\nA JWT is three Base64URL-encoded parts joined by dots: **header**, **payload**, and **signature**.\n\n\`\`\`bash\neyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9           # Header\n.eyJzdWIiOiJ1c2VyXzEyMyIsInJvbGVzIjpbImFkbWluIl19   # Payload\n.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c         # Signature\n\`\`\`\n\n**Header** — declares algorithm and token type:\n\n\`\`\`json\n{ "alg": "RS256", "typ": "JWT" }\n\`\`\`\n\n**Payload** — the claims your services rely on:\n\n\`\`\`json\n{\n  "sub": "user_uuid_123",\n  "iss": "https://auth.example.com",\n  "aud": "https://api.example.com",\n  "exp": 1700000900,\n  "iat": 1700000000,\n  "jti": "abc-unique-token-id",\n  "roles": ["admin"]\n}\n\`\`\`\n\n**Signature** — tamper-proof seal, produced with the auth server's private key:\n\n\`\`\`bash\nRSA_SHA256(\n  base64url(header) + "." + base64url(payload),\n  privateKey\n)\n\`\`\`\n\nThe signature proves the token was issued by a trusted party and has not been tampered with. Only the auth server that holds the **private key** can produce it. Any service that has the **public key** can verify it.`,
-      callouts: [
-        {
-          tone: "warn",
-          text: "**Can you decode a JWT without the secret? Yes — but you cannot verify it.** Header and payload are just Base64URL-encoded, not encrypted. Anyone who holds the token string can decode and read the claims. The signature only prevents *forgery* — it does not hide the data. Never put secrets, passwords, or PII in a JWT payload.",
-        },
-      ],
+      type: "two-column",
+      ratio: "2:3",
+      left: {
+        id: "oauth-authn-unit-10-prose",
+        type: "prose",
+        title: "JWT: A Separate Standard",
+        icon: "Key",
+        iconColor: "var(--primary-2)",
+        body: `JWT (RFC 7519, 2015) is a compact, self-contained token format. It carries all the claims a service needs — any server with the public key can verify it **without a database call**.\n\nA JWT is three Base64URL-encoded parts joined by dots:\n\n\`\`\`bash\neyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9           # Header\n.eyJzdWIiOiJ1c2VyXzEyMyIsInJvbGVzIjpbImFkbWluIl19   # Payload\n.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c         # Signature\n\`\`\`\n\nOnly the auth server holding the **private key** can produce a valid signature. Any service with the **public key** can verify it — no database call needed.`,
+        callouts: [
+          {
+            tone: "warn",
+            text: "**Can you decode a JWT without the secret? Yes — but you cannot verify it.** Header and payload are just Base64URL-encoded, not encrypted. The signature only prevents *forgery* — it does not hide the data. Never put secrets, passwords, or PII in a JWT payload.",
+          },
+        ],
+      },
+      right: {
+        id: "oauth-authn-unit-10-image",
+        type: "media",
+        kind: "image",
+        src: "/media/lectures/jwt-structure.png",
+        alt: "JWT structure diagram: Header (alg, typ), Payload (sub, name, iat), and Signature (HMAC-SHA256) — each Base64URL-encoded and joined by dots to form the final token",
+        caption: "Header · Payload · Signature — joined by dots",
+      },
     },
 
     {
@@ -244,20 +257,9 @@ export const oauthAuthn: Lecture = {
     // Strategy 1 — Short TTL
     {
       id: "oauth-authn-revocation-ttl",
-      type: "two-column",
-      ratio: "1:1",
-      left: {
-        id: "oauth-authn-revocation-ttl-prose",
-        type: "prose",
-        title: "Strategy 1 — Short TTL",
-        body: `Keep access tokens short-lived (5–15 min). On logout, revoke only the **refresh token** in the database. The access token keeps working until it expires — but the window is small.\n\n**How it works:**\n- User logs out → refresh token deleted from DB\n- Attacker replays the stolen access token → still accepted for up to 15 min\n- After \`exp\` → rejected everywhere\n\n**Trade-offs:**\n\n| | |\n|---|---|\n| ✅ Fully stateless | No extra lookup per request |\n| ✅ Zero infrastructure | No Redis needed |\n| ⚠️ Exposure window | Stolen AT valid up to TTL |\n\n**Best for:** Most apps. Acceptable when a 15-minute exposure window is tolerable.`,
-      },
-      right: {
-        id: "oauth-authn-revocation-ttl-demo",
-        type: "demo",
-        title: "Token Lifetime Visualizer",
-        component: "TokenLifetimeVisualizer",
-      },
+      type: "prose",
+      title: "Strategy 1 — Short TTL",
+      body: `Keep access tokens short-lived (5–15 min). On logout, revoke only the **refresh token** in the database. The access token keeps working until it expires — but the window is small.\n\n**How it works:**\n- User logs out → refresh token deleted from DB\n- Attacker replays the stolen access token → still accepted for up to 15 min\n- After \`exp\` → rejected everywhere\n\n**Trade-offs:**\n\n| | |\n|---|---|\n| ✅ Fully stateless | No extra lookup per request |\n| ✅ Zero infrastructure | No Redis needed |\n| ⚠️ Exposure window | Stolen AT valid up to TTL |\n\n**Best for:** Most apps. Acceptable when a 15-minute exposure window is tolerable.`,
     },
 
     // Strategy 2 — Redis Denylist
@@ -293,28 +295,31 @@ export const oauthAuthn: Lecture = {
     {
       id: "oauth-authn-revocation-denylist-code",
       type: "code",
-      title: "Redis Denylist — TypeScript Implementation",
-      language: "ts",
-      code: `// On logout — store jti in Redis until the token would have expired anyway
-async function revokeToken(jti: string, exp: number): Promise<void> {
-  const ttl = exp - Math.floor(Date.now() / 1000); // remaining seconds
-  if (ttl > 0) {
-    await redis.set(\`jti:\${jti}\`, "1", { EX: ttl }); // auto-expires
+      title: "Redis Denylist — Kotlin + Micronaut Implementation",
+      language: "kotlin",
+      code: `@Singleton
+class TokenRevocationService(
+  private val redis: StatefulRedisConnection<String, String>,
+) {
+  // On logout — store jti in Redis until the token would have expired anyway
+  suspend fun revoke(jti: String, exp: Instant) {
+    val ttl = exp.epochSecond - Instant.now().epochSecond // remaining seconds
+    if (ttl > 0) {
+      redis.sync().setex("jti:\$jti", ttl, "1") // auto-expires
+    }
   }
-}
 
-// On every request — check denylist before trusting the token
-async function validateToken(token: string): Promise<Claims> {
-  const claims = jwt.verify(token, PUBLIC_KEY) as Claims; // throws if invalid sig/exp
-
-  const revoked = await redis.get(\`jti:\${claims.jti}\`);
-  if (revoked) throw new UnauthorizedException("Token revoked");
-
-  return claims;
+  // On every request — check denylist before trusting the token
+  suspend fun validate(token: String): JWTClaimsSet {
+    val claims = SignedJWT.parse(token).also { verifier.verify(it) }.jwtClaimsSet
+    val revoked = redis.sync().get("jti:\${claims.jwtid}")
+    if (revoked != null) throw HttpStatusException(HttpStatus.UNAUTHORIZED, "Token revoked")
+    return claims
+  }
 }`,
       annotations: [
-        { line: 3, note: "TTL = remaining lifetime so the Redis key expires the moment the JWT would have anyway — no orphaned keys." },
-        { line: 11, note: "Signature and expiry are verified first (cheap, CPU-only), Redis is queried only for structurally valid tokens." },
+        { line: 7, note: "TTL = remaining lifetime so the Redis key expires the moment the JWT would have anyway — no orphaned keys." },
+        { line: 15, note: "Signature and expiry are verified first (cheap, CPU-only), Redis is queried only for structurally valid tokens." },
       ],
     },
 
@@ -357,31 +362,33 @@ async function validateToken(token: string): Promise<Claims> {
     {
       id: "oauth-authn-revocation-versioning-code",
       type: "code",
-      title: "Token Versioning — TypeScript Implementation",
-      language: "ts",
+      title: "Token Versioning — Kotlin + Micronaut Implementation",
+      language: "kotlin",
       code: `// JWT payload includes: { sub, exp, ver: 3, iat, jti, ... }
 
-async function validateToken(token: string): Promise<Claims> {
-  const claims = jwt.verify(token, PUBLIC_KEY) as Claims;
-
-  // One DB (or Redis cache) read per request
-  const { jwtVersion } = await db.users.findOne(claims.sub, ["jwt_version"]);
-  if (claims.ver !== jwtVersion) {
-    throw new UnauthorizedException("Session invalidated — please log in again");
+@Singleton
+class VersionedTokenValidator(
+  private val users: UserRepository,
+  private val verifier: SignedJWTVerifier,
+) {
+  suspend fun validate(token: String): JWTClaimsSet {
+    val claims = SignedJWT.parse(token).also { verifier.verify(it) }.jwtClaimsSet
+    // One DB (or Redis cache) read per request
+    val current = users.findJwtVersion(UUID.fromString(claims.subject))
+    if (claims.getIntClaim("ver") != current) {
+      throw HttpStatusException(HttpStatus.UNAUTHORIZED, "Session invalidated — please log in again")
+    }
+    return claims
   }
-
-  return claims;
 }
 
 // Revoke ALL sessions for this user instantly — one write, zero token tracking
-async function invalidateAllSessions(userId: string): Promise<void> {
-  await db.users.update(userId, {
-    jwt_version: db.raw("jwt_version + 1"),
-  });
+suspend fun UserRepository.invalidateAllSessions(userId: UUID) = transaction(db.primary) {
+  Users.update({ Users.id eq userId }) { it[jwtVersion] = jwtVersion + 1 }
 }`,
       annotations: [
-        { line: 7, note: "Cache jwt_version in Redis per user_id to avoid a DB hit on every request — invalidate the cache entry when you bump the version." },
-        { line: 15, note: "Incrementing is atomic and safe under concurrent requests — no race condition between two simultaneous password resets." },
+        { line: 11, note: "Cache jwt_version in Redis per user_id to avoid a DB hit on every request — invalidate the cache entry when you bump the version." },
+        { line: 22, note: "Incrementing is atomic and safe under concurrent requests — no race condition between two simultaneous password resets." },
       ],
     },
 

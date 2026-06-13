@@ -23,7 +23,8 @@
     --border-strong: rgba(255, 255, 255, 0.16);
 
     /* Text */
-    --text: #edecf4;
+    --text: #cfcede;
+    --text-strong: #f4f3fb;
     --text-dim: #a3a4bb;
     --text-faint: #6f7089;
 
@@ -79,6 +80,23 @@
     --input: 237 21% 19%;
     --ring: 249 87% 72%;
     --radius: 0.5rem;
+
+    /* ── Mermaid diagram palette (dark) ── */
+    --mermaid-node-bg:       #2c2870;  /* solid lavender node fill */
+    --mermaid-node-border:   #8b7cf6;  /* --primary */
+    --mermaid-node-text:     #ffffff;
+    --mermaid-line:          #a3a4bb;  /* --text-dim */
+    --mermaid-edge-label-bg: #1c1c22;  /* --surface-2 */
+    --mermaid-cluster-bg:    #1c1c22;
+    --mermaid-title:         #f4f3fb;  /* --text-strong */
+    --mermaid-note-bg:       #2a1e09;  /* amber-tinted, distinct from lavender */
+    --mermaid-note-border:   #7a5810;
+    --mermaid-note-text:     #f7c14b;  /* --amber */
+    --mermaid-actor-bg:      #2c2870;
+    --mermaid-actor-border:  #8b7cf6;
+    --mermaid-actor-text:    #ffffff;
+    --mermaid-signal:        #a3a4bb;
+    --mermaid-activation-bg: #3b3490;  /* lighter lavender for active lifelines */
   }
 
   [data-theme="light"] {
@@ -97,6 +115,7 @@
 
     /* Text */
     --text: #211f33;
+    --text-strong: #0f0d1f;
     --text-dim: #5d5c76;
     --text-faint: #908fa8;
 
@@ -152,6 +171,23 @@
     --input: 249 68% 96%;
     --ring: 252 75% 63%;
     --radius: 0.5rem;
+
+    /* ── Mermaid diagram palette (light) ── */
+    --mermaid-node-bg:       #6d5be8;  /* --primary (solid, readable against white text) */
+    --mermaid-node-border:   #5a47d6;  /* --primary-2 */
+    --mermaid-node-text:     #ffffff;
+    --mermaid-line:          #5d5c76;  /* --text-dim */
+    --mermaid-edge-label-bg: #f4f2fd;  /* --surface-2 */
+    --mermaid-cluster-bg:    #f4f2fd;
+    --mermaid-title:         #0f0d1f;  /* --text-strong */
+    --mermaid-note-bg:       #fff3cd;  /* amber-tinted, distinct */
+    --mermaid-note-border:   #cc9410;  /* --amber */
+    --mermaid-note-text:     #7a5200;
+    --mermaid-actor-bg:      #6d5be8;
+    --mermaid-actor-border:  #5a47d6;
+    --mermaid-actor-text:    #ffffff;
+    --mermaid-signal:        #5d5c76;
+    --mermaid-activation-bg: #9b8ef5;
   }
 }
 
@@ -1707,7 +1743,7 @@ body::before {
 .prose h4,
 .prose h5,
 .prose h6 {
-  color: var(--text);
+  color: var(--text-strong);
 }
 
 /* Cap h1 inside prose slides — content uses # as a dramatic mid-slide
@@ -1719,7 +1755,8 @@ body::before {
 }
 
 .prose strong {
-  color: var(--text);
+  color: var(--text-strong);
+  font-weight: 700;
 }
 
 .prose a {
@@ -1728,6 +1765,7 @@ body::before {
   text-underline-offset: 3px;
   text-decoration-color: color-mix(in srgb, var(--primary-2) 40%, transparent);
 }
+
 .prose a:hover {
   text-decoration-color: var(--primary-2);
 }
