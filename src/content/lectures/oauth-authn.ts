@@ -356,6 +356,36 @@ suspend fun UserRepository.invalidateAllSessions(userId: UUID) = transaction(db.
       component: "DecisionTracer",
     },
 
+    // ── Block 6c: Putting It Together in Micronaut ──────────────────────────
+
+    {
+      id: "jwt-best-practices-unit-5",
+      type: "code",
+      title: "Micronaut JWT Configuration",
+      language: "yaml",
+      code: `micronaut:
+  security:
+    authentication: bearer
+    token:
+      jwt:
+        signatures:
+          secret:
+            generator:
+              secret: "\${JWT_GENERATOR_SIGNATURE_SECRET}"
+              jws-algorithm: HS256
+        claims-validators:
+          expiration: true
+          subject-not-null: true
+          issuer: "https://auth.example.com"
+          audience: "https://api.example.com"
+        generator:
+          refresh-token:
+            secret: "\${JWT_GENERATOR_SIGNATURE_SECRET}"
+      generator:
+        access-token:
+          expiration: 900  # 15 minutes`,
+    },
+
     // ── Recap ────────────────────────────────────────────────────────────────
 
     {

@@ -3,3 +3,7 @@ export { ComparePair } from './ComparePair';
 export type { CompareColumn } from './ComparePair';
 export { MistakeRow } from './MistakeRow';
 export { KeyTakeaway } from './KeyTakeaway';
+export { FactorCards } from './FactorCards';
+export { AppCards } from './AppCards';
+export { MediaRow } from './MediaRow';
+export { YouTubeEmbed } from './YouTubeEmbed';

@@ -39,7 +39,9 @@ export function markdownToHtml(md: string): string {
         quoteLines.push(lines[i].slice(2));
         i++;
       }
-      const inner = quoteLines.map((l) => `<p>${inlineFormat(l)}</p>`).join('');
+      // Parse the inner blockquote content so ordered lists (1. ...) and
+      // unordered lists (- ...) inside the blockquote render correctly.
+      const inner = parseBlockquoteInner(quoteLines);
       output.push(`<blockquote>${inner}</blockquote>`);
       continue;
     }
@@ -89,8 +91,9 @@ export function markdownToHtml(md: string): string {
     if (line.trim() === '') { i++; continue; }
 
     // Regular paragraph line — collect until blank or structural line.
-    // Must also stop on ordered-list lines (/^\d+\. /) and fenced code fences
-    // (```), otherwise those structural elements get absorbed into the <p>.
+    // Must also stop on ordered-list lines (/^\d+\. /), fenced code fences
+    // (```), pipe tables, and blockquotes (> ) so those structural elements
+    // are not absorbed into the <p>.
     const paraLines: string[] = [];
     while (
       i < lines.length &&
@@ -99,7 +102,8 @@ export function markdownToHtml(md: string): string {
       !lines[i].match(/^\s*- /) &&
       !lines[i].match(/^\d+\. /) &&
       !lines[i].startsWith('```') &&
-      !lines[i].trimStart().startsWith('|')
+      !lines[i].trimStart().startsWith('|') &&
+      !lines[i].startsWith('> ')
     ) {
       paraLines.push(inlineFormat(lines[i]));
       i++;
@@ -110,6 +114,49 @@ export function markdownToHtml(md: string): string {
   }
 
   return output.join('\n');
+}
+
+/**
+ * Parse the inner lines of a blockquote so that ordered lists (1. ...) and
+ * unordered lists (- ...) inside the blockquote render as HTML list elements
+ * rather than bare paragraphs.
+ */
+function parseBlockquoteInner(lines: string[]): string {
+  const out: string[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    const l = lines[i];
+    if (/^\d+\. /.test(l)) {
+      const items: string[] = [];
+      while (i < lines.length && /^\d+\. /.test(lines[i])) {
+        items.push(`<li>${inlineFormat(lines[i].replace(/^\d+\. /, ''))}</li>`);
+        i++;
+      }
+      out.push(`<ol>${items.join('')}</ol>`);
+    } else if (/^\s*- /.test(l)) {
+      const items: string[] = [];
+      while (i < lines.length && /^\s*- /.test(lines[i])) {
+        items.push(`<li>${inlineFormat(lines[i].replace(/^\s*- /, ''))}</li>`);
+        i++;
+      }
+      out.push(`<ul>${items.join('')}</ul>`);
+    } else if (l.trim() === '') {
+      i++;
+    } else {
+      const paraLines: string[] = [];
+      while (
+        i < lines.length &&
+        lines[i].trim() !== '' &&
+        !/^\d+\. /.test(lines[i]) &&
+        !/^\s*- /.test(lines[i])
+      ) {
+        paraLines.push(inlineFormat(lines[i]));
+        i++;
+      }
+      if (paraLines.length > 0) out.push(`<p>${paraLines.join(' ')}</p>`);
+    }
+  }
+  return out.join('');
 }
 
 /** Apply bold, italic, inline code, and link formatting to a single line of text. */

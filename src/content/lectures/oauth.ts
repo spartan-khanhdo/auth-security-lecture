@@ -4,7 +4,7 @@ export const oauthLecture: Lecture = {
   slug: "oauth",
   title: "OAuth: Delegated Authorization",
   subtitle:
-    "In Lecture 1 we built auth ourselves. This lecture explains why that boundary forced the creation of OAuth, how OAuth 2.0 works, and the token lifecycle best practices that go with it.",
+    "In Lecture 1 we built auth ourselves: hash passwords, mint JWTs, rotate refresh tokens. That works — until a third-party app needs to act on a user's behalf. That is the boundary where OAuth begins.",
   tagline: "From the password anti-pattern to PKCE, token rotation, and key management.",
   estMinutes: 20,
   topics: ["OAuth 1.0 → 2.0", "PKCE", "Token Lifetime", "Refresh Token Rotation", "Storage"],
@@ -12,22 +12,18 @@ export const oauthLecture: Lecture = {
   iconKey: "key",
   comingSoon: false,
   units: [
-    // ── Unit 0: Section Intro ────────────────────────────────────────────────
-
-    {
-      id: "jwt-bp-intro",
-      type: "prose",
-      title: "OAuth — Delegated Authorization",
-      body: `In Lecture 1 we built auth ourselves: hash passwords, mint JWTs, rotate refresh tokens. That works — until a third-party app needs to act on a user's behalf. This lecture explains why that boundary forced the creation of OAuth, how OAuth 2.0 works, and the token lifecycle best practices that go with it.`,
-    },
-
     // ── Unit 1: Why OAuth? ───────────────────────────────────────────────────
 
     {
       id: "jwt-bp-why-oauth",
       type: "prose",
       title: "Why OAuth? The Problem with Self-Managed Auth",
-      body: `Self-managed auth is fine when *your* app talks to *your* API. It breaks down the moment a third party needs delegated access.\n\n**The scenario:**\n> A user wants to let a travel-planning app read their Google Calendar to find free slots. How does the travel app get access?\n\n**Before OAuth — The Password Anti-Pattern:**\nThe only option was to give the travel app your Google username and password. Once you did:\n\n- A breach at the travel app meant **your Google password was exposed**\n- The app had **unlimited access** — it could read email, delete events, access Drive\n- **No revocation** — to cut off the app you had to change your Google password everywhere\n- **No scope** — impossible to say "read calendar only"; the app got everything\n\nOAuth solves this by separating *who grants access* (the user + Google) from *who uses the access* (the travel app) — without the travel app ever seeing your Google password.`,
+      body: `Self-managed auth is fine when *your* app talks to *your* API. It breaks the moment a third party needs delegated access.\n\n**Scenario:** A user wants a travel app to read their Google Calendar for free slots.\n\n**Pre-OAuth — the password anti-pattern:** the user hands the travel app their Google password. The consequences:\n\n- A breach at the travel app exposes the **Google password itself**\n- The app gets **unlimited access** — mail, Drive, everything — not just calendar\n- **No revocation** without changing the password everywhere\n- **No scopes** — can't say "read calendar only"`,
+      image: {
+        src: "/media/lectures/User_syncing_Google_Calendar_travel_202606132146.jpeg",
+        alt: "User syncing Google Calendar with a travel planning app",
+        caption: "Before OAuth: accessing someone's calendar meant handing over your Google password.",
+      },
       callouts: [
         {
           tone: "info",
@@ -42,16 +38,7 @@ export const oauthLecture: Lecture = {
       id: "jwt-bp-oauth1",
       type: "prose",
       title: "OAuth 1.0: The Password Anti-Pattern Era",
-      body: `OAuth 1.0 (RFC 5849, 2010) introduced **delegated authorization** — letting third-party apps act on a user's behalf **without ever seeing their password**.\n\n**3-Legged Flow:**\n\n1. App requests a temporary **Request Token** from the provider\n2. User is redirected to the provider, logs in, and grants access\n3. App exchanges the token + verifier for a permanent **Access Token**\n4. Every API call is **cryptographically signed** with HMAC-SHA1\n\nEvery API call was cryptographically signed: \`HMAC-SHA1(method + URL + params, consumer_secret + token_secret)\` sent as an \`Authorization: OAuth ...\` header. Exact parameter ordering was required — one wrong encoding broke the signature entirely.`,
-    },
-
-    // ── Unit 3: OAuth 1.0 Demo ───────────────────────────────────────────────
-
-    {
-      id: "jwt-bp-oauth1-demo",
-      type: "demo",
-      title: "OAuth 1.0 Flow",
-      component: "OAuthFlowPlayer",
+      body: `OAuth 1.0 (RFC 5849, 2010) introduced **delegated authorization** — letting third-party apps act on a user's behalf **without ever seeing their password**.\n\n**3-Legged Flow:**\n\n1. App requests a temporary **Request Token** from the provider\n2. User is redirected to the provider, logs in, and grants access\n3. App exchanges the token + verifier for a permanent **Access Token**\n4. Every API call is signed: \`HMAC-SHA1(method + URL + params, consumer_secret + token_secret)\` in an \`Authorization: OAuth ...\` header\n\nSignatures required *exact* parameter ordering — one wrong encoding broke the request.\n\n\`\`\`bash\n# Leg 1 — Request Token (App → Provider, no user yet)\ncurl -X POST https://api.example.com/oauth/request_token \\\n  -H 'Authorization: OAuth oauth_consumer_key="app_key",oauth_nonce="kYjzVBB8Y0",oauth_signature="tnnArxj%3D",oauth_signature_method="HMAC-SHA1",oauth_timestamp="1318622958",oauth_version="1.0"'\n# → oauth_token=REQUEST_TOKEN&oauth_token_secret=TOKEN_SECRET\n\n# Leg 2 — User authorizes in browser (no API call)\n# https://api.example.com/oauth/authorize?oauth_token=REQUEST_TOKEN\n# → callback: ?oauth_token=REQUEST_TOKEN&oauth_verifier=VERIFIER\n\n# Leg 3 — Exchange for Access Token\ncurl -X POST https://api.example.com/oauth/access_token \\\n  -H 'Authorization: OAuth oauth_consumer_key="app_key",oauth_token="REQUEST_TOKEN",oauth_verifier="VERIFIER",oauth_signature="newSig%3D",oauth_signature_method="HMAC-SHA1",oauth_timestamp="1318622999",oauth_nonce="abc456",oauth_version="1.0"'\n# → oauth_token=ACCESS_TOKEN&oauth_token_secret=ACCESS_SECRET\n\`\`\``,
     },
 
     // ── Unit 4: OAuth 1.0 Diagram ────────────────────────────────────────────
@@ -65,19 +52,28 @@ export const oauthLecture: Lecture = {
     participant App as Client App
     participant Provider as OAuth Provider
 
-    App->>Provider: 1. Request Temporary Token
-    Provider-->>App: Temporary Token
-    App->>User: 2. Redirect to Provider Login
-    User->>Provider: Login and Grant Access
-    Provider-->>App: Redirect with Verifier Code
-    App->>Provider: 3. Exchange Token + Verifier
-    Provider-->>App: Access Token + Token Secret
+    rect rgba(99, 102, 241, 0.15)
+        Note over App,Provider: Leg 1 — Request Token
+        App->>Provider: POST /oauth/request_token
+        Provider-->>App: oauth_token + oauth_token_secret
+    end
+    rect rgba(251, 191, 36, 0.15)
+        Note over User,Provider: Leg 2 — User Authorization
+        App->>User: Redirect to /oauth/authorize
+        User->>Provider: Login and Grant Access
+        Provider-->>App: Callback with oauth_verifier
+    end
+    rect rgba(34, 197, 94, 0.15)
+        Note over App,Provider: Leg 3 — Token Exchange
+        App->>Provider: POST /oauth/access_token + verifier
+        Provider-->>App: Access Token + Token Secret
+    end
     loop Every API Call
         App->>Provider: Signed Request HMAC-SHA1
         Note right of App: Signature = HMAC(method+url+params, secret)
         Provider-->>App: Protected Resource
     end`,
-      caption: "OAuth 1.0 3-legged flow. Every API call required a HMAC-SHA1 signature over exact parameter ordering.",
+      caption: "Three distinct legs — each a round-trip. The per-request signing loop at the bottom is what killed OAuth 1.0 on mobile.",
     },
 
     // ── Unit 5: OAuth 2.0 ────────────────────────────────────────────────────
@@ -86,13 +82,7 @@ export const oauthLecture: Lecture = {
       id: "jwt-bp-oauth2",
       type: "prose",
       title: "OAuth 2.0: Why OAuth 1.0 Was Replaced",
-      body: `**The Problems with OAuth 1.0 (that led to OAuth 2.0)**\n\n- **Signature complexity** — Every request required computing HMAC-SHA1 over exact parameter ordering. One wrong encoding or missing parameter broke the signature.\n- **Mobile-unfriendly** — The 3-legged flow required browser redirects. Native mobile apps had no clean way to receive the OAuth callback.\n- **Token secret on the client** — The \`token_secret\` had to be stored client-side, replacing the password problem with a different secret management problem.\n- **No scopes** — OAuth 1.0 was all-or-nothing. You couldn't express "read contacts only."\n\nOAuth 2.0 (RFC 6749, 2012) dropped signatures entirely, relying on **HTTPS for transport security**. It introduced multiple **grant types** for different use cases instead of one-size-fits-all.`,
-      callouts: [
-        {
-          tone: "warn",
-          text: "Why it was replaced: Signature computation was complex and error-prone. Parameter order mattered exactly. No mobile-friendly flows. Libraries implemented it inconsistently.",
-        },
-      ],
+      body: `**Why OAuth 1.0 was replaced:**\n\n- **Signature complexity** — every request required HMAC-SHA1 over exact parameter ordering. One bad encoding broke it.\n- **Mobile-unfriendly** — native apps had no clean way to receive the OAuth callback.\n- **Token secret on the client** — \`token_secret\` had to live client-side, recreating the secret-management problem.\n- **No scopes** — all-or-nothing access. No "read contacts only."\n\nOAuth 2.0 (RFC 6749, 2012) dropped signatures and relies on **HTTPS for transport security**. It also introduced **grant types** so each client type gets the right flow.`,
     },
 
     // ── Unit 6: Grant Types ──────────────────────────────────────────────────
@@ -101,10 +91,19 @@ export const oauthLecture: Lecture = {
       id: "jwt-bp-grant-types",
       type: "prose",
       title: "OAuth 2.0 Grant Types Overview",
-      body: `**Grant Types at a glance:**\n\n| Grant Type | Use Case | Key Characteristic |\n|---|---|---|\n| **Authorization Code + PKCE** | Web apps, SPAs, mobile | Redirect flow + code exchange; PKCE prevents interception |\n| **Client Credentials** | Backend service-to-service (M2M) | No user involved; app authenticates with \`client_id\` + \`client_secret\` |\n| **Device Code** | Smart TVs, CLIs | Device shows code → user authorizes on phone → device polls for token |`,
+      body: `| Grant Type | Use Case | Key Characteristic |\n|---|---|---|\n| **Authorization Code + PKCE** | Web apps, SPAs, mobile | Redirect flow + code exchange; PKCE prevents interception |\n| **Client Credentials** | Backend service-to-service (M2M) | No user involved; app authenticates with \`client_id\` + \`client_secret\` |\n| **Device Code** | Smart TVs, CLIs | Device shows code → user authorizes on phone → device polls for token |`,
     },
 
-    // ── Unit 7: Client ID vs Secret ──────────────────────────────────────────
+    // ── Unit 7: Authorization Code Flow ─────────────────────────────────────
+
+    {
+      id: "jwt-bp-authcode",
+      type: "prose",
+      title: "Authorization Code Flow",
+      body: `The **Authorization Code** grant is the recommended flow for web apps, SPAs, and mobile apps. The core insight: instead of sending a token through the browser redirect URL (which lands in history and server logs), the auth server issues a short-lived, single-use **code** first. Only the backend exchanges it for real tokens.\n\n**Why a code instead of a token directly?**\n\n- Codes expire in under 60 seconds and are single-use — capturing one buys an attacker nothing\n- Tokens never touch the browser URL bar or access logs\n- The \`/token\` exchange happens server-to-server, where a \`client_secret\` can be verified\n\n**Step 1 — App redirects user to the authorization server.** The \`state\` value is generated by the app and verified on return to prevent CSRF.\n\n\`\`\`bash\nGET /authorize\n  ?response_type=code\n  &client_id=my_app\n  &redirect_uri=https://app.com/callback\n  &scope=calendar:read\n  &state=xK9m\n\`\`\`\n\n**Step 2 — Auth server redirects back with a short-lived code** (valid < 60 s, single-use).\n\n\`\`\`bash\nGET https://app.com/callback?code=SplxlOBeZQQYbYS6WxSbIA&state=xK9m\n\`\`\`\n\n**Step 3 — App exchanges the code for tokens.** This call is server-side only — the browser never sees the tokens.\n\n\`\`\`bash\nPOST /token\n  grant_type=authorization_code\n  &code=SplxlOBeZQQYbYS6WxSbIA\n  &redirect_uri=https://app.com/callback\n  &client_id=my_app\n  &client_secret=s3cr3t\n\n{ "access_token": "eyJ...", "expires_in": 900, "refresh_token": "8xLOxBtZp..." }\n\`\`\``,
+    },
+
+    // ── Unit 8: Client ID vs Secret ──────────────────────────────────────────
 
     {
       id: "jwt-bp-client-id-secret",
@@ -124,8 +123,8 @@ export const oauthLecture: Lecture = {
     {
       id: "jwt-bp-pkce",
       type: "prose",
-      title: "PKCE & Authorization Code Interception Attack",
-      body: `The Authorization Code flow was originally designed for **confidential clients** (backends that can safely store \`client_secret\`). But SPAs and mobile apps are **public clients** — their code runs in the user's hands.\n\n> ⚠️ **The attack (on mobile, without PKCE):**\n> 1. Your app registers \`myapp://callback\` as its redirect URI\n> 2. A *malicious app* also registers \`myapp://callback\` — custom URL schemes are not exclusive on Android/iOS\n> 3. User logs in via browser → Google redirects with \`?code=AUTH_CODE\`\n> 4. The OS asks which app handles \`myapp://\` — the malicious app wins\n> 5. Malicious app has the auth code — and since public clients often skip \`client_secret\`, it exchanges \`code\` for tokens\n> 6. **Result: attacker owns the user's session**\n\n**PKCE (RFC 7636)** binds the token exchange to the exact device that started the flow using a one-time cryptographic proof.\n\n**Why it works:** The \`code_verifier\` never travels over the network until the legitimate exchange. Even if an attacker captures the \`AUTH_CODE\`, they cannot complete the exchange without the verifier that only the real client generated. No shared secret needed — PKCE works for all public clients.`,
+      title: "PKCE (Proof Key for Code Exchange) & Authorization Code Interception Attack",
+      body: `The Authorization Code flow was originally designed for **confidential clients** — backends that can safely store a \`client_secret\`. SPAs and mobile apps are **public clients**: their code runs in the user's hands, so any embedded secret is effectively public.\n\n> ⚠️ **The attack (mobile, no PKCE):**\n> 1. Your app registers \`myapp://callback\` as its redirect URI\n> 2. A malicious app registers the *same* scheme — custom URL schemes aren't exclusive on Android/iOS\n> 3. User authenticates → provider redirects with \`?code=AUTH_CODE\`\n> 4. OS routes \`myapp://\` to the malicious app\n> 5. With no \`client_secret\` required, it exchanges the code for tokens — **session hijacked**\n\n**PKCE (RFC 7636)** fixes this. The client generates a random \`code_verifier\`, sends \`SHA-256(code_verifier)\` as the \`code_challenge\` on the authorize request, and sends the raw \`code_verifier\` only at the token endpoint. An attacker who intercepts the auth code never sees the verifier — so they cannot complete the exchange.`,
     },
 
     // ── Unit 9: PKCE Simulator ───────────────────────────────────────────────
@@ -135,55 +134,6 @@ export const oauthLecture: Lecture = {
       type: "demo",
       title: "PKCE Simulator",
       component: "PKCESimulator",
-    },
-
-    // ── Unit 10: Auth Server internals (code) ────────────────────────────────
-
-    {
-      id: "jwt-bp-auth-server-code",
-      type: "code",
-      title: "Behind the Scenes: How the Auth Server Manages Clients",
-      language: "py",
-      code: `# Step 1 — Registration (when the developer creates an app in the console)
-client_id     = base64url(secureRandom(16 bytes))
-client_secret = base64url(secureRandom(32 bytes))
-
-client_secret_hash = bcrypt(client_secret, cost=12)
-
-db.insert("oauth_clients", {
-    client_id:          client_id,
-    client_secret_hash: client_secret_hash,
-    redirect_uris:      ["https://app.com/callback"],
-    allowed_grants:     ["authorization_code", "refresh_token"],
-    is_confidential:    True,
-    is_active:          True,
-})
-
-return { client_id, client_secret }  # Secret shown ONCE — never retrievable again
-
-# Step 2 — Verification at /token
-def exchange_code_for_token(request):
-    client_id, provided_secret = parse_client_credentials(request)
-    client = db.get("SELECT * FROM oauth_clients WHERE client_id = ?", client_id)
-    if not client:
-        raise Unauthorized("unknown_client")
-
-    if client.is_confidential:
-        if not bcrypt.verify(provided_secret, client.client_secret_hash):
-            raise Unauthorized("invalid_client")  # vague — don't reveal why
-
-    if request.redirect_uri not in client.redirect_uris:
-        raise InvalidRequest("redirect_uri_mismatch")
-
-    auth_code = db.get("SELECT * FROM auth_codes WHERE code = ?", request.code)
-    if not auth_code or auth_code.client_id != client_id:
-        raise InvalidGrant("code_invalid_or_stolen")
-    if auth_code.expires_at < now():
-        raise InvalidGrant("code_expired")
-
-    db.delete(auth_code)  # Auth codes are single-use — delete immediately
-
-    return issue_tokens(client, auth_code.user_id, auth_code.scope)`,
     },
 
     // ── Unit 11: Full OAuth 2.0 Flow Demo ────────────────────────────────────
@@ -219,34 +169,10 @@ def exchange_code_for_token(request):
     Note over App,AS: On expiry — silent refresh
     App->>AS: POST /token  with refresh_token cookie
     AS-->>App: New access_token + New refresh_token`,
-      caption: "Authorization Code + PKCE is the standard flow for all public clients (SPAs and mobile apps). PKCE replaces the client_secret for public clients.",
+      caption: "The code_verifier is the secret that never travels — it leaves the device only on the final token exchange, after the auth code is already useless to an interceptor.",
     },
 
-    // ── Unit 13: Token Lifetime ───────────────────────────────────────────────
-
-    {
-      id: "jwt-best-practices-unit-0",
-      type: "prose",
-      title: "Token Lifetime",
-      body: `Short-lived tokens limit the window of exposure if a token is stolen. The industry consensus on lifetimes:\n\n| Token | Recommended TTL | Notes |\n|---|---|---|\n| **Access token** | 5–15 minutes | 5 min for banking/healthcare; 15 min for general web apps |\n| **Refresh token** | 7–30 days | Always rotate on every use; 7–14 days with rotation is the consensus |\n| **ID token (OIDC)** | Same as access token | For identity only — never use as API bearer token |\n\nGoing beyond 60 minutes for access tokens is an anti-pattern — it widens the window during which a stolen token grants access. PCI DSS environments require session termination after 15 minutes of inactivity; NIST SP 800-63B caps sessions at 12 hours for moderate assurance.`,
-    },
-
-    // ── Unit 14: Refresh Token Rotation ──────────────────────────────────────
-
-    {
-      id: "jwt-best-practices-unit-1",
-      type: "takeaways",
-      title: "Refresh Token Rotation & Reuse Detection",
-      icon: "RefreshCw",
-      iconColor: "var(--green)",
-      items: [
-        "On every refresh, issue a new refresh token and immediately invalidate the old one.",
-        "If a previously-used refresh token is presented, revoke the entire token family — both user and attacker must re-authenticate.",
-        "Proactively refresh at ~75% of the access token's lifetime to avoid user-visible 401 errors (silent refresh pattern).",
-      ],
-    },
-
-    // ── Unit 15: Token Storage ────────────────────────────────────────────────
+    // ── Unit 13: Token Storage ────────────────────────────────────────────────
 
     {
       id: "jwt-best-practices-unit-2",
@@ -255,10 +181,9 @@ def exchange_code_for_token(request):
       icon: "Database",
       iconColor: "var(--amber)",
       items: [
-        "Store access tokens in JavaScript memory only — lost on page refresh but safe from XSS. The client silently re-fetches via the refresh cookie.",
-        "Store refresh tokens in an HttpOnly; Secure; SameSite=Strict cookie — JavaScript cannot read it, neutralizing XSS-based theft.",
-        "Never use localStorage or sessionStorage for tokens — both are readable by any JS on the page.",
-        "sessionStorage is NOT safer than localStorage. The distinction does not matter for XSS attackers.",
+        "Access token → JS memory only. Lost on refresh, but unreachable by XSS. The client silently re-fetches via the refresh cookie.",
+        "Refresh token → HttpOnly; Secure; SameSite=Strict cookie. JS cannot read it, so XSS cannot steal it.",
+        "Never localStorage or sessionStorage. Both are readable by any script on the page — sessionStorage is not safer, it just clears on tab close.",
       ],
     },
 
@@ -293,43 +218,13 @@ def exchange_code_for_token(request):
       ],
     },
 
-    // ── Unit 19: Micronaut Config ─────────────────────────────────────────────
-
-    {
-      id: "jwt-best-practices-unit-5",
-      type: "code",
-      title: "Micronaut JWT Configuration",
-      language: "yaml",
-      code: `micronaut:
-  security:
-    authentication: bearer
-    token:
-      jwt:
-        signatures:
-          secret:
-            generator:
-              secret: "\${JWT_GENERATOR_SIGNATURE_SECRET}"
-              jws-algorithm: HS256
-        claims-validators:
-          expiration: true
-          subject-not-null: true
-          issuer: "https://auth.example.com"
-          audience: "https://api.example.com"
-        generator:
-          refresh-token:
-            secret: "\${JWT_GENERATOR_SIGNATURE_SECRET}"
-      generator:
-        access-token:
-          expiration: 900  # 15 minutes`,
-    },
-
-    // ── Unit 20: Myth-Buster ──────────────────────────────────────────────────
+    // ── Unit 19: Myth-Buster ──────────────────────────────────────────────────
 
     {
       id: "jwt-bp-myth-buster",
       type: "prose",
       title: "Myth-Buster: \"Login with Google\" Is Not OAuth",
-      body: `> ❌ **Common belief:** "Login with Google" uses OAuth 2.0\n> ✅ **Reality:** It uses **OpenID Connect (OIDC)** — a thin identity layer built *on top of* OAuth 2.0\n\nThis is one of the most widespread misconceptions in the industry. Here's the precise distinction:\n\n| | OAuth 2.0 | OpenID Connect (OIDC) |\n|---|---|---|\n| **Question it answers** | "Can this app access your Google Drive?" | "Who are you?" |\n| **Purpose** | Authorization — delegate resource access | Authentication — assert user identity |\n| **Returns** | Access token (opaque, for resource access) | Access token **+ ID token** (a JWT with identity claims) |\n| **Standard** | RFC 6749 (2012) | Built on OAuth 2.0 (2014) |\n\n**OAuth 2.0 alone:**\n\`\`\`\n"App X is allowed to read your Google Calendar"\n→ Server gets an access_token to call the Calendar API\n→ Server does NOT know who you are — only that access was granted\n\`\`\`\n\n**OIDC:**\n\`\`\`\n"You are truc@gmail.com"\n→ Server gets an access_token (for API access) + an id_token (your identity)\n→ id_token is a JWT: { sub: "google|12345", email: "truc@gmail.com", name: "Truc Le" }\n\`\`\`\n\n> 💡 **Rule of thumb:**\n> - Need to *access a resource* on behalf of a user? → OAuth 2.0\n> - Need to know *who the user is*? → OIDC (which uses OAuth 2.0 underneath)\n> - "Login with X" is always OIDC — never bare OAuth 2.0\n\nWe cover OIDC in depth in **Lecture 3**.`,
+      body: `> ❌ **Common belief:** "Login with Google" uses OAuth 2.0\n> ✅ **Reality:** It uses **OpenID Connect (OIDC)** — an identity layer built *on top of* OAuth 2.0\n\n| | OAuth 2.0 | OpenID Connect |\n|---|---|---|\n| **Answers** | "Can this app access your Drive?" | "Who are you?" |\n| **Purpose** | Authorization | Authentication |\n| **Returns** | Access token | Access token **+ ID token** (a JWT of identity claims) |\n| **Standard** | RFC 6749 (2012) | OIDC Core 1.0 (2014), built on OAuth 2.0 |\n\nThe practical difference: with pure OAuth 2.0, your server gets an access token and knows it can call an API — but does *not* know who the user is. With OIDC, you also get an \`id_token\`, a JWT like \`{ sub: "google|12345", email: "truc@gmail.com" }\` — that *is* the identity.\n\n> 💡 **Rule of thumb:**\n> - Accessing a resource on the user's behalf? → OAuth 2.0\n> - Need to know *who the user is*? → OIDC\n> - "Login with X" is always OIDC — never bare OAuth 2.0\n\nOIDC is covered in depth in **Lecture 3**.`,
     },
 
     // ── Unit 21: References ───────────────────────────────────────────────────
@@ -348,125 +243,125 @@ def exchange_code_for_token(request):
       type: "checkpoint",
       title: "Checkpoint",
       questions: [
-    {
-        id: "jwt-bp-quiz-mobile-secret",
-        type: "quiz",
-        difficulty: "medium",
-        title: "Mobile App and client_secret",
-        question: "A native mobile app needs to use OAuth 2.0. Why can't it safely store a client_secret?",
-        choices: [
-          { id: "a", label: "It can — Google issues a unique secret per device." },
-          { id: "b", label: "It cannot — the app binary is distributed to users and can be reverse-engineered, exposing any embedded secret." },
-          { id: "c", label: "It uses the device's TPM as the secret store." },
-          { id: "d", label: "It uses SMS-based verification instead of a secret." },
-        ],
-        correctChoiceId: "b",
-        explanation: "Native app binaries are distributed to end users who can decompile or inspect them. Any secret embedded in the binary is effectively public. This is why public clients (mobile apps, SPAs) must use PKCE instead of a client_secret — PKCE provides proof-of-possession without requiring a static secret.",
-        points: 2,
-      },
-      {
-        id: "jwt-bp-quiz-client-id-secret",
-        type: "quiz",
-        difficulty: "easy",
-        title: "client_id vs client_secret",
-        question: "Which of the following correctly describes the difference between client_id and client_secret in OAuth 2.0?",
-        choices: [
-          { id: "a", label: "Both are public identifiers." },
-          { id: "b", label: "Both are private and must stay server-side." },
-          { id: "c", label: "`client_id` is a public identifier; `client_secret` is a private credential that must never leave the server." },
-          { id: "d", label: "`client_id` is private; `client_secret` is public." },
-        ],
-        correctChoiceId: "c",
-        explanation: "`client_id` identifies the application and is safe to expose (it appears in redirect URLs). `client_secret` is the application's password — it authenticates the app to the authorization server during the token exchange and must only ever exist server-side. Leaking it allows an attacker to impersonate your application.",
-        points: 1,
-      },
-      {
-        id: "jwt-bp-quiz-pkce-walkthrough",
-        type: "quiz",
-        difficulty: "hard",
-        title: "Authorization Code + PKCE Walkthrough",
-        question: "In the Authorization Code + PKCE flow, when does the authorization server verify the code_verifier?",
-        choices: [
-          { id: "a", label: "When the user first clicks 'Login' — before any redirect." },
-          { id: "b", label: "When the client sends the authorization request with code_challenge." },
-          { id: "c", label: "At the token endpoint, when the client exchanges the authorization code for tokens." },
-          { id: "d", label: "After the access token is issued, as a background integrity check." },
-        ],
-        correctChoiceId: "c",
-        explanation: "The code_verifier is sent to the token endpoint alongside the authorization code. The server computes SHA-256(code_verifier) and compares it to the code_challenge it stored when the authorization request arrived. If they match, the code exchange succeeds. This proves the entity requesting the token is the same one that started the flow — defeating authorization code interception attacks.",
-        points: 3,
-      },
-    {
-      id: "jwt-best-practices-unit-7",
-      type: "quiz",
-      difficulty: "easy",
-      title: "JWT and OAuth Independence",
-      question:
-        "JWT and OAuth 2.0 were invented separately. Can you use JWT *without* OAuth 2.0? Can you use OAuth 2.0 *without* JWT? Explain.",
-      choices: [
-        { id: "a", label: "No to both — they were designed together." },
         {
-          id: "b",
-          label:
-            "Yes to both — JWT (2015, RFC 7519) and OAuth 2.0 (2012, RFC 6749) are independent standards.",
+          id: "jwt-bp-quiz-mobile-secret",
+          type: "quiz",
+          difficulty: "medium",
+          title: "Mobile App and client_secret",
+          question: "A native mobile app needs to use OAuth 2.0. Why can't it safely store a client_secret?",
+          choices: [
+            { id: "a", label: "It can — Google issues a unique secret per device." },
+            { id: "b", label: "It cannot — the app binary is distributed to users and can be reverse-engineered, exposing any embedded secret." },
+            { id: "c", label: "It uses the device's TPM as the secret store." },
+            { id: "d", label: "It uses SMS-based verification instead of a secret." },
+          ],
+          correctChoiceId: "b",
+          explanation: "Native app binaries are distributed to end users who can decompile or inspect them. Any secret embedded in the binary is effectively public. This is why public clients (mobile apps, SPAs) must use PKCE instead of a client_secret — PKCE provides proof-of-possession without requiring a static secret.",
+          points: 2,
         },
-        { id: "c", label: "JWT requires OAuth, but OAuth can use opaque tokens." },
-        { id: "d", label: "OAuth requires JWT, but JWT can be used standalone." },
-      ],
-      correctChoiceId: "b",
-      explanation:
-        "OAuth 2.0 (2012) is an authorization framework; JWT (2015) is a token format published 3 years later. OAuth can use opaque random strings as tokens; JWT works fine as session tokens, API keys, or service credentials outside any OAuth flow.",
-      points: 1,
-    },
+        {
+          id: "jwt-bp-quiz-client-id-secret",
+          type: "quiz",
+          difficulty: "easy",
+          title: "client_id vs client_secret",
+          question: "Which of the following correctly describes the difference between client_id and client_secret in OAuth 2.0?",
+          choices: [
+            { id: "a", label: "Both are public identifiers." },
+            { id: "b", label: "Both are private and must stay server-side." },
+            { id: "c", label: "`client_id` is a public identifier; `client_secret` is a private credential that must never leave the server." },
+            { id: "d", label: "`client_id` is private; `client_secret` is public." },
+          ],
+          correctChoiceId: "c",
+          explanation: "`client_id` identifies the application and is safe to expose (it appears in redirect URLs). `client_secret` is the application's password — it authenticates the app to the authorization server during the token exchange and must only ever exist server-side. Leaking it allows an attacker to impersonate your application.",
+          points: 1,
+        },
+        {
+          id: "jwt-bp-quiz-pkce-walkthrough",
+          type: "quiz",
+          difficulty: "hard",
+          title: "Authorization Code + PKCE Walkthrough",
+          question: "In the Authorization Code + PKCE flow, when does the authorization server verify the code_verifier?",
+          choices: [
+            { id: "a", label: "When the user first clicks 'Login' — before any redirect." },
+            { id: "b", label: "When the client sends the authorization request with code_challenge." },
+            { id: "c", label: "At the token endpoint, when the client exchanges the authorization code for tokens." },
+            { id: "d", label: "After the access token is issued, as a background integrity check." },
+          ],
+          correctChoiceId: "c",
+          explanation: "The code_verifier is sent to the token endpoint with the auth code. The server computes SHA-256(code_verifier) and compares it to the code_challenge it stored at /authorize. A match proves the token request comes from the same client that started the flow — defeating code interception.",
+          points: 3,
+        },
+        {
+          id: "jwt-best-practices-unit-7",
+          type: "quiz",
+          difficulty: "easy",
+          title: "JWT and OAuth Independence",
+          question:
+            "JWT and OAuth 2.0 were invented separately. Can you use JWT *without* OAuth 2.0? Can you use OAuth 2.0 *without* JWT? Explain.",
+          choices: [
+            { id: "a", label: "No to both — they were designed together." },
+            {
+              id: "b",
+              label:
+                "Yes to both — JWT (2015, RFC 7519) and OAuth 2.0 (2012, RFC 6749) are independent standards.",
+            },
+            { id: "c", label: "JWT requires OAuth, but OAuth can use opaque tokens." },
+            { id: "d", label: "OAuth requires JWT, but JWT can be used standalone." },
+          ],
+          correctChoiceId: "b",
+          explanation:
+            "OAuth 2.0 (2012) is an authorization framework; JWT (2015) is a token format published 3 years later. OAuth can use opaque random strings as tokens; JWT works fine as session tokens, API keys, or service credentials outside any OAuth flow.",
+          points: 1,
+        },
 
-    {
-      id: "jwt-best-practices-unit-8",
-      type: "quiz",
-      difficulty: "medium",
-      title: "Why Refresh Tokens Exist",
-      question:
-        "What is the purpose of a Refresh Token if we already have an Access Token? Why are they stored differently (memory vs. HttpOnly cookie)?",
-      choices: [
-        { id: "a", label: "Refresh tokens are a redundant backup of access tokens." },
         {
-          id: "b",
-          label:
-            "Access tokens are short-lived for safety; refresh tokens let the client get new access tokens without re-logging in. Storage differs because each defends a different attack surface: AT in memory (XSS-safe), RT in HttpOnly cookie (XSS-safe and CSRF-safe via SameSite).",
+          id: "jwt-best-practices-unit-8",
+          type: "quiz",
+          difficulty: "medium",
+          title: "Why Refresh Tokens Exist",
+          question:
+            "What is the purpose of a Refresh Token if we already have an Access Token? Why are they stored differently (memory vs. HttpOnly cookie)?",
+          choices: [
+            { id: "a", label: "Refresh tokens are a redundant backup of access tokens." },
+            {
+              id: "b",
+              label:
+                "Access tokens are short-lived to limit exposure; refresh tokens let the client get new ATs without re-login. Storage differs to defend different attack surfaces: AT in memory (no persistent store for XSS to scrape), RT in HttpOnly cookie (unreachable from JS; SameSite blocks CSRF).",
+            },
+            { id: "c", label: "Refresh tokens are encrypted access tokens." },
+            {
+              id: "d",
+              label: "Refresh tokens are required by the OAuth 2.0 spec for every grant type.",
+            },
+          ],
+          correctChoiceId: "b",
+          explanation:
+            "Short AT limits stolen-token exposure. RT enables re-issuance without re-login. Memory AT is gone on refresh and absent from any persistent store; HttpOnly cookie RT is unreachable from JS, so XSS cannot exfiltrate it.",
+          points: 1,
         },
-        { id: "c", label: "Refresh tokens are encrypted access tokens." },
-        {
-          id: "d",
-          label: "Refresh tokens are required by the OAuth 2.0 spec for every grant type.",
-        },
-      ],
-      correctChoiceId: "b",
-      explanation:
-        "Short AT limits stolen-token exposure. RT enables re-issuance without prompting login. Memory AT can't be read by XSS; HttpOnly cookie RT can't be read by JS at all.",
-      points: 1,
-    },
 
-    {
-      id: "jwt-best-practices-unit-9",
-      type: "quiz",
-      difficulty: "medium",
-      title: "Token Storage Comparison",
-      question:
-        "`localStorage`, `sessionStorage`, JS memory, HttpOnly cookie — which is safest for an access token and why? Which is safest for a refresh token?",
-      choices: [
-        { id: "a", label: "localStorage for both — simplest." },
-        { id: "b", label: "sessionStorage for AT (clears on tab close), localStorage for RT." },
         {
-          id: "c",
-          label:
-            "JS memory for the access token (XSS- and CSRF-safe, lost on refresh — recover via silent refresh); HttpOnly + Secure + SameSite=Strict cookie for the refresh token.",
+          id: "jwt-best-practices-unit-9",
+          type: "quiz",
+          difficulty: "medium",
+          title: "Token Storage Comparison",
+          question:
+            "`localStorage`, `sessionStorage`, JS memory, HttpOnly cookie — which is safest for an access token and why? Which is safest for a refresh token?",
+          choices: [
+            { id: "a", label: "localStorage for both — simplest." },
+            { id: "b", label: "sessionStorage for AT (clears on tab close), localStorage for RT." },
+            {
+              id: "c",
+              label:
+                "JS memory for the access token (no persistent store, lost on refresh — recover via silent refresh); HttpOnly + Secure + SameSite=Strict cookie for the refresh token.",
+            },
+            { id: "d", label: "HttpOnly cookie for both — single storage location." },
+          ],
+          correctChoiceId: "c",
+          explanation:
+            "`localStorage`/`sessionStorage` are both readable by any JS on the page — one XSS = full takeover. JS memory keeps the AT out of any persisted store. HttpOnly cookie shields the RT from JS entirely; `SameSite=Strict` blocks CSRF.",
+          points: 1,
         },
-        { id: "d", label: "HttpOnly cookie for both — single storage location." },
-      ],
-      correctChoiceId: "c",
-      explanation:
-        "`localStorage`/`sessionStorage` are both readable by any JS on the page — one XSS = full takeover. JS memory keeps the AT out of any persisted store. HttpOnly cookie shields the RT from JS entirely; `SameSite=Strict` blocks CSRF.",
-      points: 1,
-    },
       ], // end questions
     },  // end checkpoint
   ],

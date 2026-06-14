@@ -27,14 +27,35 @@ export interface ProseCompareColumn {
  * Rich inline block that can appear inside a ProseUnit.
  * Each variant maps to a block component in src/components/units/blocks/.
  */
+export interface FactorCardData {
+  icon: string;
+  color: string;
+  category: string;
+  description: string;
+  examples: string[];
+}
+
+export interface AppCardData {
+  name: string;
+  note: string;
+  color: string;   // CSS var or hex — used as accent color
+  logo: string;    // path relative to /public, e.g. '/icons/brands/authy.svg'
+}
+
 export type ProseBlock =
   | { type: 'keypoint'; label: string; title: string; body: string; accent?: 'primary' | 'blue' | 'amber' | 'red' | 'green' }
   | { type: 'compare'; left: ProseCompareColumn; right: ProseCompareColumn }
-  | { type: 'mistake'; mistake: string; risk: string };
+  | { type: 'mistake'; mistake: string; risk: string }
+  | { type: 'factor-cards'; factors: FactorCardData[] }
+  | { type: 'app-cards'; apps: AppCardData[] }
+  | { type: 'media-row'; items: Array<{ src: string; alt?: string; caption?: string }> }
+  | { type: 'youtube'; videoId: string; caption?: string };
 
 export interface ProseUnit extends BaseUnit {
   type: 'prose';
   body: string;
+  /** Optional image rendered between the body and callouts. */
+  image?: { src: string; alt?: string; caption?: string };
   callouts?: Array<{ tone: 'info' | 'warn' | 'danger' | 'success'; text: string }>;
   learnMore?: Array<{ label: string; url: string }>;
   /** Optional key takeaway displayed after the body segments. */

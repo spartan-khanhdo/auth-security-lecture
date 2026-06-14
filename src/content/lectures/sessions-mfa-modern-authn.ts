@@ -4,7 +4,7 @@ export const sessionsMfaModernAuthn: Lecture = {
   slug: "sessions-mfa-modern-authn",
   title: "Sessions, MFA & Modern AuthN",
   subtitle:
-    "From cookie-based sessions to passkeys — the full spectrum of how modern apps authenticate users.",
+    "Lecture 2 ended with a cliffhanger: \"Login with Google\" is OIDC, not bare OAuth 2.0. This lecture explains why — covering the identity layer (OIDC), the session layer, and the factors that prove who you are (MFA).",
   tagline: "Sessions, OIDC, TOTP, passkeys, SSO — the identity stack beyond OAuth.",
   estMinutes: 15,
   topics: ["Sessions", "OIDC", "MFA & TOTP", "Passkeys / WebAuthn", "SSO"],
@@ -12,51 +12,7 @@ export const sessionsMfaModernAuthn: Lecture = {
   iconKey: "layers",
   comingSoon: false,
   units: [
-    // Unit 0 — Section Intro
-    {
-      id: "sessions-mfa-unit-0",
-      type: "prose",
-      title: "Sessions, MFA & Modern AuthN",
-      body: `Lecture 2 ended with a cliffhanger: "Login with Google" is OIDC, not bare OAuth 2.0. This lecture explains why — by covering the identity layer (OIDC), the session layer (how you stay logged in after authentication), and the factors that prove who you are (MFA). Each topic is covered at a practical depth. Use the **Learn More** links to go deeper.`,
-    },
-
-    // Unit 1 — Cookie-Based Sessions
-    {
-      id: "sessions-mfa-unit-1",
-      type: "prose",
-      title: "Cookie-Based Sessions",
-      body: `**What it is:** The server stores a session record; the client holds only a session ID cookie that points to it.\n\n**How it works:**\n1. User logs in → server creates a session record in DB or Redis\n2. Server returns \`Set-Cookie: session_id=abc123\` (HttpOnly, Secure)\n3. Browser automatically sends the cookie on every subsequent request\n4. Server looks up \`session_id\` → retrieves the user's context\n5. Logout → server deletes the session record → cookie becomes useless\n\n**When to use it:**\n- Server-rendered applications (Next.js SSR, Rails, Django)\n- Banking and healthcare — where instant revocation is required\n- Anywhere you can't tolerate even a 15-minute token validity window after logout\n\n**Trade-off:** Doesn't scale horizontally without a shared session store (Redis, Memcached). If you have 3 servers, every server must be able to reach the same session store or requests will fail on round-robin.`,
-      learnMore: [
-        {
-          label: "OWASP Session Management Cheat Sheet",
-          url: "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html",
-        },
-        {
-          label: "MDN — HTTP Cookies",
-          url: "https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies",
-        },
-      ],
-    },
-
-    // Unit 2 — Session Attacks
-    {
-      id: "sessions-mfa-unit-2",
-      type: "prose",
-      title: "Session Attacks",
-      body: `Two attacks to know — both are fixable with one line of code each.\n\n**Session Fixation:**\nAttacker plants a known session ID *before* the user logs in. If the server keeps the same session ID after login, the attacker's pre-planted cookie now points to an authenticated session.\n\n\`\`\`\nFix: Always regenerate the session ID immediately on login.\nsession.regenerate()  // one call in any framework\n\`\`\`\n\n**Session Hijacking:**\nAttacker steals a valid session cookie (via XSS, network sniff, or log leak) and replays it as their own.\n\n\`\`\`\nFix: HttpOnly + Secure + SameSite=Strict on the cookie.\nOptionally: bind the session to the client's IP or User-Agent (tradeoff: breaks mobile networks).\n\`\`\`\n\n> ⚠️ Session hijacking is why \`HttpOnly\` matters. If JS can read the cookie, XSS can steal the session.`,
-      learnMore: [
-        {
-          label: "OWASP Session Hijacking Attack",
-          url: "https://owasp.org/www-community/attacks/Session_hijacking_attack",
-        },
-        {
-          label: "OWASP Session Fixation",
-          url: "https://owasp.org/www-community/attacks/Session_fixation",
-        },
-      ],
-    },
-
-    // Unit 3 — OpenID Connect (OIDC)
+    // Unit 1 — OpenID Connect (OIDC)
     {
       id: "sessions-mfa-unit-3",
       type: "prose",
@@ -78,7 +34,7 @@ export const sessionsMfaModernAuthn: Lecture = {
       ],
     },
 
-    // Unit 4 — OIDC Flow Diagram
+    // Unit 2 — OIDC Flow Diagram
     {
       id: "sessions-mfa-unit-4",
       type: "diagram",
@@ -101,16 +57,80 @@ export const sessionsMfaModernAuthn: Lecture = {
       caption: "OIDC extends the OAuth 2.0 Authorization Code flow by returning an ID token alongside the access token.",
     },
 
+    // Unit 3 — Cookie-Based Sessions
+    {
+      id: "sessions-mfa-unit-1",
+      type: "prose",
+      title: "Cookie-Based Sessions",
+      body: `**What it is:** The server stores a session record; the client holds only a session ID cookie that points to it.\n\n**How it works:**\n1. User logs in → server creates a session record in DB or Redis\n2. Server returns \`Set-Cookie: session_id=abc123\` (HttpOnly, Secure)\n3. Browser automatically sends the cookie on every subsequent request\n4. Server looks up \`session_id\` → retrieves the user's context\n5. Logout → server deletes the session record → cookie becomes useless\n\n**When to use it:**\n- Server-rendered applications (Next.js SSR, Rails, Django)\n- Banking and healthcare — where instant revocation is required\n- Anywhere you can't tolerate even a 15-minute token validity window after logout\n\n**Trade-off:** Doesn't scale horizontally without a shared session store (Redis, Memcached). If you have 3 servers, every server must be able to reach the same session store or requests will fail on round-robin.`,
+      learnMore: [
+        {
+          label: "OWASP Session Management Cheat Sheet",
+          url: "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html",
+        },
+        {
+          label: "MDN — HTTP Cookies",
+          url: "https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies",
+        },
+      ],
+    },
+
+    // Unit 4 — Session Attacks
+    {
+      id: "sessions-mfa-unit-2",
+      type: "prose",
+      title: "Session Attacks",
+      body: `Two attacks to know — both are fixable with one line of code each.\n\n**Session Fixation:**\nAttacker plants a known session ID *before* the user logs in. If the server keeps the same session ID after login, the attacker's pre-planted cookie now points to an authenticated session.\n\n\`\`\`\nFix: Always regenerate the session ID immediately on login.\nsession.regenerate()  // one call in any framework\n\`\`\`\n\n**Session Hijacking:**\nAttacker steals a valid session cookie (via XSS, network sniff, or log leak) and replays it as their own.\n\n\`\`\`\nFix: HttpOnly + Secure + SameSite=Strict on the cookie.\nOptionally: bind the session to the client's IP or User-Agent (tradeoff: breaks mobile networks).\n\`\`\`\n\n> ⚠️ Session hijacking is why \`HttpOnly\` matters. If JS can read the cookie, XSS can steal the session.`,
+      learnMore: [
+        {
+          label: "OWASP Session Hijacking Attack",
+          url: "https://owasp.org/www-community/attacks/Session_hijacking_attack",
+        },
+        {
+          label: "OWASP Session Fixation",
+          url: "https://owasp.org/www-community/attacks/Session_fixation",
+        },
+      ],
+    },
+
     // Unit 5 — MFA Overview
     {
       id: "sessions-mfa-unit-5",
       type: "prose",
       title: "Multi-Factor Authentication (MFA)",
-      body: `**What it is:** Requiring a user to prove identity using two or more independent factors.\n\n**The three factor categories:**\n\n| Factor | What it is | Examples |\n|---|---|---|\n| **Something you know** | A secret only you hold | Password, PIN |\n| **Something you have** | A physical device or token | Authenticator app, hardware key, phone |\n| **Something you are** | A biological trait | Fingerprint, Face ID |\n\nMFA = any **two** of these three categories. Two passwords is not MFA — they're both "something you know."`,
+      body: `**What it is:** Requiring a user to prove identity using two or more independent factors.\n\nMFA = any **two** of these three categories. Two passwords is not MFA — they're both "something you know."`,
       callouts: [
         {
           tone: "info",
           text: "MFA is an AuthN concern — it operates on a completely separate layer from OAuth 2.0. When you \"Login with Google\" via OIDC, Google may challenge you with an MFA code — but that happens inside Google's AuthN layer, not as part of the OAuth or OIDC protocol.",
+        },
+      ],
+      blocks: [
+        {
+          type: 'factor-cards',
+          factors: [
+            {
+              icon: 'Brain',
+              color: 'var(--blue)',
+              category: 'Something you know',
+              description: 'A secret only you hold',
+              examples: ['Password', 'PIN'],
+            },
+            {
+              icon: 'Smartphone',
+              color: 'var(--amber)',
+              category: 'Something you have',
+              description: 'A physical device or token',
+              examples: ['Authenticator app', 'Hardware key', 'Phone'],
+            },
+            {
+              icon: 'Fingerprint',
+              color: 'var(--green)',
+              category: 'Something you are',
+              description: 'A biological trait',
+              examples: ['Fingerprint', 'Face ID'],
+            },
+          ],
         },
       ],
     },
@@ -120,7 +140,59 @@ export const sessionsMfaModernAuthn: Lecture = {
       id: "sessions-mfa-unit-6",
       type: "prose",
       title: "TOTP (Authenticator Apps)",
-      body: `**What it is:** A 6-digit code that changes every 30 seconds, generated by an app on your phone (Google Authenticator, Authy, 1Password).\n\n**How it works:**\n1. Setup: server generates a shared secret → encodes it as a QR code → user scans into their app\n2. At login: both the server and the app independently compute \`HMAC(shared_secret, floor(time / 30))\`\n3. They arrive at the same 6-digit number without any network communication\n4. Code is valid for one 30-second window (server often allows ±1 window for clock drift)\n\n**Why it works without internet:** The shared secret is seeded once at setup. After that, the math is deterministic — both sides produce the same number from the same inputs (secret + time).\n\n**Weakness:** The shared secret lives on the server. If the server is breached, all TOTP secrets are exposed — attackers can generate valid codes for any user.\n\n**Use when:** Strong second factor for consumer apps, internal tools, and enterprise systems.`,
+      body: `**What it is:** A 6-digit code that changes every 30 seconds, computed from a shared secret and the current time — no network required.\n\n**How it works:**\n1. Setup: server generates a shared secret → encodes it as a QR code → user scans into their app\n2. At login: both the server and the app independently compute \`HMAC(shared_secret, floor(time / 30))\`\n3. They arrive at the same 6-digit number without any network communication\n4. Code is valid for one 30-second window (server often allows ±1 window for clock drift)\n\n**Weakness:** The shared secret lives on the server. If the server is breached, all TOTP secrets are exposed — attackers can generate valid codes for any user.\n\n**Use when:** Strong second factor for consumer apps, internal tools, and enterprise systems.`,
+      blocks: [
+        {
+          type: 'media-row',
+          items: [
+            {
+              src: '/media/lectures/google authenticator.png',
+              alt: 'Google Authenticator showing TOTP codes',
+              caption: 'Google Authenticator',
+            },
+            {
+              src: '/media/lectures/microsoft authenticator.png',
+              alt: 'Microsoft Authenticator app',
+              caption: 'Microsoft Authenticator',
+            },
+          ],
+        },
+        {
+          type: 'app-cards',
+          apps: [
+            {
+              name: 'Google Authenticator',
+              note: 'Simple, widely used. No cloud backup by default — lose your phone, lose your codes.',
+              color: '#4285F4',
+              logo: '/icons/brands/google-authenticator.svg',
+            },
+            {
+              name: 'Microsoft Authenticator',
+              note: 'Enterprise-friendly, integrates with Azure AD / Entra ID.',
+              color: '#00A4EF',
+              logo: '/icons/brands/microsoft-authenticator.svg',
+            },
+            {
+              name: 'Authy',
+              note: 'Cloud backup + multi-device sync. Good for teams.',
+              color: '#EC1D24',
+              logo: '/icons/brands/authy.svg',
+            },
+            {
+              name: '1Password',
+              note: 'Built-in TOTP inside a password manager — convenient but one basket.',
+              color: '#1A8CFF',
+              logo: '/icons/brands/1password.svg',
+            },
+            {
+              name: 'Bitwarden',
+              note: 'Open-source password manager with TOTP (premium tier).',
+              color: '#175DDC',
+              logo: '/icons/brands/bitwarden.svg',
+            },
+          ],
+        },
+      ],
       learnMore: [
         {
           label: "RFC 6238 — TOTP",
@@ -157,6 +229,13 @@ export const sessionsMfaModernAuthn: Lecture = {
       type: "prose",
       title: "Passkeys & WebAuthn — The Modern Standard",
       body: `**What it is:** Your device holds a private key. The server stores only the corresponding public key. Login = device signs a server-issued challenge with the private key.\n\n**How it works:**\n1. **Registration:** device generates a key pair → public key stored on server → private key stays on device (never leaves)\n2. **Login:** server sends a random challenge → device signs it with private key → server verifies with stored public key\n3. **Biometric gate:** before signing, device may require Face ID, fingerprint, or PIN to unlock the private key\n\n**Why it's better than TOTP or SMS:**\n\n| | TOTP | SMS | Passkeys |\n|---|---|---|---|\n| **Phishing resistant** | ❌ Code can be entered on fake site | ❌ | ✅ Key is bound to the exact domain |\n| **Server secret to steal** | ❌ Shared secret | N/A | ✅ Server holds only public key |\n| **Works without network** | ✅ | ❌ | ✅ |\n| **UX** | OK | Easy | Excellent (biometric) |\n\n**Browser support:** Chrome, Safari, Edge, Firefox — plus iOS and Android native support since 2023.\n\n**The direction the industry is moving:** Google, Apple, GitHub, and Microsoft have all deployed passkeys for primary authentication. No password needed at all.`,
+      blocks: [
+        {
+          type: 'youtube',
+          videoId: '2xdV-xut7EQ',
+          caption: 'How passkeys work — a visual walkthrough',
+        },
+      ],
       learnMore: [
         {
           label: "passkeys.dev — Official Guide",

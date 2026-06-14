@@ -2,7 +2,7 @@ import type { ProseUnit, ProseBlock, CodeUnit } from '@/content/types';
 import { markdownToHtml } from '@/lib/markdownToHtml';
 import Callout from '@/components/ui/Callout';
 import CodeRenderer from './CodeRenderer';
-import { KeyPoint, ComparePair, MistakeRow, KeyTakeaway } from './blocks';
+import { KeyPoint, ComparePair, MistakeRow, KeyTakeaway, FactorCards, AppCards, MediaRow, YouTubeEmbed } from './blocks';
 
 type Segment =
   | { kind: 'prose'; text: string }
@@ -60,6 +60,18 @@ function renderBlock(block: ProseBlock, idx: number) {
   if (block.type === 'mistake') {
     return <MistakeRow key={idx} mistake={block.mistake} risk={block.risk} />;
   }
+  if (block.type === 'factor-cards') {
+    return <FactorCards key={idx} factors={block.factors} />;
+  }
+  if (block.type === 'app-cards') {
+    return <AppCards key={idx} apps={block.apps} />;
+  }
+  if (block.type === 'media-row') {
+    return <MediaRow key={idx} items={block.items} />;
+  }
+  if (block.type === 'youtube') {
+    return <YouTubeEmbed key={idx} videoId={block.videoId} caption={block.caption} />;
+  }
   return null;
 }
 
@@ -91,6 +103,20 @@ export default function ProseRenderer({ unit }: ProseRendererProps) {
             }}
           />
         )
+      )}
+      {unit.image && (
+        <figure className="w-full">
+          <img
+            src={unit.image.src}
+            alt={unit.image.alt ?? ''}
+            className="w-full rounded-lg object-contain"
+          />
+          {unit.image.caption && (
+            <figcaption className="mt-2 text-center text-sm text-[var(--text-dim)]">
+              {unit.image.caption}
+            </figcaption>
+          )}
+        </figure>
       )}
       {(unit.callouts ?? []).map((callout, idx) => (
         <Callout key={idx} tone={callout.tone} text={callout.text} />

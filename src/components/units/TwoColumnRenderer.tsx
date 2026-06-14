@@ -22,11 +22,7 @@ export default function TwoColumnRenderer({ unit }: TwoColumnRendererProps) {
 
   return (
     <div className="w-full space-y-4">
-      {unit.section ? (
-        <StepHeader section={unit.section} />
-      ) : (
-        unit.title && <p className="eyebrow">{unit.title}</p>
-      )}
+      {unit.section && <StepHeader section={unit.section} />}
       <div className={isColumn ? 'flex flex-col gap-6' : `grid grid-cols-1 ${colsClass} gap-6 items-start`}>
         <div>
           <SubUnit unit={unit.left} />

@@ -57,6 +57,9 @@ export default function UnitCover({ lecture }: IUnitCoverProps) {
       {/* Title */}
       <h1 className="cover-title">{lecture.title}</h1>
 
+      {/* Bridge sentence */}
+      {lecture.subtitle && <p className="cover-sub">{lecture.subtitle}</p>}
+
       {/* Tagline */}
       <p className="cover-tag">{lecture.tagline}</p>
 

@@ -1,5 +1,6 @@
 import { Info, AlertTriangle, XCircle, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { markdownToHtml } from '@/lib/markdownToHtml';
 
 type CalloutTone = 'info' | 'warn' | 'danger' | 'success';
 
@@ -23,17 +24,13 @@ const ToneIcon: Record<CalloutTone, React.ElementType> = {
   success: CheckCircle,
 };
 
-/** Parse inline markdown bold, italic, and code into HTML. */
-function inlineFormat(raw: string): string {
-  return raw
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
-}
-
 export default function Callout({ tone, text, children }: CalloutProps) {
   const Icon = ToneIcon[tone];
   const styles = toneStyles[tone];
+
+  // Use the full markdownToHtml parser so callout text can include
+  // paragraph breaks (\n\n), bullet lists (- item), bold, italic, and code.
+  const html = markdownToHtml(text);
 
   return (
     <div
@@ -43,10 +40,11 @@ export default function Callout({ tone, text, children }: CalloutProps) {
       )}
     >
       <Icon className={cn('mt-0.5 h-4 w-4 shrink-0', styles.icon)} aria-hidden="true" />
-      <div className="flex-1">
-        <span dangerouslySetInnerHTML={{ __html: inlineFormat(text) }} />
-        {children}
-      </div>
+      <div
+        className="flex-1 prose dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-p:text-[var(--text)] prose-strong:text-[var(--text-strong)]"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+      {children}
     </div>
   );
 }
