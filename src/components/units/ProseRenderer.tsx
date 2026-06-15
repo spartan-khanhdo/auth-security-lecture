@@ -2,7 +2,7 @@ import type { ProseUnit, ProseBlock, CodeUnit } from '@/content/types';
 import { markdownToHtml } from '@/lib/markdownToHtml';
 import Callout from '@/components/ui/Callout';
 import CodeRenderer from './CodeRenderer';
-import { KeyPoint, ComparePair, MistakeRow, KeyTakeaway, FactorCards, AppCards, MediaRow, YouTubeEmbed, FlowSteps } from './blocks';
+import { KeyPoint, ComparePair, MistakeRow, KeyTakeaway, FactorCards, AppCards, MediaRow, YouTubeEmbed, FlowSteps, Timeline, ProblemList } from './blocks';
 
 type Segment =
   | { kind: 'prose'; text: string }
@@ -74,6 +74,12 @@ function renderBlock(block: ProseBlock, idx: number) {
   }
   if (block.type === 'flow-steps') {
     return <FlowSteps key={idx} steps={block.steps} />;
+  }
+  if (block.type === 'timeline') {
+    return <Timeline key={idx} events={block.events} />;
+  }
+  if (block.type === 'problem-list') {
+    return <ProblemList key={idx} items={block.items} />;
   }
   return null;
 }

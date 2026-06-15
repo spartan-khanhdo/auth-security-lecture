@@ -48,6 +48,18 @@ export interface FlowStepData {
   description: string;  // one-line detail below the label
 }
 
+export interface TimelineEventData {
+  year: string;         // e.g. "2014", "March 2019"
+  title: string;        // short label
+  description: string;  // detail sentence
+}
+
+export interface ProblemItemData {
+  icon?: string;        // Lucide icon name, e.g. 'KeyRound'
+  label: string;        // e.g. "Passwords"
+  description: string;  // the risk
+}
+
 export type ProseBlock =
   | { type: 'keypoint'; label: string; title: string; body: string; accent?: 'primary' | 'blue' | 'amber' | 'red' | 'green' }
   | { type: 'compare'; left: ProseCompareColumn; right: ProseCompareColumn }
@@ -56,7 +68,9 @@ export type ProseBlock =
   | { type: 'app-cards'; apps: AppCardData[] }
   | { type: 'media-row'; items: Array<{ src: string; alt?: string; caption?: string }> }
   | { type: 'youtube'; videoId: string; caption?: string }
-  | { type: 'flow-steps'; steps: FlowStepData[] };
+  | { type: 'flow-steps'; steps: FlowStepData[] }
+  | { type: 'timeline'; events: TimelineEventData[] }
+  | { type: 'problem-list'; items: ProblemItemData[] };
 
 export interface ProseUnit extends BaseUnit {
   type: 'prose';
@@ -96,7 +110,8 @@ export interface DemoUnit extends BaseUnit {
   | 'DecisionTracer'
   | 'TokenLifetimeVisualizer'
   | 'StorageAttackMatrix'
-  | 'MTLSVisualizer';
+  | 'MTLSVisualizer'
+  | 'MFAVerificationDemo';
   props?: Record<string, unknown>;
 }
 

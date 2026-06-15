@@ -24,11 +24,11 @@ export function FactorCards({ factors }: FactorCardsProps) {
           >
             {/* Icon badge */}
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              className="size-16 rounded-xl flex items-center justify-center shrink-0"
               style={{ backgroundColor: `color-mix(in srgb, ${factor.color} 15%, transparent)` }}
             >
               <Icon
-                size={20}
+                size={32}
                 style={{ color: factor.color }}
                 aria-hidden="true"
               />
@@ -36,10 +36,10 @@ export function FactorCards({ factors }: FactorCardsProps) {
 
             {/* Text */}
             <div className="flex flex-col gap-1">
-              <p className="text-sm font-semibold text-[var(--text-strong)]">
+              <p className="text-lg font-semibold text-[var(--text-strong)]">
                 {factor.category}
               </p>
-              <p className="text-sm text-[var(--text-dim)] leading-relaxed">
+              <p className="text-base text-[var(--text-dim)] leading-relaxed">
                 {factor.description}
               </p>
             </div>
@@ -49,7 +49,7 @@ export function FactorCards({ factors }: FactorCardsProps) {
               {factor.examples.map((example) => (
                 <span
                   key={example}
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium"
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium"
                   style={{
                     backgroundColor: `color-mix(in srgb, ${factor.color} 12%, transparent)`,
                     color: factor.color,

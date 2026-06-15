@@ -228,6 +228,14 @@ export const sessionsMfaModernAuthn: Lecture = {
       ],
     },
 
+    // Unit 5b — MFA Verification Demo
+    {
+      id: "sessions-mfa-unit-5b",
+      type: "demo",
+      title: "Step Through an MFA Verification",
+      component: "MFAVerificationDemo",
+    },
+
     // Unit 6 — TOTP
     {
       id: "sessions-mfa-unit-6",
@@ -316,69 +324,6 @@ export const sessionsMfaModernAuthn: Lecture = {
       ],
     },
 
-    // Unit 8 — Passkeys & WebAuthn
-    {
-      id: "sessions-mfa-unit-8",
-      type: "prose",
-      title: "Passkeys & WebAuthn — The Modern Standard",
-      body: `**What it is:** Your device holds a private key. The server stores only the corresponding public key. Login = device signs a server-issued challenge with the private key.\n\n**How it works:**\n1. **Registration:** device generates a key pair → public key stored on server → private key stays on device (never leaves)\n2. **Login:** server sends a random challenge → device signs it with private key → server verifies with stored public key\n3. **Biometric gate:** before signing, device may require Face ID, fingerprint, or PIN to unlock the private key\n\n**Why it's better than TOTP or SMS:**\n\n| | TOTP | SMS | Passkeys |\n|---|---|---|---|\n| **Phishing resistant** | ❌ Code can be entered on fake site | ❌ | ✅ Key is bound to the exact domain |\n| **Server secret to steal** | ❌ Shared secret | N/A | ✅ Server holds only public key |\n| **Works without network** | ✅ | ❌ | ✅ |\n| **UX** | OK | Easy | Excellent (biometric) |\n\n**Browser support:** Chrome, Safari, Edge, Firefox — plus iOS and Android native support since 2023.\n\n**The direction the industry is moving:** Google, Apple, GitHub, and Microsoft have all deployed passkeys for primary authentication. No password needed at all.`,
-      blocks: [
-        {
-          type: 'youtube',
-          videoId: '2xdV-xut7EQ',
-          caption: 'How passkeys work — a visual walkthrough',
-        },
-      ],
-      learnMore: [
-        {
-          label: "passkeys.dev — Official Guide",
-          url: "https://passkeys.dev/",
-        },
-        {
-          label: "web.dev — Passkeys",
-          url: "https://web.dev/passkey-registration/",
-        },
-        {
-          label: "FIDO2 / WebAuthn Spec",
-          url: "https://www.w3.org/TR/webauthn-2/",
-        },
-      ],
-    },
-
-    // Unit 9 — WebAuthn Registration & Login Diagram
-    {
-      id: "sessions-mfa-unit-9",
-      type: "diagram",
-      title: "WebAuthn Registration & Login",
-      mermaid: `sequenceDiagram
-    actor User
-    participant Browser
-    participant Device as Device (TPM / Secure Enclave)
-    participant Server
-
-    Note over User,Server: Registration
-
-    Server-->>Browser: Challenge + RP ID (your domain)
-    Browser->>Device: Create key pair for this domain
-    Device->>User: Face ID / Touch ID / PIN prompt
-    User->>Device: Approve
-    Device-->>Browser: Public key + attestation
-    Browser->>Server: { public_key, credential_id }
-    Server->>Server: Store public_key for this user
-
-    Note over User,Server: Login
-
-    Server-->>Browser: Challenge
-    Browser->>Device: Sign challenge with private key for this domain
-    Device->>User: Face ID / Touch ID / PIN prompt
-    User->>Device: Approve
-    Device-->>Browser: Signed assertion
-    Browser->>Server: Signed assertion
-    Server->>Server: Verify signature with stored public_key
-    Server-->>Browser: Authenticated`,
-      caption: "WebAuthn binds the credential to the exact origin (RP ID) — phishing attacks are impossible because the private key will not sign challenges from a different domain.",
-    },
-
     // Unit 10 — Single Sign-On (SSO)
     {
       id: "sessions-mfa-unit-10",
@@ -413,6 +358,137 @@ export const sessionsMfaModernAuthn: Lecture = {
           url: "https://auth0.com/docs/authenticate/protocols/saml",
         },
       ],
+    },
+
+    // Unit 8 — Passkeys & WebAuthn (teaser + video)
+    {
+      id: "sessions-mfa-unit-8",
+      type: "prose",
+      title: "Passkeys & WebAuthn — The Modern Standard",
+      body: `Passwords get phished. TOTP codes get phished. Passkeys can't — because there is no shared secret to steal or type into a fake site. Watch the 3-minute walkthrough, then we'll unpack why this is the first AuthN factor designed to *end* phishing.`,
+      blocks: [
+        {
+          type: 'youtube',
+          videoId: '2xdV-xut7EQ',
+          caption: 'How passkeys work — a visual walkthrough',
+        },
+      ],
+    },
+
+    // Unit 8b — Why Passkeys Were Built (problem + history)
+    {
+      id: "sessions-mfa-unit-8b",
+      type: "prose",
+      title: "The Problem Passkeys Were Built to Solve",
+      body: `Every prior authentication factor has a shared secret that travels over the wire — making it vulnerable to phishing, breaches, and interception.`,
+      blocks: [
+        {
+          type: 'problem-list',
+          items: [
+            {
+              icon: 'KeyRound',
+              label: 'Passwords',
+              description: 'Reused across sites, leaked in breaches, and typed into phishing pages every day. Credential stuffing — replaying leaked passwords against other sites — is still the #1 cause of account takeover.',
+            },
+            {
+              icon: 'Smartphone',
+              label: 'TOTP',
+              description: "Raises the bar but doesn't end phishing: a convincing fake login page can ask for the 6-digit code and forward it to the real site in real time (this is what adversary-in-the-middle kits like Evilginx automate).",
+            },
+            {
+              icon: 'MessageSquare',
+              label: 'SMS OTP',
+              description: 'Adds SIM-swap risk on top of phishability.',
+            },
+            {
+              icon: 'Database',
+              label: 'Server-side breaches',
+              description: 'If the server stores password hashes or TOTP seeds, one database leak compromises every user at once.',
+            },
+          ],
+        },
+        {
+          type: 'keypoint',
+          label: 'The goal',
+          title: 'What the industry needed',
+          body: 'A factor where (a) the credential never leaves the user\'s device, (b) the server stores nothing worth stealing, and (c) the credential is cryptographically bound to the real domain so it physically cannot be used on a fake one.',
+          accent: 'primary',
+        },
+        {
+          type: 'timeline',
+          events: [
+            {
+              year: '2014',
+              title: 'FIDO Alliance publishes U2F',
+              description: 'Hardware security keys (e.g. YubiKey) introduce the first phishing-resistant second factor based on public-key cryptography.',
+            },
+            {
+              year: 'March 2019',
+              title: 'W3C ratifies WebAuthn Level 1',
+              description: 'Official W3C Recommendation alongside FIDO2 / CTAP2. Browsers now have a standard JS API for public-key authentication.',
+            },
+            {
+              year: 'May 2022',
+              title: 'Apple, Google, and Microsoft announce passkeys',
+              description: 'WebAuthn credentials that sync across devices via iCloud Keychain, Google Password Manager, or Windows Hello. The moment WebAuthn becomes consumer-ready.',
+            },
+            {
+              year: '2023 onward',
+              title: 'Passkeys go mainstream',
+              description: 'Google, Apple, GitHub, Microsoft, and Amazon roll out passkeys for primary login. No password required.',
+            },
+          ],
+        },
+      ],
+    },
+
+    // Unit 8b2 — How Passkeys Work
+    {
+      id: "sessions-mfa-unit-8b2",
+      type: "prose",
+      title: "How Passkeys Work",
+      body: `Your device generates a key pair — the public key goes to the server, the private key never leaves your device. Login = device signs a challenge; server verifies the signature. No secret ever crosses the wire.`,
+      blocks: [
+        {
+          type: 'flow-steps',
+          steps: [
+            {
+              label: 'Registration',
+              description: 'The device generates a fresh key pair specifically for this site. The public key is sent to the server; the private key never leaves the device\'s secure enclave.',
+            },
+            {
+              label: 'Login',
+              description: 'The server sends a random challenge. The device signs it with the private key — but only after the user unlocks it with Face ID, Touch ID, or a PIN.',
+            },
+            {
+              label: 'Domain binding',
+              description: 'The browser includes the origin in what gets signed. A passkey for bank.com will refuse to sign for bank.evil.com — even if the user is fooled, the protocol isn\'t.',
+            },
+          ],
+        },
+      ],
+      learnMore: [
+        {
+          label: "passkeys.dev — Official Guide",
+          url: "https://passkeys.dev/",
+        },
+        {
+          label: "web.dev — Passkeys",
+          url: "https://web.dev/passkey-registration/",
+        },
+        {
+          label: "FIDO2 / WebAuthn Spec",
+          url: "https://www.w3.org/TR/webauthn-2/",
+        },
+      ],
+    },
+
+    // Unit 8c — Passkeys comparison table + status
+    {
+      id: "sessions-mfa-unit-8c",
+      type: "prose",
+      title: "How Passkeys Compare",
+      body: `| | Password | TOTP | SMS | Passkeys |\n|---|---|---|---|---|\n| **Phishing resistant** | ❌ | ❌ Code can be replayed | ❌ | ✅ Signature bound to real origin |\n| **Server secret to steal** | ❌ Hash | ❌ Shared seed | N/A | ✅ Only the public key |\n| **Survives DB breach** | ❌ | ❌ | N/A | ✅ Public keys are useless to attackers |\n| **Works offline** | ✅ | ✅ | ❌ | ✅ |\n| **UX** | Poor | OK | Easy | Excellent (biometric, one tap) |\n\n**Where it stands today.** All four major browsers ship WebAuthn. iOS and Android sync passkeys natively. Google, Apple, GitHub, and Microsoft accept passkeys as a *primary* authenticator — no password at all. For new systems, passkeys are now the default recommendation; passwords and TOTP exist mainly as fallbacks.`,
     },
 
     // Unit 12 — References

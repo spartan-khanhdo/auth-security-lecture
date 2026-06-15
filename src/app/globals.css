@@ -1578,6 +1578,12 @@ body::before {
   color: var(--text-dim);
 }
 
+@keyframes shake {
+  10%, 90% { transform: translateX(-2px); }
+  30%, 70% { transform: translateX(5px); }
+  50%       { transform: translateX(-7px); }
+}
+
 /* Recap list */
 @keyframes popIn {
   from {

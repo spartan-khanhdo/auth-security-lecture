@@ -87,4 +87,8 @@ export const demoRegistry: Record<
     () => import('@/components/demos/MTLSVisualizer'),
     { ssr: false, loading: DemoSkeleton }
   ),
+  MFAVerificationDemo: dynamic(
+    () => import('@/components/demos/MFAVerificationDemo'),
+    { ssr: false, loading: DemoSkeleton }
+  ),
 };
