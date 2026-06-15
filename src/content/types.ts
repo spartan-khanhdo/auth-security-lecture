@@ -42,6 +42,12 @@ export interface AppCardData {
   logo: string;    // path relative to /public, e.g. '/icons/brands/authy.svg'
 }
 
+export interface FlowStepData {
+  icon?: string;        // Lucide icon name
+  label: string;        // short heading shown inside the block
+  description: string;  // one-line detail below the label
+}
+
 export type ProseBlock =
   | { type: 'keypoint'; label: string; title: string; body: string; accent?: 'primary' | 'blue' | 'amber' | 'red' | 'green' }
   | { type: 'compare'; left: ProseCompareColumn; right: ProseCompareColumn }
@@ -49,7 +55,8 @@ export type ProseBlock =
   | { type: 'factor-cards'; factors: FactorCardData[] }
   | { type: 'app-cards'; apps: AppCardData[] }
   | { type: 'media-row'; items: Array<{ src: string; alt?: string; caption?: string }> }
-  | { type: 'youtube'; videoId: string; caption?: string };
+  | { type: 'youtube'; videoId: string; caption?: string }
+  | { type: 'flow-steps'; steps: FlowStepData[] };
 
 export interface ProseUnit extends BaseUnit {
   type: 'prose';

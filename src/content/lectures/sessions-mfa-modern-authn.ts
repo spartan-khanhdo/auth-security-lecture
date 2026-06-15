@@ -17,7 +17,7 @@ export const sessionsMfaModernAuthn: Lecture = {
       id: "sessions-mfa-unit-3",
       type: "prose",
       title: "OpenID Connect (OIDC)",
-      body: `**What it is:** A thin identity layer built on top of OAuth 2.0. It standardizes how a server asserts *who the user is* — the piece OAuth 2.0 deliberately left out.\n\n**What it adds to OAuth 2.0:**\n\n| OAuth 2.0 alone | OIDC adds |\n|---|---|\n| Access token (for resource access) | **ID token** — a JWT with identity claims |\n| No standard for user identity | \`/userinfo\` endpoint — fetch the user's profile |\n| No discovery | \`/.well-known/openid-configuration\` — auto-discover endpoints |\n\n**The three endpoints that matter:**\n\n\`\`\`\nGET /.well-known/openid-configuration\n→ Discovery document: where are the token, userinfo, and JWKS endpoints?\n\nPOST /token\n→ Returns: { access_token, id_token, refresh_token }\n\nGET /userinfo  (Authorization: Bearer access_token)\n→ Returns: { sub, email, name, picture, email_verified, ... }\n\`\`\`\n\n**What's in the ID token:**\n\`\`\`json\n{\n  "iss": "https://accounts.google.com",\n  "sub": "104261234567890",\n  "email": "truc@gmail.com",\n  "name": "Truc Le",\n  "aud": "your-client-id.apps.googleusercontent.com",\n  "exp": 1700000900,\n  "iat": 1700000000\n}\n\`\`\`\n\n**The rule:** Use the ID token to establish *who the user is*. Use the access token to *call APIs*. Never use the ID token as a bearer token for API calls.`,
+      body: `**What it is:** A thin identity layer built on top of OAuth 2.0. It standardizes how a server asserts *who the user is* — the piece OAuth 2.0 deliberately left out.\n\n**What it adds to OAuth 2.0:**\n\n| OAuth 2.0 alone | OIDC adds |\n|---|---|\n| Access token (for resource access) | **ID token** — a JWT with identity claims |\n| No standard for user identity | \`/userinfo\` endpoint — fetch the user's profile |\n| No discovery | \`/.well-known/openid-configuration\` — auto-discover all endpoints ([live example ↗](https://accounts.google.com/.well-known/openid-configuration)) |\n\n**The three endpoints that matter:**\n\n\`\`\`\nGET /.well-known/openid-configuration\n→ Discovery document: where are the token, userinfo, and JWKS endpoints?\n\nPOST /token\n→ Returns: { access_token, id_token, refresh_token }\n\nGET /userinfo  (Authorization: Bearer access_token)\n→ Returns: { sub, email, name, picture, email_verified, ... }\n\`\`\`\n\n**What's in the ID token:**\n\`\`\`json\n{\n  "iss": "https://accounts.google.com",\n  "sub": "104261234567890",\n  "email": "truc@gmail.com",\n  "name": "Truc Le",\n  "aud": "your-client-id.apps.googleusercontent.com",\n  "exp": 1700000900,\n  "iat": 1700000000\n}\n\`\`\`\n\n**The rule:** Use the ID token to establish *who the user is*. Use the access token to *call APIs*. Never use the ID token as a bearer token for API calls.\n\n**The discovery document:** Every OIDC provider publishes a JSON file at \`{issuer}/.well-known/openid-configuration\`. It contains every endpoint your client needs: \`authorization_endpoint\`, \`token_endpoint\`, \`userinfo_endpoint\`, \`jwks_uri\`. Configure your client with the issuer URL only — the rest is fetched automatically at runtime. This is what makes swapping providers a one-line config change.\n\n**Beyond user login — machine identity:** OIDC also powers service-to-service trust. GitHub Actions issues a signed OIDC token to each workflow run; AWS validates it against GitHub's JWKS and returns short-lived credentials via \`sts:AssumeRoleWithWebIdentity\`. Same protocol, same ID token validation — the subject (\`sub\`) is just a workflow run instead of a human.`,
       learnMore: [
         {
           label: "OpenID Connect Core 1.0 Spec",
@@ -34,27 +34,120 @@ export const sessionsMfaModernAuthn: Lecture = {
       ],
     },
 
-    // Unit 2 — OIDC Flow Diagram
+    // Unit 1b — OIDC Providers
     {
-      id: "sessions-mfa-unit-4",
-      type: "diagram",
-      title: "OIDC Flow",
-      mermaid: `sequenceDiagram
-    actor User
-    participant App as Your App
-    participant IdP as Identity Provider (Google / Okta)
+      id: "sessions-mfa-unit-3b",
+      type: "prose",
+      title: "OIDC Providers in the Wild",
+      body: `OIDC is a standard — many vendors implement it. You almost never build an OIDC provider yourself; you pick one and integrate as a client.\n\nOnce you know the issuer URL, every other endpoint (\`/token\`, \`/userinfo\`, \`/jwks\`) is auto-discovered. Your integration code stays identical whether you swap Google for Okta — only the issuer changes.`,
+      blocks: [
+        {
+          type: 'app-cards',
+          apps: [
+            {
+              name: 'Google',
+              note: 'Consumer "Sign in with Google" — the canonical OIDC integration. Issuer: accounts.google.com',
+              color: '#4285F4',
+              logo: '/icons/brands/google.svg',
+            },
+            {
+              name: 'Azure / Entra ID',
+              note: 'Enterprise SSO for Office 365 and Azure tenants. Issuer: login.microsoftonline.com/{tenant}/v2.0',
+              color: '#0078D4',
+              logo: '/icons/brands/azure.svg',
+            },
+            {
+              name: 'Okta',
+              note: 'Workforce identity — SSO into internal tools. Issuer: {your-org}.okta.com',
+              color: '#007DC1',
+              logo: '/icons/brands/okta.svg',
+            },
+            {
+              name: 'Auth0',
+              note: 'Developer-friendly IdP for B2B and B2C apps. Issuer: {your-tenant}.auth0.com',
+              color: '#EB5424',
+              logo: '/icons/brands/auth0.svg',
+            },
+            {
+              name: 'AWS Cognito',
+              note: 'User pools for AWS-hosted apps. Issuer: cognito-idp.{region}.amazonaws.com/{userPoolId}',
+              color: '#7B3FC4',
+              logo: '/icons/brands/aws-cognito.svg',
+            },
+            {
+              name: 'GitHub',
+              note: 'OIDC tokens for GitHub Actions workflows — machine identity, not user login. Issuer: token.actions.githubusercontent.com',
+              color: '#181717',
+              logo: '/icons/brands/github-dark.svg',
+            },
+            {
+              name: 'Keycloak',
+              note: 'Open-source, self-hosted — when compliance forbids a managed IdP. Issuer: {your-host}/realms/{realm}',
+              color: '#4D4D4D',
+              logo: '/icons/brands/keycloak.svg',
+            },
+          ],
+        },
+      ],
+      learnMore: [
+        {
+          label: "Google Identity — OpenID Connect",
+          url: "https://developers.google.com/identity/openid-connect/openid-connect",
+        },
+        {
+          label: "Microsoft Entra ID — OIDC on the Microsoft identity platform",
+          url: "https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc",
+        },
+        {
+          label: "Keycloak — Server Administration",
+          url: "https://www.keycloak.org/docs/latest/server_admin/",
+        },
+      ],
+    },
 
-    App->>IdP: GET /authorize?scope=openid email profile&response_type=code
-    User->>IdP: Authenticate (password + MFA if configured)
-    IdP-->>App: Redirect /callback?code=AUTH_CODE
-    App->>IdP: POST /token  { code, client_id, client_secret, code_verifier }
-    IdP-->>App: { access_token, id_token, refresh_token }
-    App->>App: Verify id_token signature (via JWKS)
-    App->>App: Extract sub, email, name from id_token
-    Note over App: User is now authenticated — create local session
-    App->>IdP: GET /userinfo  Authorization: Bearer access_token
-    IdP-->>App: { sub, email, name, picture, ... }`,
-      caption: "OIDC extends the OAuth 2.0 Authorization Code flow by returning an ID token alongside the access token.",
+    // Unit 2b — OIDC for Machine Identity: GitHub Actions → AWS
+    {
+      id: "sessions-mfa-unit-4b",
+      type: "prose",
+      title: "OIDC in DevOps — GitHub Actions Deploying to AWS",
+      body: `The same protocol that powers "Login with Google" also eliminates stored AWS credentials in CI/CD pipelines.\n\n**The problem:** GitHub Actions needs AWS credentials to deploy. The naive fix — an IAM user with long-lived access keys in GitHub Secrets — creates a credential that never expires, is hard to rotate, and exposes full AWS access if the repo is compromised.\n\n\`\`\`yaml\npermissions:\n  id-token: write   # required to mint the OIDC token\n  contents: read\n\nsteps:\n  - uses: aws-actions/configure-aws-credentials@v4\n    with:\n      role-to-assume: arn:aws:iam::123456789012:role/GitHubActionsDeployRole\n      aws-region: us-east-1\n\`\`\`\n\nThe IAM trust policy locks it to a specific repo and branch via the \`sub\` claim:\n\`\`\`\nsub = "repo:your-org/your-repo:ref:refs/heads/main"\n\`\`\`\n\n**Why it matters:** Zero stored secrets, zero rotation work, and least-privilege enforced at the IAM level. This is OIDC doing machine identity — the subject is a workflow run, not a human.`,
+      blocks: [
+        {
+          type: 'flow-steps',
+          steps: [
+            {
+              label: 'Register OIDC Issuer in AWS IAM',
+              description: 'AWS trusts GitHub\'s issuer (token.actions.githubusercontent.com) as an external identity provider.',
+            },
+            {
+              label: 'GitHub mints a signed JWT',
+              description: 'A short-lived token is issued to the workflow run. The sub claim encodes the exact repo and branch.',
+            },
+            {
+              label: 'AssumeRoleWithWebIdentity',
+              description: 'AWS validates the JWT signature via GitHub\'s JWKS and checks aud/sub against the IAM role trust policy.',
+            },
+            {
+              label: '15-min credentials returned',
+              description: 'AWS issues temporary credentials. No long-lived secret exists anywhere — not in Secrets, not on disk.',
+            },
+          ],
+        },
+      ],
+      learnMore: [
+        {
+          label: "GitHub Docs — Security hardening with OIDC",
+          url: "https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect",
+        },
+        {
+          label: "GitHub Docs — Configuring OIDC in AWS",
+          url: "https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services",
+        },
+        {
+          label: "AWS STS — AssumeRoleWithWebIdentity",
+          url: "https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRoleWithWebIdentity.html",
+        },
+      ],
     },
 
     // Unit 3 — Cookie-Based Sessions

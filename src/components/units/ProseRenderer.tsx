@@ -2,7 +2,7 @@ import type { ProseUnit, ProseBlock, CodeUnit } from '@/content/types';
 import { markdownToHtml } from '@/lib/markdownToHtml';
 import Callout from '@/components/ui/Callout';
 import CodeRenderer from './CodeRenderer';
-import { KeyPoint, ComparePair, MistakeRow, KeyTakeaway, FactorCards, AppCards, MediaRow, YouTubeEmbed } from './blocks';
+import { KeyPoint, ComparePair, MistakeRow, KeyTakeaway, FactorCards, AppCards, MediaRow, YouTubeEmbed, FlowSteps } from './blocks';
 
 type Segment =
   | { kind: 'prose'; text: string }
@@ -71,6 +71,9 @@ function renderBlock(block: ProseBlock, idx: number) {
   }
   if (block.type === 'youtube') {
     return <YouTubeEmbed key={idx} videoId={block.videoId} caption={block.caption} />;
+  }
+  if (block.type === 'flow-steps') {
+    return <FlowSteps key={idx} steps={block.steps} />;
   }
   return null;
 }
