@@ -34,6 +34,15 @@ export const sessionsMfaModernAuthn: Lecture = {
       ],
     },
 
+    // Unit 1a — OIDC diagram/screenshot
+    {
+      id: "sessions-mfa-unit-3a",
+      type: "media",
+      kind: "image",
+      src: "/media/lectures/Screenshot 2026-06-16 at 18.00.53.png",
+      alt: "OIDC flow diagram",
+    },
+
     // Unit 1b — OIDC Providers
     {
       id: "sessions-mfa-unit-3b",
