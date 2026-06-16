@@ -320,11 +320,11 @@ export const sessionsMfaModernAuthn: Lecture = {
       id: "sessions-mfa-unit-7",
       type: "prose",
       title: "SMS OTP",
-      body: `**What it is:** A one-time code sent to your phone number via SMS.\n\n**How it works:** Server generates a random 6-digit code → sends via SMS → user enters it → server verifies and expires it.\n\n**Why it's popular:** Low friction — no app to install, works on any phone, widely understood by non-technical users.\n\n**The weakness — SIM swapping:**\nAn attacker calls your carrier, impersonates you, and transfers your phone number to their SIM. From that point, all SMS messages (including OTP codes) go to the attacker.\n\n**Verdict:**\n- ✅ Acceptable for consumer apps where UX friction matters\n- ❌ Avoid for high-security systems, admin access, or financial transactions\n- NIST SP 800-63B (2024 revision) no longer recommends SMS OTP as a primary second factor for Authenticator Assurance Level 2`,
+      body: `**What it is:** A one-time code sent to your phone number via SMS.\n\n**How it works:** Server generates a random 6-digit code → sends via SMS → user enters it → server verifies and expires it.\n\n**Why it's popular:** Low friction — no app to install, works on any phone, widely understood by non-technical users.\n\n**The weakness — SIM swapping:**\nAn attacker calls your carrier, impersonates you, and transfers your phone number to their SIM. From that point, all SMS messages (including OTP codes) go to the attacker.\n\n**Verdict:**\n- ✅ Acceptable for consumer apps where UX friction matters\n- ❌ Avoid for high-security systems, admin access, or financial transactions\n- NIST SP 800-63B-4 (2025) classifies SMS OTP as **RESTRICTED** — it's still permitted, but requires additional risk assessment and compensating controls. It is not outright banned.`,
       learnMore: [
         {
-          label: "NIST SP 800-63B — Digital Identity Guidelines",
-          url: "https://pages.nist.gov/800-63-3/sp800-63b.html",
+          label: "NIST SP 800-63B-4 — Digital Identity Guidelines (2025)",
+          url: "https://pages.nist.gov/800-63-4/",
         },
         {
           label: "Wired — The SIM Swap Hack That Changed Twitter Forever",
@@ -505,7 +505,7 @@ export const sessionsMfaModernAuthn: Lecture = {
       id: "sessions-mfa-unit-12",
       type: "prose",
       title: "References",
-      body: `**References:**\n\n- [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)\n- [RFC 6238 — TOTP](https://datatracker.ietf.org/doc/html/rfc6238)\n- [W3C WebAuthn Level 2](https://www.w3.org/TR/webauthn-2/)\n- [FIDO2 Overview — FIDO Alliance](https://fidoalliance.org/fido2/)\n- [NIST SP 800-63B — Digital Identity Guidelines](https://pages.nist.gov/800-63-3/sp800-63b.html)\n- [OWASP Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)\n- [passkeys.dev](https://passkeys.dev/)`,
+      body: `**References:**\n\n- [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)\n- [RFC 6238 — TOTP](https://datatracker.ietf.org/doc/html/rfc6238)\n- [W3C WebAuthn Level 2](https://www.w3.org/TR/webauthn-2/)\n- [FIDO2 Overview — FIDO Alliance](https://fidoalliance.org/fido2/)\n- [NIST SP 800-63B-4 — Digital Identity Guidelines (2025)](https://pages.nist.gov/800-63-4/)\n- [OWASP Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)\n- [passkeys.dev](https://passkeys.dev/)`,
     },
   ],
 };
