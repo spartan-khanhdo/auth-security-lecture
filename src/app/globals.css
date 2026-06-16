@@ -1248,6 +1248,8 @@ body::before {
   color: var(--text);
   margin-top: 12px;
   max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
   line-height: 1.65;
   text-wrap: pretty;
 }
