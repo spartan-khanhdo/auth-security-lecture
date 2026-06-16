@@ -17,10 +17,10 @@ export function FlowSteps({ steps }: FlowStepsProps) {
               <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[var(--primary-2)] text-[var(--bg)] text-xs font-bold shrink-0">
                 {i + 1}
               </span>
-              <p className="text-sm font-semibold text-[var(--text-strong)] leading-snug">
+              <p className="text-base font-semibold text-[var(--text-strong)] leading-snug">
                 {step.label}
               </p>
-              <p className="text-xs text-[var(--text-dim)] leading-relaxed">
+              <p className="text-sm text-[var(--text-dim)] leading-relaxed">
                 {step.description}
               </p>
             </div>

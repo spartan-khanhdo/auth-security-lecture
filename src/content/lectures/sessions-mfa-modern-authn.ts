@@ -333,12 +333,39 @@ export const sessionsMfaModernAuthn: Lecture = {
       ],
     },
 
-    // Unit 10 — Single Sign-On (SSO)
+    // Unit 10 — The Pain Without SSO + Core Idea (two-column)
     {
       id: "sessions-mfa-unit-10",
-      type: "prose",
+      type: "two-column",
       title: "Single Sign-On (SSO)",
-      body: `**What it is:** Log in once to an Identity Provider (IdP) → access multiple apps without re-authenticating.\n\n**How it works:**\n1. User visits App A → App A redirects to the IdP (e.g. Okta, Google Workspace, Azure AD)\n2. IdP authenticates the user (with MFA if configured)\n3. IdP issues an ID token / SAML assertion → App A trusts it\n4. User visits App B → App B redirects to the same IdP → IdP sees an active session → issues token without prompting again\n\n**When to use it:** Any company running multiple internal tools — one login for Jira, Slack, GitHub, your own apps. Users never manage per-app passwords; IT controls access centrally.\n\n**Trade-off:** The IdP becomes a single point of failure. If the IdP goes down, all SSO-protected apps become inaccessible.`,
+      ratio: "1:1",
+      left: {
+        id: "sessions-mfa-unit-10-left",
+        type: "prose",
+        body: `Imagine a company with 20 internal tools. Without SSO:\n\n- Users manage 20 separate credentials\n- Each app implements its own auth logic (and probably does it differently, or badly)\n- IT must manually provision/deprovision accounts on 20 systems when someone joins or leaves\n- Security audit is a nightmare — no single view of who has access to what\n\n**Core idea:** SSO lets a user authenticate once and gain access to multiple systems. The key insight: **separate Authentication from Authorization**. One trusted party answers "who are you?" — every app just asks that party instead of managing it themselves.`,
+      },
+      right: {
+        id: "sessions-mfa-unit-10-right",
+        type: "media",
+        kind: "image",
+        src: "/media/lectures/why_SSO.png",
+        alt: "Diagram comparing the complexity of managing separate logins vs. a single SSO identity provider",
+      },
+    },
+
+    // Unit 10c — Three Actors + SSO Flow + Trade-off
+    {
+      id: "sessions-mfa-unit-10c",
+      type: "prose",
+      title: "How SSO Works",
+      body: `**Three actors:**\n\n- **User** — wants access to an app; authenticates once with the IdP, never again per-app\n- **Identity Provider (IdP)** — the source of truth (Okta, Google Workspace, Azure AD); issues a signed token after authentication\n- **Service Provider (SP)** — the app the user wants to use; trusts the IdP's token instead of managing credentials itself`,
+      image: { src: '/media/lectures/SSO.webp', alt: 'SSO flow diagram — user, service provider, SAML identity provider, and database' },
+      callouts: [
+        {
+          tone: 'warn',
+          text: '**Trade-off:** The IdP is a single point of failure. If it goes down, every SSO-protected app becomes inaccessible. Mitigate with local fallback admin accounts, a high-SLA IdP, and dedicated IdP health monitoring.',
+        },
+      ],
       learnMore: [
         {
           label: "Okta — What is SSO?",
@@ -356,7 +383,7 @@ export const sessionsMfaModernAuthn: Lecture = {
       id: "sessions-mfa-unit-11",
       type: "prose",
       title: "SAML vs OIDC",
-      body: `Two protocols that enable SSO. You'll encounter both — SAML in enterprise, OIDC in modern apps.\n\n| | SAML 2.0 | OIDC |\n|---|---|---|\n| **Year** | 2005 | 2014 |\n| **Format** | XML assertions | JSON / JWT |\n| **Transport** | Browser POST (form) | HTTP redirect + JSON API |\n| **Mobile friendly** | ❌ | ✅ |\n| **Developer experience** | Complex XML, certificate management | Simple, libraries everywhere |\n| **Enterprise adoption** | Very high — Salesforce, Workday | Growing rapidly |\n| **Use when** | Legacy enterprise vendor requires it | New systems, anything modern |\n\n**Rule of thumb:** If the vendor only supports SAML (common in enterprise SaaS), use SAML. For anything you control, use OIDC.`,
+      body: `Two protocols power SSO. You'll encounter both — SAML in enterprise, OIDC everywhere modern.\n\n| | SAML 2.0 | OIDC |\n|---|---|---|\n| **Year** | 2005 | 2014 |\n| **Format** | XML assertions | JSON / JWT |\n| **Transport** | Browser POST (form) | HTTP redirect + JSON API |\n| **Mobile friendly** | ❌ | ✅ |\n| **Developer experience** | Complex XML, certificate management | Simple, libraries everywhere |\n| **Enterprise adoption** | Very high — Salesforce, Workday | Growing rapidly |\n| **Use when** | Legacy enterprise vendor requires it | New systems, anything modern |\n\n**What a SAML assertion looks like:**\n\n\`\`\`xml\n<Assertion>\n  <Subject>user@company.com</Subject>\n  <Conditions NotBefore="..." NotOnOrAfter="..." />\n  <AttributeStatement>\n    <Attribute Name="role">engineer</Attribute>\n  </AttributeStatement>\n</Assertion>\n\`\`\`\n\n**Rule of thumb:** If the vendor only supports SAML, use SAML. For anything you control, prefer OIDC.`,
       learnMore: [
         {
           label: "Okta — SAML vs OIDC",
