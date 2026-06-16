@@ -368,9 +368,15 @@ export default function LandingHero() {
                     color: "#fff",
                     flexShrink: 0,
                     background: idx === 0 ? "var(--primary)" : "var(--pink)",
+                    overflow: "hidden",
                   }}
                 >
-                  {getInitials(a.name)}
+                  {a.avatarPath ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={a.avatarPath} alt={a.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    getInitials(a.name)
+                  )}
                 </span>
                 <span
                   style={{
