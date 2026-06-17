@@ -12,15 +12,15 @@ export function FlowSteps({ steps }: FlowStepsProps) {
         {steps.map((step, i) => (
           <div key={i} className="flex items-stretch flex-1 min-w-0">
             {/* Step card */}
-            <div className="flex-1 flex flex-col gap-2 p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)]">
+            <div className="flex-1 flex flex-col gap-2 p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)] overflow-hidden min-w-0">
               {/* Step number badge */}
               <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[var(--primary-2)] text-[var(--bg)] text-xs font-bold shrink-0">
                 {i + 1}
               </span>
-              <p className="text-base font-semibold text-[var(--text-strong)] leading-snug">
+              <p className="text-base font-semibold text-[var(--text-strong)] leading-snug [overflow-wrap:anywhere]">
                 {step.label}
               </p>
-              <p className="text-sm text-[var(--text-dim)] leading-relaxed">
+              <p className="text-sm text-[var(--text-dim)] leading-relaxed [overflow-wrap:anywhere]">
                 {step.description}
               </p>
             </div>

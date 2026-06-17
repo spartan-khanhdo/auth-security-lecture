@@ -1203,7 +1203,7 @@ body::before {
     width: min(1200px, 100%);
   }
   .code-block-wrap pre {
-    font-size: 1rem !important;
+    font-size: 1.0625rem !important;
   }
 }
 
@@ -1212,7 +1212,7 @@ body::before {
     width: min(1400px, 100%);
   }
   .code-block-wrap pre {
-    font-size: 1.0625rem !important;
+    font-size: 1.125rem !important;
   }
 }
 

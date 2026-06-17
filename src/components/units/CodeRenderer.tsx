@@ -59,7 +59,7 @@ export default function CodeRenderer({ unit }: CodeRendererProps) {
         style={vscDarkPlus}
         customStyle={{
           borderRadius: '0.5rem',
-          fontSize: '0.875rem',
+          fontSize: '1rem',
           margin: 0,
         }}
         showLineNumbers

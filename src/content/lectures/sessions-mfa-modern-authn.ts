@@ -125,20 +125,20 @@ export const sessionsMfaModernAuthn: Lecture = {
           type: 'flow-steps',
           steps: [
             {
-              label: 'Register OIDC Issuer in AWS IAM',
-              description: 'AWS trusts GitHub\'s issuer (token.actions.githubusercontent.com) as an external identity provider.',
+              label: 'Register GitHub as OIDC issuer',
+              description: 'AWS IAM trusts GitHub\'s issuer (token.actions.githubusercontent.com) as an external identity provider.',
             },
             {
               label: 'GitHub mints a signed JWT',
               description: 'A short-lived token is issued to the workflow run. The sub claim encodes the exact repo and branch.',
             },
             {
-              label: 'AssumeRoleWithWebIdentity',
+              label: 'Assume role via Web Identity',
               description: 'AWS validates the JWT signature via GitHub\'s JWKS and checks aud/sub against the IAM role trust policy.',
             },
             {
-              label: '15-min credentials returned',
-              description: 'AWS issues temporary credentials. No long-lived secret exists anywhere — not in Secrets, not on disk.',
+              label: '15-min credentials issued',
+              description: 'AWS returns temporary credentials. No long-lived secret exists anywhere — not in Secrets, not on disk.',
             },
           ],
         },
