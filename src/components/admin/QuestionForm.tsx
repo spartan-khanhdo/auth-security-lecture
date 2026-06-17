@@ -11,7 +11,7 @@ interface QuestionFormProps {
 }
 
 const LECTURE_OPTIONS: { value: LectureSlug; label: string }[] = [
-  { value: "oauth-authn", label: "The Foundation: Stateless, Passwords & JWT" },
+  { value: "password-jwt-hashing", label: "The Foundation: Stateless, Passwords & JWT" },
   { value: "oauth", label: "OAuth: Delegated Authorization" },
   { value: "sessions-mfa-modern-authn", label: "Sessions, MFA & Modern AuthN" },
   { value: "service-to-service", label: "Service-to-Service Auth" },
@@ -47,7 +47,7 @@ const labelStyle: React.CSSProperties = {
 
 export function QuestionForm({ question, onSave, onClose }: QuestionFormProps) {
   const [lectureSlug, setLectureSlug] = useState<LectureSlug>(
-    question?.lecture_slug ?? "oauth-authn"
+    question?.lecture_slug ?? "password-jwt-hashing"
   );
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">(
     question?.difficulty ?? "easy"
@@ -64,7 +64,7 @@ export function QuestionForm({ question, onSave, onClose }: QuestionFormProps) {
 
   // Reset form when question prop changes
   useEffect(() => {
-    setLectureSlug(question?.lecture_slug ?? "oauth-authn");
+    setLectureSlug(question?.lecture_slug ?? "password-jwt-hashing");
     setDifficulty(question?.difficulty ?? "easy");
     setQuestionText(question?.question ?? "");
     setOptions(question?.options ?? ["", "", "", ""]);

@@ -53,7 +53,7 @@ export default function CodeRenderer({ unit }: CodeRendererProps) {
   const annotations = unit.annotations ?? [];
 
   return (
-    <div className="max-w-5xl mx-auto w-full space-y-3">
+    <div className="max-w-5xl mx-auto w-full space-y-3 code-block-wrap">
       <SyntaxHighlighter
         language={language}
         style={vscDarkPlus}

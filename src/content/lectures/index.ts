@@ -18,7 +18,7 @@ export const LECTURES: Lecture[] = [
 ];
 
 export const LECTURES_BY_SLUG: Record<LectureSlug, Lecture> = {
-  "oauth-authn": oauthAuthn,
+  "password-jwt-hashing": oauthAuthn,
   "oauth": oauthLecture,
   "sessions-mfa-modern-authn": sessionsMfaModernAuthn,
   "service-to-service": serviceToService,

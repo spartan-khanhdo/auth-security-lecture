@@ -59,7 +59,7 @@ export default function PasswordProgression() {
             />
 
             {/* Code column */}
-            <div className="min-w-0">
+            <div className="min-w-0 code-block-wrap">
               <SyntaxHighlighter
                 language="python"
                 style={vscDarkPlus}

@@ -28,7 +28,7 @@ interface QuestionTableProps {
 
 const LECTURE_TABS: Array<{ value: string; label: string }> = [
   { value: "all", label: "All" },
-  { value: "oauth-authn", label: "Foundation" },
+  { value: "password-jwt-hashing", label: "Foundation" },
   { value: "oauth", label: "OAuth" },
   { value: "sessions-mfa-modern-authn", label: "Sessions / MFA" },
   { value: "service-to-service", label: "S2S Auth" },

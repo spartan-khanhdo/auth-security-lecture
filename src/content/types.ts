@@ -206,7 +206,7 @@ export interface TwoColumnUnit extends BaseUnit {
 export type Unit = ProseUnit | DiagramUnit | DemoUnit | CodeUnit | QuizUnit | MediaUnit | TwoColumnUnit | CheckpointUnit | SectionUnit | TakeawaysUnit;
 
 export type LectureSlug =
-  | 'oauth-authn'
+  | 'password-jwt-hashing'
   | 'oauth'
   | 'sessions-mfa-modern-authn'
   | 'service-to-service'

@@ -1,7 +1,7 @@
 import type { Lecture } from "@/content/types";
 
 export const oauthAuthn: Lecture = {
-  slug: "oauth-authn",
+  slug: "password-jwt-hashing",
   title: "The Foundation: Stateless, Passwords & JWT",
   subtitle:
     "Build from the simplest possible auth system up to the full JWT lifecycle — then see how OAuth delegates access without sharing credentials.",
@@ -410,146 +410,149 @@ suspend fun UserRepository.invalidateAllSessions(userId: UUID) = transaction(db.
       type: "checkpoint",
       title: "Checkpoint",
       questions: [
-    // question 1 — JWT storage in SPA
-    {
-      id: "oauth-authn-quiz-storage",
-      type: "quiz",
-      difficulty: "medium",
-      title: "Where Should You Store a JWT Access Token in a SPA?",
-      question:
-        "Where should you store a JWT access token in a Single Page Application (SPA)?",
-      choices: [
+        // Q1 — AuthN vs AuthZ
         {
-          id: "a",
-          label: "`localStorage` — persists across page refreshes, easy to access",
+          id: "oauth-authn-quiz-authn-authz",
+          type: "quiz",
+          difficulty: "easy",
+          title: "AuthN vs AuthZ",
+          question: "Which statement correctly distinguishes Authentication (AuthN) from Authorization (AuthZ)?",
+          choices: [
+            { id: "a", label: "AuthN decides what you can do; AuthZ verifies who you are." },
+            { id: "b", label: "AuthN verifies who you are; AuthZ decides what you are allowed to do." },
+            { id: "c", label: "Both verify identity — AuthZ just happens later in the request lifecycle." },
+            { id: "d", label: "AuthN runs on the client; AuthZ runs on the server." },
+          ],
+          correctChoiceId: "b",
+          explanation: 'AuthN answers "who are you?" — verifying identity via credentials. AuthZ answers "what can you do?" — checking permissions after identity is established. Example: logging in is AuthN; being allowed to delete a user record is AuthZ.',
+          points: 1,
         },
-        {
-          id: "b",
-          label: "`sessionStorage` — cleared when the tab closes, slightly safer",
-        },
-        {
-          id: "c",
-          label: "JavaScript memory (a variable or closure) — lost on refresh, requires silent refresh",
-        },
-        {
-          id: "d",
-          label: "An HttpOnly cookie — JS cannot read it at all",
-        },
-      ],
-      correctChoiceId: "c",
-      explanation:
-        "JavaScript memory is the correct choice for access tokens in SPAs. `localStorage` and `sessionStorage` are both accessible to any JS running on the page — one XSS vulnerability and your token is gone. An HttpOnly cookie is the right place for the *refresh token*, not the short-lived access token. The access token lives in memory and is silently replaced when it expires.",
-      points: 1,
-    },
 
-    // question 2 — JWT tampering
-    {
-      id: "oauth-authn-quiz-tampering",
-      type: "quiz",
-      difficulty: "medium",
-      title: "What Happens When a JWT Is Tampered With?",
-      question:
-        "An attacker intercepts a JWT and changes the `role` claim from `\"user\"` to `\"admin\"` in the payload. What happens when the server receives it?",
-      choices: [
+        // Q2 — Why not store passwords in plaintext
         {
-          id: "a",
-          label: "The server accepts it — the payload is just Base64, not encrypted",
+          id: "oauth-authn-quiz-plaintext",
+          type: "quiz",
+          difficulty: "easy",
+          title: "Why Not Store Passwords in Plaintext?",
+          question: "A database containing plaintext passwords is breached. What is the immediate consequence that hashing prevents?",
+          choices: [
+            { id: "a", label: "Attackers can read the passwords — but can't log in because the session tokens are separate." },
+            { id: "b", label: "Attackers can immediately use the passwords to log into your app and every other site where the user reused that password." },
+            { id: "c", label: "Nothing — modern TLS in transit protects passwords at rest too." },
+            { id: "d", label: "Attackers can read the passwords but can't reverse-engineer which user they belong to." },
+          ],
+          correctChoiceId: "b",
+          explanation: "Plaintext in a breach means instant, full credential exposure — and because most users reuse passwords, it cascades to their other accounts. Hashing means an attacker gets a hash, not a password. They must crack it (computationally expensive with bcrypt/Argon2) before they can use it.",
+          points: 1,
         },
-        {
-          id: "b",
-          label: "The server rejects it — the signature no longer matches the tampered payload",
-        },
-        {
-          id: "c",
-          label: "The server accepts it only if the `alg` header is `\"none\"`",
-        },
-        {
-          id: "d",
-          label: "It depends on whether the server checks the `exp` claim",
-        },
-      ],
-      correctChoiceId: "b",
-      explanation:
-        "The signature is computed over the original header + payload. Any change to the payload — even one character — produces a completely different hash. The server recomputes the signature from the received header and payload, compares it to the included signature, and they won't match. However — if the server doesn't whitelist algorithms and an attacker sets `alg: none`, some vulnerable libraries skip verification entirely. This is the `alg:none` attack.",
-      points: 1,
-    },
 
-    // question 3 — JWT payload safety
-    {
-      id: "oauth-authn-quiz-payload",
-      type: "quiz",
-      difficulty: "easy",
-      title: "What Should You Never Put in a JWT Payload?",
-      question: "Which of the following is safe to include in a JWT payload?",
-      choices: [
+        // Q3 — bcrypt work factor
         {
-          id: "a",
-          label: "The user's plaintext password",
+          id: "oauth-authn-quiz-bcrypt",
+          type: "quiz",
+          difficulty: "medium",
+          title: "bcrypt Work Factor",
+          question: "What does increasing the bcrypt work factor (cost) from 10 to 12 actually do?",
+          choices: [
+            { id: "a", label: "It makes the hash longer and therefore harder to store." },
+            { id: "b", label: "It makes hashing 4× slower — making brute-force attacks 4× more expensive." },
+            { id: "c", label: "It adds 2 extra salt bytes to prevent rainbow table attacks." },
+            { id: "d", label: "It switches bcrypt to use a different underlying hashing algorithm." },
+          ],
+          correctChoiceId: "b",
+          explanation: "The bcrypt work factor is an exponent: cost 10 = 2¹⁰ = 1024 iterations; cost 12 = 2¹² = 4096 iterations. Each increment of 1 doubles the computation time. A higher cost slows down both legitimate logins (milliseconds) and brute-force attacks (seconds to years per hash). Tune it so hashing takes ~100–300ms on your hardware.",
+          points: 1,
         },
-        {
-          id: "b",
-          label: "The user's credit card number",
-        },
-        {
-          id: "c",
-          label: "The user's role (`\"admin\"`, `\"viewer\"`)",
-        },
-        {
-          id: "d",
-          label: "The user's full home address",
-        },
-      ],
-      correctChoiceId: "c",
-      explanation:
-        "Roles and permission claims are exactly what JWTs are designed to carry — any service that holds the public key can verify the claim without a DB call. The other three are sensitive PII or secrets. **JWT payloads are Base64URL-encoded, not encrypted** — anyone who intercepts the token can read the payload. A JWT is a signed envelope, not a locked safe. Never put passwords, financial data, health records, or government IDs in a JWT payload.",
-      points: 1,
-    },
 
-    // question 4
-    {
-      id: "oauth-authn-unit-7",
-      type: "quiz",
-      difficulty: "easy",
-      title: "AuthN vs AuthZ",
-      question:
-        "What is the difference between Authentication (AuthN) and Authorization (AuthZ)? Give a one-sentence example of each.",
-      choices: [
-        { id: "a", label: "AuthN is about what you can do; AuthZ is about who you are." },
+        // Q4 — stateless vs stateful
         {
-          id: "b",
-          label: "AuthN verifies who you are; AuthZ determines what you are allowed to do.",
+          id: "oauth-authn-quiz-stateless",
+          type: "quiz",
+          difficulty: "medium",
+          title: "Stateless vs Stateful Sessions",
+          question: "Your app uses stateless JWTs. A user clicks 'Log out everywhere'. What problem do you immediately face?",
+          choices: [
+            { id: "a", label: "No problem — JWTs expire on their own so all sessions end eventually." },
+            { id: "b", label: "You cannot revoke the issued JWTs because the server holds no session state to invalidate." },
+            { id: "c", label: "The user's browser clears the token automatically on logout." },
+            { id: "d", label: "You must rotate the asymmetric key pair, invalidating all tokens globally." },
+          ],
+          correctChoiceId: "b",
+          explanation: "This is the core stateless trade-off: the server has no record of which tokens are active, so there is nothing to delete. Clicking 'logout' on the client just removes the local copy — any other copy of the same token remains valid until expiry. Solutions: short TTL (accept the risk), Redis denylist, or token versioning.",
+          points: 1,
         },
-        { id: "c", label: "Both verify identity, but at different layers of the stack." },
-        { id: "d", label: "AuthN happens server-side; AuthZ happens client-side." },
-      ],
-      correctChoiceId: "b",
-      explanation:
-        'AuthN — "Are you Truc?" → correct password + OTP ✅. AuthZ — "Can Truc delete users?" → No, Truc is a viewer, not an admin ❌.',
-      points: 1,
-    },
 
-    {
-      id: "oauth-authn-unit-10-quiz",
-      type: "quiz",
-      difficulty: "hard",
-      title: "JWT Revocation Strategies",
-      question:
-        "If I steal your JWT, I can impersonate you until it expires. Name two server-side strategies to revoke it earlier. What is the trade-off of each?",
-      choices: [
-        { id: "a", label: "Client-side token deletion only." },
+        // Q5 — JWT structure
         {
-          id: "b",
-          label:
-            "Redis denylist of `jti` values (trade-off: ~1–2ms lookup overhead per request, gives up some statelessness) and token versioning via a `ver` claim incremented per user on a security event (trade-off: DB/cache lookup per request, revokes ALL tokens for that user at once).",
+          id: "oauth-authn-quiz-jwt-structure",
+          type: "quiz",
+          difficulty: "easy",
+          title: "JWT Structure",
+          question: "A JWT consists of three Base64URL-encoded parts separated by dots. What are they?",
+          choices: [
+            { id: "a", label: "Encrypted payload · signature · expiry timestamp" },
+            { id: "b", label: "Header · payload · signature" },
+            { id: "c", label: "Algorithm · claims · public key" },
+            { id: "d", label: "Version · body · checksum" },
+          ],
+          correctChoiceId: "b",
+          explanation: "Header (algorithm + token type) · Payload (claims: sub, exp, roles, etc.) · Signature (HMAC or RSA over header.payload). The payload is only Base64URL-encoded — not encrypted. Anyone who gets the token can read the claims. The signature ensures they cannot be tampered with.",
+          points: 1,
         },
-        { id: "c", label: "Change the user's password and hope tokens expire soon." },
-        { id: "d", label: "Rotate the signing key every minute." },
-      ],
-      correctChoiceId: "b",
-      explanation:
-        "Redis denylist allows selective per-token revocation with auto-expiry but adds a per-request lookup. Token versioning is simpler but is all-or-nothing per user. A third option is just relying on short TTL (\"pseudo-revocation\") — limits exposure to the AT lifetime without any state.",
-      points: 1,
-    },
+
+        // Q6 — JWT payload safety
+        {
+          id: "oauth-authn-quiz-payload",
+          type: "quiz",
+          difficulty: "easy",
+          title: "What Should You Never Put in a JWT Payload?",
+          question: "Which of the following is safe to include in a JWT payload?",
+          choices: [
+            { id: "a", label: "The user's plaintext password" },
+            { id: "b", label: "The user's credit card number" },
+            { id: "c", label: "The user's role (`\"admin\"`, `\"viewer\"`)" },
+            { id: "d", label: "The user's full home address" },
+          ],
+          correctChoiceId: "c",
+          explanation: "Roles and permission claims are exactly what JWTs are designed to carry — any service with the public key can verify the claim without a DB call. JWT payloads are Base64URL-encoded, not encrypted — anyone who gets the token can read the payload. Never put passwords, financial data, PII, or secrets in a JWT payload.",
+          points: 1,
+        },
+
+        // Q7 — JWT storage in SPA
+        {
+          id: "oauth-authn-quiz-storage",
+          type: "quiz",
+          difficulty: "medium",
+          title: "Where Should You Store a JWT Access Token in a SPA?",
+          question: "Where should you store a JWT access token in a Single Page Application (SPA)?",
+          choices: [
+            { id: "a", label: "`localStorage` — persists across page refreshes, easy to access" },
+            { id: "b", label: "`sessionStorage` — cleared when the tab closes, slightly safer" },
+            { id: "c", label: "JavaScript memory (a variable or closure) — lost on refresh, requires silent refresh" },
+            { id: "d", label: "An HttpOnly cookie — JS cannot read it at all" },
+          ],
+          correctChoiceId: "c",
+          explanation: "JavaScript memory is the correct choice for access tokens. `localStorage` and `sessionStorage` are readable by any JS on the page — one XSS vulnerability and your token is gone. An HttpOnly cookie is the right place for the *refresh token*. The access token lives in memory and is silently refreshed when it expires.",
+          points: 1,
+        },
+
+        // Q8 — JWT revocation
+        {
+          id: "oauth-authn-quiz-revocation",
+          type: "quiz",
+          difficulty: "hard",
+          title: "JWT Revocation Strategies",
+          question: "An attacker steals a user's JWT access token (15-minute TTL). Which server-side approach lets you invalidate it immediately without abandoning statelessness entirely?",
+          choices: [
+            { id: "a", label: "Delete the token from localStorage on the server side." },
+            { id: "b", label: "Store the token's `jti` in a Redis denylist with a TTL matching the token's expiry — reject any request whose `jti` is in the list." },
+            { id: "c", label: "Immediately rotate the JWT signing key — all tokens become invalid." },
+            { id: "d", label: "Set the token's `exp` claim to a past timestamp." },
+          ],
+          correctChoiceId: "b",
+          explanation: "A Redis denylist stores only the `jti` (JWT ID) of revoked tokens, with a TTL so entries auto-expire. Each request does a fast O(1) Redis lookup — ~1–2ms overhead. Rotating the signing key is nuclear: it invalidates *all* sessions globally. Modifying the `exp` claim would break the signature. Deleting from localStorage only removes the client copy — the token is still valid on other devices.",
+          points: 1,
+        },
 
       ], // end questions
     },  // end checkpoint
