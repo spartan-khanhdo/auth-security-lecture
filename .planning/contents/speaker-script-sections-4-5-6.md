@@ -60,14 +60,16 @@
 
 **CHUYỂN Ý:** "Vậy sửa thế nào? Đặt một Auth Server vào giữa."
 
-### SLIDE 4.2 — "Auth Server Issues the Tokens" (kiến trúc nền) `~1.5 phút`
-**MÀN HÌNH:** 3 vai (Service A / Auth Server / Service B) + sơ đồ 3 bước.
+### SLIDE 4.2 — "Auth Server Issues the Tokens" (kiến trúc nền) `~2 phút`
+**MÀN HÌNH:** 3 vai (Service A / Auth Server / Service B) + sơ đồ 5 bước (kèm JWKS).
 
 **NÓI:**
 - "Lời giải: **không ai được tin theo vị trí — ai cũng phải cầm token do Auth Server phát.**"
 - **CHỈ 3 vai:** "**Service A** là caller. **Auth Server** xác minh và phát token. **Service B** validate token rồi phục vụ."
-- **CHỈ 4 bước:** "A xác thực với Auth Server → nhận access token (JWT) → gọi B kèm `Authorization: Bearer` → B validate."
-- **Câu chốt:** "**Service B validate JWT *local* — không phải gọi ngược về Auth Server mỗi request.** Đó là cái hay của JWT stateless."
+- **CHỈ sơ đồ, nhấn mạnh AI LOGIN:** "Để ý: **chỉ Service A — bên *gọi* — mới login** (bước 1: gửi `client_id + secret`) để **lấy token** (bước 2). **Service B — bên *kiểm* — KHÔNG login.**"
+- **CHỈ nhánh JWKS (đường nét đứt):** "Auth Server publish **public key** ở `jwks.json` — endpoint **công khai, không cần đăng nhập**. Service B chỉ **tải về một lần rồi cache** (bước 3)."
+- **CHỈ bước 4–5:** "A gọi B kèm `Authorization: Bearer` (bước 4). B **kiểm chữ ký *local* bằng key đã cache** (bước 5) — **không gọi ngược về Auth Server mỗi request.**"
+- **Câu chốt:** "**Chỉ bên gọi mới login để lấy token; bên kiểm chỉ tải public key rồi verify local.** Đó là cái hay của JWT stateless — không nghẽn ở Auth Server."
 
 **CHUYỂN Ý:** "Service 'đăng nhập' kiểu gì khi không có người? Đó là Client Credentials."
 
@@ -132,6 +134,7 @@
 ## PHẦN C — Q&A Section 4
 
 - **Vì sao đổi secret lấy token chứ không gửi secret thẳng?** → Để Service B không bao giờ phải biết/kiểm secret. Nó chỉ kiểm một token tự chứa, ngắn hạn, hết hạn nhanh nếu lộ.
+- **Service B có phải login vào Auth Server không?** → **Không.** Chỉ **bên gọi (Service A)** mới login (Client Credentials) để **lấy token**. Bên kiểm (Service B) chỉ **tải public key (JWKS) — endpoint công khai, không cần credential — về cache một lần**, rồi **verify token local** mỗi request. Service B cũng không "lấy thông tin user" từ Auth Server: mọi claim (`sub`/`aud`/`scope`) đã nằm sẵn trong JWT; public key chỉ để xác nhận token thật, không bị giả mạo.
 - **JWKS (JSON Web Key Set) là gì?** → Danh sách **public key** Auth Server công bố công khai (file JSON ở `/.well-known/jwks.json`). JWT ký bằng **private key** (chỉ Auth Server giữ); Service B fetch **public key** từ JWKS để **kiểm chữ ký** — verify được nhưng không ký giả được. Mỗi key có `kid`; header JWT cũng ghi `kid` → Service B chọn đúng key. **Lợi ích:** Auth Server **xoay vòng (rotate) key** mà không service nào phải hardcode key hay deploy lại. *(Chính là `jwks_uri` mình đã nói ở phần OIDC — cùng một ý tưởng, dùng lại cho M2M.)*
 - **Least privilege (đặc quyền tối thiểu) là gì?** → Nguyên tắc: **cấp đúng quyền tối thiểu cần để làm việc, không hơn.** Vd token chỉ mang `scope: orders.read` thì **không bao giờ ghi/xóa được** — lộ cũng chỉ đọc. Mục tiêu: **giảm "blast radius"** — bị chiếm thì thiệt hại bị giới hạn đúng trong quyền được cấp. Áp khắp nơi: scope của token, DB user read-only (chống SQLi), role trong RBAC/ABAC, IAM role khóa đúng resource (như `sub` khóa repo+branch ở OIDC→AWS).
 - **Sao token ngắn hạn 5–15 phút?** → Không có refresh phức tạp cho M2M; lộ token thì hết hạn nhanh, và service xin token mới rẻ.

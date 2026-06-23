@@ -65,11 +65,16 @@ export const serviceToService: Lecture = {
         id: "service-to-service-step-2-right",
         type: "diagram",
         mermaid: `graph TD
-    SA["Service A<br/>caller"] -->|"1. authenticate"| AS["Auth Server<br/>issues tokens"]
+    SA["Service A<br/>caller"] -->|"1. login: client_id + secret"| AS["Auth Server<br/>issues tokens"]
     AS -->|"2. access token (JWT)"| SA
-    SA -->|"3. Bearer token"| SB["Service B<br/>validates + authorizes"]`,
+    AS -.->|"publishes public keys"| J[".well-known/jwks.json<br/>public · no login"]
+    J -.->|"3. fetch once + cache"| SB["Service B<br/>validator"]
+    SA -->|"4. Bearer token (JWT)"| SB
+    SB --> V["5. verify signature locally<br/>no call back per request"]
+    style J fill:#1f2937,stroke:#f59e0b,color:#ffffff
+    style V fill:#064e3b,stroke:#10b981,color:#ffffff`,
         caption:
-          "Three roles. The Auth Server only mints tokens; Service B verifies them on its own.",
+          "Only the caller logs in. Service B just fetches the public keys (JWKS) once and verifies every token locally — no call back to the Auth Server per request.",
       },
     },
 
