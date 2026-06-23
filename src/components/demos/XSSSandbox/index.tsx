@@ -14,9 +14,22 @@ function escapeHtml(input: string): string {
 }
 
 const SAMPLE_PAYLOADS = [
-  { label: "<script> tag", value: "<script>alert('XSS')</script>" },
-  { label: "img onerror", value: "<img src=x onerror=alert(1)>" },
-  { label: "svg onload", value: "<svg onload=alert(document.domain)>" },
+  {
+    label: "<script> tag",
+    value: `<script>document.body.style.background='#7f1d1d';document.body.insertAdjacentHTML('beforeend','<div style="color:#fff;font-weight:700;margin-top:8px">💥 injected &lt;script&gt; ran</div>')</script>`,
+  },
+  {
+    label: "img onerror",
+    value: `<img src=x onerror="document.body.style.background='#7f1d1d';this.insertAdjacentHTML('afterend','<div style=color:#fff;font-weight:700;margin-top:8px>💥 onerror handler fired</div>')">`,
+  },
+  {
+    label: "svg onload",
+    value: `<svg onload="document.body.style.background='#7f1d1d';document.body.insertAdjacentHTML('beforeend','<div style=color:#fff;font-weight:700;margin-top:8px>💥 svg onload fired</div>')"></svg>`,
+  },
+  {
+    label: "alert()",
+    value: `<script>alert('XSS')</script>`,
+  },
 ];
 
 function makeUnsanitizedDoc(input: string): string {
@@ -66,7 +79,7 @@ export default function XSSSandbox() {
       title="XSS Sandbox"
       subtitle="Type an HTML payload to see it execute unsanitized vs rendered safely"
       onReset={input ? handleReset : undefined}
-      footerNote="Both iframes use sandbox='allow-scripts' without allow-same-origin, so injected scripts run in a null origin and cannot reach window.parent or the parent page's cookies. In a real app, never inject user content without escaping it."
+      footerNote="Both iframes use sandbox='allow-scripts allow-modals' without allow-same-origin, so injected scripts run in a null origin and cannot reach window.parent or the parent page's cookies. In a real app, never inject user content without escaping it."
     >
       {/* Input */}
       <div className="flex flex-col gap-2 mb-3">
@@ -108,13 +121,13 @@ export default function XSSSandbox() {
           <iframe
             key={`unsafe-${input}`}
             srcDoc={makeUnsanitizedDoc(input)}
-            sandbox="allow-scripts"
+            sandbox="allow-scripts allow-modals"
             className="w-full rounded-xl border border-[var(--red)]/30 bg-[var(--code-bg)]"
             style={{ height: 130 }}
             title="Unsanitized XSS demo"
           />
           <p className="text-xs text-[var(--text-faint)]">
-            User content is injected directly into the DOM. Scripts execute, images trigger event handlers, and SVG onload fires.
+            User content is injected directly into the DOM. The script runs immediately — here it paints the frame red and writes a banner; a real attacker would steal cookies or tokens instead.
           </p>
         </div>
 
@@ -127,7 +140,7 @@ export default function XSSSandbox() {
           <iframe
             key={`safe-${input}`}
             srcDoc={makeSanitizedDoc(input)}
-            sandbox="allow-scripts"
+            sandbox="allow-scripts allow-modals"
             className="w-full rounded-xl border border-[var(--green)]/30 bg-[var(--code-bg)]"
             style={{ height: 130 }}
             title="Sanitized XSS demo"
