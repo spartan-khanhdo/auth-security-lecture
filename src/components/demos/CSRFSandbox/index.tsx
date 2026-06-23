@@ -113,7 +113,7 @@ export default function CSRFSandbox() {
           <iframe
             key={`same-${sameSite}`}
             srcDoc={sameOriginDoc}
-            sandbox="allow-scripts"
+            sandbox="allow-scripts allow-forms"
             className="w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--code-bg)]"
             style={{ height: 160 }}
             title="Same-origin CSRF form"
@@ -129,7 +129,7 @@ export default function CSRFSandbox() {
           <iframe
             key={`cross-${sameSite}`}
             srcDoc={crossSiteDoc}
-            sandbox="allow-scripts"
+            sandbox="allow-scripts allow-forms"
             className="w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--code-bg)]"
             style={{ height: 160 }}
             title="Cross-site CSRF form"
