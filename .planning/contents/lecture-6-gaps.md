@@ -1,52 +1,18 @@
 # Lecture 6 — What's Missing: Fill These Gaps
 
-> Structure follows source §5.1–5.3, **8 steps**. Each `##` block maps 1:1 to a unit in
+> Structure follows source §5.2–5.3, **6 steps**. Each `##` block maps 1:1 to a unit in
 > `src/content/lectures/gaps.ts`. Concept steps are **two-column** (prose left, diagram
 > right) with a `section` kicker (e.g. "§ 5.2 · CSRF"); the RBAC explanation is split
 > into a full-width prose + a full-width diagram so the model picture renders large.
 >
-> Covers three topics that don't fit neatly into Lectures 1–5 but come up constantly:
-> the OIDC identity layer, CSRF, and RBAC vs ABAC.
+> Covers two topics that don't fit neatly into Lectures 1–5 but come up constantly:
+> CSRF, and RBAC vs ABAC. (OIDC / the identity layer was moved up into the OIDC block
+> presented with the Sessions & MFA lecture — removed here to avoid duplication.)
 >
 > **Demos:** trimmed to a single "hero" demo (CSRF Sandbox) for the live 45-minute slot.
 > RBACPlayground was removed from the deck.
 
-## Step 1 — 5.1 OIDC: OAuth Authorizes, OIDC Identifies
-**type:** two-column (prose + diagram) · **section:** § 5.1 · OpenID Connect
-
-**Left (prose):** OAuth = authorization, OIDC = identity; OIDC is a thin layer adding the **ID token** (a JWT: `sub`, `email`, `name`); keywords; "Login with Google/GitHub/Microsoft" = OIDC; + danger callout *"never use the ID token as an API bearer token."*
-
-**Right (diagram) — Login-with-Google flow:**
-
-```mermaid
-graph TD
-    U["User clicks<br/>Login with Google"] --> P["Google · OIDC Provider<br/>authenticates user"]
-    P -->|"ID token (JWT)"| APP["Your App<br/>who logged in?<br/>sub · email · name"]
-    P -->|"access token"| API["Google APIs<br/>call on user's behalf"]
-    style APP fill:#1f2937,stroke:#10b981,color:#ffffff
-```
-
----
-
-## Step 2 — 5.1 OIDC: One Difference, Zero Hardcoding
-**type:** two-column (prose + diagram) · **section:** § 5.1 · OpenID Connect
-
-**Left (prose):** one-line difference table (OAuth = authorization / access token; OIDC = authentication / access + ID token); the discovery endpoint `/.well-known/openid-configuration` → fetched once for `authorization_endpoint`, `token_endpoint`, `jwks_uri` (no hardcoding).
-
-**Right (diagram) — discovery:**
-
-```mermaid
-graph TD
-    APP["Your App"] -->|"GET /.well-known/<br/>openid-configuration"| D["Discovery Document"]
-    D --> A["authorization_endpoint"]
-    D --> T["token_endpoint"]
-    D --> J["jwks_uri"]
-    style D fill:#1f2937,stroke:#f59e0b,color:#ffffff
-```
-
----
-
-## Step 3 — 5.2 CSRF: The Browser Sends Cookies for You
+## Step 1 — 5.2 CSRF: The Browser Sends Cookies for You
 **type:** two-column (prose + diagram) · **section:** § 5.2 · CSRF
 
 **Left (prose):** malicious site triggers a credentialed cross-site request (browser auto-sends cookies); bank `<img src=...transfer>` example; fix checklist (`SameSite=Strict`, CSRF tokens, Bearer headers are naturally CSRF-safe); + info callout tying back to Lecture 2's `SameSite=Strict` refresh cookie.
@@ -63,21 +29,21 @@ graph TD
 
 ---
 
-## Step 4 — CSRF Sandbox (Demo)
+## Step 2 — CSRF Sandbox (Demo)
 **type:** demo · **section:** § 5.2 · CSRF · **demo_key:** CSRFSandbox
 
 Fire a forged cross-site request, then toggle `SameSite=Strict` / a CSRF token to watch it get blocked. *(Only live demo in this lecture.)*
 
 ---
 
-## Step 5 — 5.3 RBAC vs ABAC: Modeling Permissions
+## Step 3 — 5.3 RBAC vs ABAC: Modeling Permissions
 **type:** prose (full-width) · **section:** § 5.3 · RBAC vs ABAC
 
 RBAC (roles → permissions; simple, roles bloat) vs ABAC (policies over user/resource/env attributes; flexible, harder to debug). Rule of thumb: start with RBAC, move to ABAC when roles can't express the policy — e.g. *"editors can edit only their own posts."*
 
 ---
 
-## Step 6 — 5.3 RBAC vs ABAC: Two Ways to Decide
+## Step 4 — 5.3 RBAC vs ABAC: Two Ways to Decide
 **type:** diagram (full-width) · **section:** § 5.3 · RBAC vs ABAC
 
 Full-width model diagram so it renders large (replaced the cramped two-column version).
@@ -104,11 +70,9 @@ graph TB
 
 ---
 
-## Step 7 — Checkpoint
-**type:** checkpoint (6 questions)
+## Step 5 — Checkpoint
+**type:** checkpoint (4 questions)
 
-- **OIDC [Easy]** What does OIDC add on top of OAuth 2.0? What's the ID token for, and what must you never use it for?
-- **OIDC [Medium]** Where does OIDC fit in a "Login with Google" flow? Which step yields the ID token, and who consumes it?
 - **CSRF [Easy]** Explain CSRF in one sentence. Why are `Authorization: Bearer` tokens naturally CSRF-safe?
 - **CSRF [Medium]** Refresh token in an HttpOnly cookie — which cookie attribute prevents CSRF, and how? (`SameSite=Strict`)
 - **RBAC [Medium]** "Editors can edit only documents they own" — can pure RBAC handle it? Reach for ABAC.

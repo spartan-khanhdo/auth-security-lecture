@@ -4,68 +4,15 @@ export const gaps: Lecture = {
   slug: "gaps",
   title: "What's Missing: Fill These Gaps",
   subtitle:
-    "Tie it all together with the OIDC identity layer, cross-site request forgery defenses, and role/attribute-based access control.",
-  tagline: "The missing pieces: OIDC identity, CSRF defense, and fine-grained access control.",
-  estMinutes: 10,
-  topics: ["OIDC", "CSRF Defense", "RBAC", "ABAC"],
+    "Tie it all together with cross-site request forgery defenses and role/attribute-based access control.",
+  tagline: "The missing pieces: CSRF defense and fine-grained access control.",
+  estMinutes: 7,
+  topics: ["CSRF Defense", "RBAC", "ABAC"],
   color: "green",
   iconKey: "puzzle",
   comingSoon: false,
   units: [
-    // ═════════════ Step 1 · 5.1 OIDC — the identity layer (prose + login flow) ═════════════
-    {
-      id: "gaps-step-1",
-      type: "two-column",
-      title: "OAuth Authorizes. OIDC Identifies.",
-      ratio: "3:2",
-      left: {
-        id: "gaps-step-1-left",
-        type: "prose",
-        body: `> 💡 **OAuth 2.0 handles authorization. OIDC handles identity. They're not the same thing.**\n\nOAuth 2.0 answers *"can this app access my data?"* — it says nothing about **who** you are. OIDC is a thin identity layer **on top of** OAuth 2.0 that adds the **ID token**: a JWT telling your app who just logged in (\`sub\`, \`email\`, \`name\`).\n\n**Keywords:** \`ID token\` · \`userinfo\` · \`/.well-known/openid-configuration\`\n\n*"Login with Google / GitHub / Microsoft"* = OIDC, not plain OAuth 2.0.`,
-        callouts: [
-          {
-            tone: "danger",
-            text: "The ID token is for your app to read identity. The access token is for calling APIs. Never use the ID token as an API bearer token.",
-          },
-        ],
-      },
-      right: {
-        id: "gaps-step-1-right",
-        type: "diagram",
-        mermaid: `graph TD
-    U["User clicks<br/>Login with Google"] --> P["Google · OIDC Provider<br/>authenticates user"]
-    P -->|"ID token (JWT)"| APP["Your App<br/>who logged in?<br/>sub · email · name"]
-    P -->|"access token"| API["Google APIs<br/>call on user's behalf"]
-    style APP fill:#1f2937,stroke:#10b981,color:#ffffff`,
-        caption: "ID token = identity for your app; access token = key for APIs. Don't swap them.",
-      },
-    },
-
-    // ═════════════ Step 2 · 5.1 OIDC — discovery & the one-line difference (prose + discovery) ═════════════
-    {
-      id: "gaps-step-2",
-      type: "two-column",
-      title: "One Difference, Zero Hardcoding",
-      ratio: "3:2",
-      left: {
-        id: "gaps-step-2-left",
-        type: "prose",
-        body: `**The one-line difference:**\n\n| | OAuth 2.0 | OIDC |\n| --- | --- | --- |\n| **Purpose** | Authorization | Authentication |\n| **Issues** | Access token | Access **+ ID token** |\n| **Answers** | "Can this app read my Drive?" | "Who logged in?" |\n\nEvery OIDC provider publishes a **discovery endpoint**:\n\n\`\`\`\nhttps://accounts.google.com/\n  .well-known/openid-configuration\n\`\`\`\n\nYour app fetches it once to get \`authorization_endpoint\`, \`token_endpoint\`, and \`jwks_uri\` — no hardcoding.`,
-      },
-      right: {
-        id: "gaps-step-2-right",
-        type: "diagram",
-        mermaid: `graph TD
-    APP["Your App"] -->|"GET /.well-known/<br/>openid-configuration"| D["Discovery Document"]
-    D --> A["authorization_endpoint"]
-    D --> T["token_endpoint"]
-    D --> J["jwks_uri"]
-    style D fill:#1f2937,stroke:#f59e0b,color:#ffffff`,
-        caption: "Fetch the config once — endpoints and signing keys come from the provider, not your code.",
-      },
-    },
-
-    // ═════════════ Step 3 · 5.2 CSRF (prose + attack flow) ═════════════
+    // ═════════════ Step 1 · 5.2 CSRF (prose + attack flow) ═════════════
     {
       id: "gaps-step-3",
       type: "two-column",
@@ -94,7 +41,7 @@ export const gaps: Lecture = {
       },
     },
 
-    // ═════════════ Step 4 · 5.2 Demo: CSRF Sandbox ═════════════
+    // ═════════════ Step 2 · 5.2 Demo: CSRF Sandbox ═════════════
     {
       id: "gaps-step-4",
       type: "demo",
@@ -102,7 +49,7 @@ export const gaps: Lecture = {
       component: "CSRFSandbox",
     },
 
-    // ═════════════ Step 5 · 5.3 RBAC vs ABAC — explanation (full-width prose) ═════════════
+    // ═════════════ Step 3 · 5.3 RBAC vs ABAC — explanation (full-width prose) ═════════════
     {
       id: "gaps-step-5",
       type: "prose",
@@ -110,7 +57,7 @@ export const gaps: Lecture = {
       body: `> AuthZ says *what someone can do* — but how does your system decide that? That's where RBAC and ABAC come in.\n\n**RBAC (Role-Based Access Control)** — permissions tied to roles, roles assigned to users.\n\n\`\`\`\nadmin   → full access\neditor  → read + write\nviewer  → read only\n\`\`\`\n\nSimple, easy to reason about — most apps start here. **Limitation:** roles bloat fast as edge cases pile up.\n\n**ABAC (Attribute-Based Access Control)** — permissions evaluated from policies combining attributes (user, resource, environment).\n\n\`\`\`\nallow if user.dept == resource.dept AND action == 'read' AND hour < 18\n\`\`\`\n\nMore flexible, handles complex rules, but harder to debug and audit.\n\n**Rule of thumb:** start with RBAC; move to ABAC when roles alone can't express the policy cleanly — e.g. *"editors can edit only their own posts."*`,
     },
 
-    // ═════════════ Step 6 · 5.3 RBAC vs ABAC — model diagram (full-width) ═════════════
+    // ═════════════ Step 4 · 5.3 RBAC vs ABAC — model diagram (full-width) ═════════════
     {
       id: "gaps-step-6",
       type: "diagram",
@@ -136,60 +83,12 @@ export const gaps: Lecture = {
         "RBAC follows a fixed chain: user → role → permissions. ABAC feeds many attributes into a policy engine that decides per request.",
     },
 
-    // ═════════════ Step 7 · Checkpoint ═════════════
+    // ═════════════ Step 5 · Checkpoint ═════════════
     {
       id: "gaps-checkpoint",
       type: "checkpoint",
       title: "Checkpoint",
       questions: [
-        // OIDC — Easy
-        {
-          id: "gaps-quiz-oidc-1",
-          type: "quiz",
-          difficulty: "easy",
-          title: "What OIDC Adds",
-          question:
-            "What does OIDC add on top of OAuth 2.0? What's the ID token for, and what should you never use it for?",
-          choices: [
-            { id: "a", label: "OIDC adds encryption to OAuth's access tokens; the ID token is the encrypted form." },
-            {
-              id: "b",
-              label:
-                "OIDC adds an identity layer — the ID token (a JWT) tells your app who logged in (sub, email, name). Use the access token to call APIs; never use the ID token as an API bearer token.",
-            },
-            { id: "c", label: "OIDC replaces OAuth 2.0 entirely, and the ID token is used as the API bearer token." },
-            { id: "d", label: "Nothing meaningful — the ID token and access token are interchangeable." },
-          ],
-          correctChoiceId: "b",
-          explanation:
-            "OIDC is a thin identity layer over OAuth 2.0. The ID token is for your app to read identity claims; the access token is for calling APIs. Using the ID token as a bearer token confuses identity with authorization.",
-          points: 1,
-        },
-
-        // OIDC — Medium
-        {
-          id: "gaps-quiz-oidc-2",
-          type: "quiz",
-          difficulty: "medium",
-          title: "OIDC in 'Login with Google'",
-          question:
-            "Where does OIDC fit in a 'Login with Google' flow? At which step does the ID token appear, and who should consume it?",
-          choices: [
-            { id: "a", label: "There is no ID token in 'Login with Google' — it uses only an access token." },
-            { id: "b", label: "The ID token is issued by your app and sent to Google to prove identity." },
-            {
-              id: "c",
-              label:
-                "'Login with Google' is OIDC. After the user authenticates, the token endpoint returns an access token AND an ID token; your app (the client) consumes the ID token to read identity, while the access token is sent to Google APIs.",
-            },
-            { id: "d", label: "The ID token appears at the authorization request and is consumed by Google's API." },
-          ],
-          correctChoiceId: "c",
-          explanation:
-            "The provider returns both tokens at the token endpoint. The client app reads the ID token for identity (sub/email/name); the access token is the credential for calling APIs on the user's behalf.",
-          points: 1,
-        },
-
         // CSRF — Easy (existing)
         {
           id: "gaps-unit-5",
