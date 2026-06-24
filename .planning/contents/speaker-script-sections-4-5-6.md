@@ -304,6 +304,14 @@
 > - **CSP:** bảo trình duyệt "chỉ chạy script từ nguồn cho phép" → lọt cũng khó chạy.
 > - **Token để cookie `HttpOnly`, không để `localStorage`:** HttpOnly thì JS không đọc được → dính XSS cũng không lấy được token.
 >
+> **3 lớp chặn ở 3 chỗ (đúng sơ đồ bên phải slide):**
+> ```
+> Input vào HTML   ──①escaping──►  thành chữ, không là thẻ   (ngăn TRỞ THÀNH script)
+> Nếu lọt          ──②CSP──────►  trình duyệt từ chối chạy   (ngăn CHẠY)
+> Nếu vẫn chạy     ──③HttpOnly─►  JS không đọc được token    (giảm THIỆT HẠI)
+> ```
+> *Câu chốt:* "Escaping ngăn payload thành script, CSP ngăn script chạy, HttpOnly ngăn nó cướp token. Không lớp nào hoàn hảo — nên xếp chồng."
+>
 > **CÁCH DEMO:** bấm sample bên **trái (Unsanitized)** → khung **đỏ + banner "💥 injected script ran"** = script chạy = XSS thật. Bên **phải (Sanitized)** → cùng payload hiện ra dưới dạng **chữ vô hại** = đã escape. Chốt: *"cùng một input — không escape thì script chạy, escape thì chỉ là chữ."*
 
 ### SLIDE 5.5 — "Change the ID, Get Someone Else's Data" (Broken Access Control / IDOR) `~1.5 phút`

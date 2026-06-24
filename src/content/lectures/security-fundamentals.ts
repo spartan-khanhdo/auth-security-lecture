@@ -133,11 +133,17 @@ export const securityFundamentals: Lecture = {
         id: "security-fundamentals-step-6-right",
         type: "diagram",
         mermaid: `graph TD
-    A["Attacker plants<br/>script payload"] --> ST["Stored / reflected<br/>in the page"]
-    ST --> V["Victim's browser<br/>executes it"]
-    V --> T["💥 token stolen<br/>actions as user"]
-    style T fill:#7f1d1d,stroke:#ef4444,color:#ffffff`,
-        caption: "The payload rides the page straight into a trusted browser session.",
+    A["Attacker input<br/>&lt;script&gt;…&lt;/script&gt;"] --> H["Rendered into<br/>page HTML"]
+    H --> X["Script runs in<br/>victim's browser"]
+    X --> T["💥 Token stolen /<br/>acts as user"]
+    D1["① Output encoding<br/>→ becomes plain text"] -.->|blocks| H
+    D2["② CSP<br/>→ browser won't run it"] -.->|blocks| X
+    D3["③ HttpOnly cookie<br/>→ token unreadable by JS"] -.->|blocks| T
+    style T fill:#7f1d1d,stroke:#ef4444,color:#ffffff
+    style D1 fill:#064e3b,stroke:#10b981,color:#ffffff
+    style D2 fill:#064e3b,stroke:#10b981,color:#ffffff
+    style D3 fill:#064e3b,stroke:#10b981,color:#ffffff`,
+        caption: "Three defenses, three stages: encoding stops it becoming script, CSP stops it running, HttpOnly stops the token theft.",
       },
     },
 
