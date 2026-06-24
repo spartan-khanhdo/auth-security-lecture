@@ -378,9 +378,9 @@
 **MÀN HÌNH:** prose + sơ đồ tấn công (malicious page → browser auto cookie → bank → 💥 transfer).
 
 **NÓI:**
-- "CSRF: **một site độc dụ browser của bạn gửi request có credential tới API của bạn.** Mấu chốt: **browser TỰ đính kèm cookie**, nên server tưởng là chính chủ."
-- **CHỈ ví dụ:** "Bạn đang đăng nhập bank. Trang độc nhúng `<img src=bank.com/transfer?...>`. Browser bắn request **kèm session cookie** — và bank xử lý."
-- **CHỈ fix checklist:** "**`SameSite=Strict`** — cookie không gửi khi cross-site. **CSRF token** — secret mỗi session phải echo lại. Và **`Authorization: Bearer` tự nhiên an toàn** — trang cross-site **không set được custom header**, browser chỉ tự đính kèm cookie thôi."
+- **Mở bằng callout (đọc câu vàng trên slide):** "**Trình duyệt tự đính kèm cookie của bạn vào MỌI request tới một site — bất kể trang nào châm ngòi. CSRF lợi dụng đúng cái đó.**"
+- **CHỈ ví dụ:** "Bạn đang đăng nhập bank. Trang độc nhúng `<img src=bank.com/transfer?...>`. Browser bắn request **kèm session cookie** — và bank xử lý vì tưởng là chính bạn."
+- **CHỈ sơ đồ (lồng phòng thủ — giống 3 lớp XSS):** "Chuỗi tấn công ở giữa, 3 cách chặn màu xanh: **`SameSite=Strict`** và **Bearer header** chặn ngay bước *cookie bị đính kèm*; **CSRF token** chặn ở *server* vì kẻ tấn công không cung cấp được token."
 - **Câu chốt (cầu nối):** "Đây chính là lý do ở lecture JWT mình để **`SameSite=Strict`** cho refresh cookie — không phải cho đẹp, mà là chống CSRF ngay trong cookie."
 
 > 📖 **HIỂU SÂU — toàn bộ CSRF trong 1 câu: *"trình duyệt tự gửi cookie giùm bạn"*:**

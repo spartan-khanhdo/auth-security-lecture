@@ -21,7 +21,7 @@ export const gaps: Lecture = {
       left: {
         id: "gaps-step-3-left",
         type: "prose",
-        body: `**What it is:** a malicious site tricks the user's browser into making a **credentialed** request to your API — the browser auto-sends cookies, so the server thinks it's legitimate.\n\n**Classic example:** you're logged into your bank. A malicious page has \`<img src="https://bank.com/transfer?to=attacker&amount=1000">\`. Your browser fires the request **with your session cookie**, and the bank processes it.\n\n**Fix checklist:**\n\n- \`SameSite=Strict\` on cookies — not sent on cross-site requests\n- **CSRF tokens** — a per-session secret every mutating request must echo\n- \`Authorization: Bearer\` headers are naturally CSRF-safe — a cross-site page can't set custom headers`,
+        body: `> 🍪 **Your browser attaches your cookies to every request to a site — no matter which page triggered it. CSRF abuses exactly that.**\n\n**What it is:** a malicious site makes your browser fire a **credentialed** request to your API. The browser auto-sends your session cookie, so the server thinks it's really you.\n\n**Classic example:** you're logged into your bank. An attacker's page contains \`<img src="https://bank.com/transfer?to=attacker&amount=1000">\`. Your browser fires that request **with your session cookie attached** — and the bank processes it.\n\n**Fix checklist:**\n\n- \`SameSite=Strict\` — browser won't send the cookie on cross-site requests *(the main fix)*\n- **CSRF token** — a per-session secret every mutating request must echo; the attacker can't guess it\n- \`Authorization: Bearer\` is naturally CSRF-safe — the browser auto-attaches cookies, not custom headers`,
         callouts: [
           {
             tone: "info",
@@ -33,11 +33,17 @@ export const gaps: Lecture = {
         id: "gaps-step-3-right",
         type: "diagram",
         mermaid: `graph TD
-    M["Malicious page<br/>img src=bank.com/transfer"] --> B["Victim's browser<br/>auto-attaches session cookie"]
-    B --> S["bank.com<br/>sees a valid session"]
-    S --> X["💥 transfer processed"]
-    style X fill:#7f1d1d,stroke:#ef4444,color:#ffffff`,
-        caption: "The cookie rides along automatically — without a CSRF defense the server can't tell forgery from intent.",
+    M["Malicious page (evil.com)<br/>img src=bank.com/transfer"] --> B["Your browser auto-attaches<br/>bank.com session cookie"]
+    B --> S["bank.com sees<br/>a valid session"]
+    S --> X["💥 Transfer processed"]
+    D1["SameSite=Strict<br/>→ cookie not sent cross-site"] -.->|blocks| B
+    D3["Bearer header<br/>→ not auto-attached"] -.->|blocks| B
+    D2["CSRF token<br/>→ attacker can't supply it"] -.->|blocks| S
+    style X fill:#7f1d1d,stroke:#ef4444,color:#ffffff
+    style D1 fill:#064e3b,stroke:#10b981,color:#ffffff
+    style D2 fill:#064e3b,stroke:#10b981,color:#ffffff
+    style D3 fill:#064e3b,stroke:#10b981,color:#ffffff`,
+        caption: "The cookie rides along automatically. SameSite / Bearer stop it being attached; a CSRF token makes the server reject the forgery.",
       },
     },
 
